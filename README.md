@@ -10,11 +10,18 @@
 pip install kiwoom-rest-api
 ```
 
+또는 [uv](https://docs.astral.sh/uv/) 사용:
+```bash
+uv add kiwoom-rest-api
+```
+
 소스에서 설치:
 ```bash
 git clone https://github.com/younghwan91/kiwoom-rest-api.git
 cd kiwoom-rest-api
 pip install -e .
+# 또는
+uv pip install -e .
 ```
 
 ## 사전 준비
