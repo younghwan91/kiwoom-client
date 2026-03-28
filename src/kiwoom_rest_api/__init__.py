@@ -59,8 +59,9 @@ class KiwoomAPI:
         app_secret: str,
         base_url: str | None = None,
         is_mock: bool = False,
+        rate_limit: float | None = None,
     ):
-        self._client = BaseClient(app_key, app_secret, base_url, is_mock)
+        self._client = BaseClient(app_key, app_secret, base_url, is_mock, rate_limit)
         self._auth = KiwoomAuth(app_key, app_secret, self._client.base_url)
         self._is_mock = is_mock
 

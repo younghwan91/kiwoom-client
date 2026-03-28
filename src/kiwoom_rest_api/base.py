@@ -6,6 +6,8 @@ from typing import Any
 
 import httpx
 
+from kiwoom_rest_api.rate_limiter import RateLimiter
+
 
 class KiwoomAPIError(Exception):
     """Kiwoom API error with return_code and return_msg."""
@@ -36,6 +38,7 @@ class BaseClient:
         app_secret: str,
         base_url: str | None = None,
         is_mock: bool = False,
+        rate_limit: float | None = None,
     ):
         self.app_key = app_key
         self.app_secret = app_secret
@@ -45,6 +48,7 @@ class BaseClient:
             self.base_url = self.MOCK_URL if is_mock else self.PROD_URL
         self._access_token: str | None = None
         self._client = httpx.Client(base_url=self.base_url, timeout=30.0)
+        self._rate_limiter: RateLimiter | None = RateLimiter(rate_limit) if rate_limit is not None else None
 
     def close(self) -> None:
         self._client.close()
@@ -107,6 +111,8 @@ class BaseClient:
         Raises:
             KiwoomAPIError: If the API returns a non-zero return_code.
         """
+        if self._rate_limiter is not None:
+            self._rate_limiter.acquire()
         headers = self._build_headers(api_id, cont_yn, next_key, extra_headers)
         resp = self._client.post(resource_url, headers=headers, json=body or {})
         resp.raise_for_status()
