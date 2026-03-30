@@ -1,8 +1,25 @@
+[한국어](README.md) | [English](README_EN.md)
+
 # kiwoom-rest-api
+
+[![PyPI version](https://img.shields.io/pypi/v/kiwoom-rest-api)](https://pypi.org/project/kiwoom-rest-api/)
+[![CI](https://github.com/younghwan91/kiwoom-rest-api/actions/workflows/ci.yml/badge.svg)](https://github.com/younghwan91/kiwoom-rest-api/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/github/license/younghwan91/kiwoom-rest-api)](https://github.com/younghwan91/kiwoom-rest-api/blob/main/LICENSE)
+[![Python](https://img.shields.io/pypi/pyversions/kiwoom-rest-api)](https://pypi.org/project/kiwoom-rest-api/)
+
+> A Python wrapper for Kiwoom Securities REST API — 207 endpoints + real-time WebSocket.
 
 키움증권 REST API를 Python으로 쉽게 사용할 수 있는 래퍼 라이브러리입니다.
 
 국내주식 **207개 엔드포인트**와 **19종 실시간 WebSocket 데이터**를 지원합니다.
+
+## 왜 이 라이브러리인가?
+
+- **크로스 플랫폼**: REST API 기반이라 Windows, macOS, Linux 어디서나 동작합니다. COM/OCX 방식과 달리 서버 환경에서도 사용 가능합니다.
+- **자동 토큰 관리**: `login()` 한 번으로 접근토큰 발급과 헤더 설정을 자동 처리합니다.
+- **자동 페이지네이션**: `request_all()`로 연속조회를 한 줄에 처리합니다.
+- **내장 Rate Limiter**: 토큰 버킷 방식으로 API 호출 제한을 자동 관리합니다.
+- **완전한 커버리지**: 국내주식 207개 REST 엔드포인트 + 19종 실시간 WebSocket 데이터를 지원합니다.
 
 ## 설치
 
@@ -28,7 +45,8 @@ uv pip install -e .
 
 1. [키움 REST API 포털](https://openapi.kiwoom.com)에 가입합니다.
 2. **API 사용신청**을 통해 `앱키(appkey)`와 `시크릿키(secretkey)`를 발급받습니다.
-3. 처음에는 **모의투자**(`is_mock=True`)로 테스트한 뒤, 실전투자로 전환하세요.
+3. 환경변수 설정은 [`.env.example`](.env.example)을 참고하세요.
+4. 처음에는 **모의투자**(`is_mock=True`)로 테스트한 뒤, 실전투자로 전환하세요.
 
 ## 빠른 시작
 
