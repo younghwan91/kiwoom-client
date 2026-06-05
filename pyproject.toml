@@ -9,7 +9,11 @@ description = "키움증권 REST API Python 래퍼 (국내주식 207개 엔드�
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
-keywords = ["kiwoom", "키움증권", "stock", "trading", "rest-api", "websocket"]
+keywords = [
+    "kiwoom", "키움증권", "키움", "kiwoom-securities", "openapi",
+    "stock", "trading", "자동매매", "퀀트", "quant", "algorithmic-trading",
+    "rest-api", "websocket", "kospi", "kosdaq", "korea-finance", "investment",
+]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",

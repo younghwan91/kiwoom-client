@@ -1,13 +1,19 @@
 [한국어](README.md) | [English](README_EN.md)
 
-# kiwoom-rest-api
+# kiwoom-rest-api — Python wrapper for Kiwoom Securities REST API
 
 [![PyPI version](https://img.shields.io/pypi/v/kiwoom-rest-api)](https://pypi.org/project/kiwoom-rest-api/)
+[![Downloads](https://img.shields.io/pypi/dm/kiwoom-rest-api)](https://pypi.org/project/kiwoom-rest-api/)
 [![CI](https://github.com/younghwan91/kiwoom-rest-api/actions/workflows/ci.yml/badge.svg)](https://github.com/younghwan91/kiwoom-rest-api/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/github/license/younghwan91/kiwoom-rest-api)](https://github.com/younghwan91/kiwoom-rest-api/blob/main/LICENSE)
 [![Python](https://img.shields.io/pypi/pyversions/kiwoom-rest-api)](https://pypi.org/project/kiwoom-rest-api/)
 
+> A modern Python wrapper for the **Kiwoom Securities REST API** — a cross-platform replacement for the legacy
+> Kiwoom OpenAPI+ (OCX/COM). Automate Korean stock (KOSPI/KOSDAQ) trading, quotes, and real-time WebSocket
+> data on Windows, macOS, and Linux. 207 endpoints · 19 real-time data types · mock & live trading.
+
 A Python wrapper for [Kiwoom Securities](https://www.kiwoom.com/) REST API, covering all domestic stock endpoints.
+Unlike the legacy OpenAPI+ (OCX/COM) or `pykiwoom`, it has no 32-bit/Windows-only constraints and runs in headless server environments.
 
 ## Why this library?
 

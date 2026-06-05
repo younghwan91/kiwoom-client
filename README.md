@@ -1,17 +1,36 @@
 [한국어](README.md) | [English](README_EN.md)
 
-# kiwoom-rest-api
+# kiwoom-rest-api — 키움증권 REST API Python 라이브러리
 
 [![PyPI version](https://img.shields.io/pypi/v/kiwoom-rest-api)](https://pypi.org/project/kiwoom-rest-api/)
+[![Downloads](https://img.shields.io/pypi/dm/kiwoom-rest-api)](https://pypi.org/project/kiwoom-rest-api/)
 [![CI](https://github.com/younghwan91/kiwoom-rest-api/actions/workflows/ci.yml/badge.svg)](https://github.com/younghwan91/kiwoom-rest-api/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/github/license/younghwan91/kiwoom-rest-api)](https://github.com/younghwan91/kiwoom-rest-api/blob/main/LICENSE)
 [![Python](https://img.shields.io/pypi/pyversions/kiwoom-rest-api)](https://pypi.org/project/kiwoom-rest-api/)
 
-> A Python wrapper for Kiwoom Securities REST API — 207 endpoints + real-time WebSocket.
+> **키움증권 OpenAPI를 대체하는 Python REST API 래퍼.**
+> COM/OCX 없이 Windows · macOS · Linux 어디서나 **국내주식 자동매매 · 시세조회 · 실시간 WebSocket**을 사용할 수 있습니다.
+> 207개 엔드포인트 · 19종 실시간 데이터 · 모의투자/실전투자 지원.
 
 키움증권 REST API를 Python으로 쉽게 사용할 수 있는 래퍼 라이브러리입니다.
+기존 키움 **OpenAPI+(OCX/COM)**나 `pykiwoom`과 달리, 32bit·Windows 제약 없이 64bit Python과 서버(헤드리스) 환경에서 그대로 동작합니다.
 
 국내주식 **207개 엔드포인트**와 **19종 실시간 WebSocket 데이터**를 지원합니다.
+
+> 검색 키워드: 키움 OpenAPI 파이썬, 키움증권 자동매매 파이썬, 키움 REST API, pykiwoom 대안, 키움 모의투자 파이썬, KOSPI/KOSDAQ 시세 조회
+
+## 목차
+
+- [왜 이 라이브러리인가?](#왜-이-라이브러리인가)
+- [기존 키움 OpenAPI / pykiwoom 과 무엇이 다른가?](#기존-키움-openapi--pykiwoom-과-무엇이-다른가)
+- [설치](#설치)
+- [사전 준비](#사전-준비)
+- [빠른 시작](#빠른-시작)
+- [실시간 WebSocket 데이터](#실시간-websocket-데이터)
+- [연속 조회 (페이지네이션)](#연속-조회-페이지네이션)
+- [에러 처리](#에러-처리)
+- [자주 묻는 질문 (FAQ)](#자주-묻는-질문-faq)
+- [지원 API 목록](#지원-api-목록)
 
 ## 왜 이 라이브러리인가?
 
@@ -20,6 +39,22 @@
 - **자동 페이지네이션**: `request_all()`로 연속조회를 한 줄에 처리합니다.
 - **내장 Rate Limiter**: 토큰 버킷 방식으로 API 호출 제한을 자동 관리합니다.
 - **완전한 커버리지**: 국내주식 207개 REST 엔드포인트 + 19종 실시간 WebSocket 데이터를 지원합니다.
+
+## 기존 키움 OpenAPI / pykiwoom 과 무엇이 다른가?
+
+기존 키움 **OpenAPI+(OCX/COM)**나 이를 감싼 `pykiwoom`은 32bit Windows에 묶여 있어 서버 배포·자동화가 어렵습니다.
+이 라이브러리는 키움의 **신규 REST API**를 사용하므로 그 제약이 없습니다.
+
+| 항목 | 키움 OpenAPI+ (OCX) | pykiwoom | **kiwoom-rest-api** |
+|------|---------------------|----------|---------------------|
+| 연동 방식 | COM/OCX | OCX 래퍼 | **REST + WebSocket** |
+| 운영체제 | Windows 전용 | Windows 전용 | **Windows · macOS · Linux** |
+| Python 비트수 | 32bit 전용 | 32bit 전용 | **64bit 지원** |
+| 서버/헤드리스 배포 | 어려움 (GUI 필요) | 어려움 | **가능** |
+| 실시간 데이터 | 이벤트 콜백 | 이벤트 콜백 | **async WebSocket** |
+| 설치 | 별도 모듈 설치 | OCX + 모듈 | **`pip install` 한 줄** |
+
+> 이미 OCX 기반 코드를 쓰고 있다면, REST 방식으로 전환할 때 GUI 의존성과 32bit 제약을 한 번에 제거할 수 있습니다.
 
 ## 설치
 
@@ -196,6 +231,40 @@ except KiwoomAPIError as e:
     print(f"에러 메시지: {e.message}")
     print(f"전체 응답: {e.response}")
 ```
+
+## 자주 묻는 질문 (FAQ)
+
+### 키움 앱키(appkey)와 시크릿키는 어떻게 발급받나요?
+
+[키움 REST API 포털](https://openapi.kiwoom.com)에 로그인한 뒤 **API 사용신청** 메뉴에서 신청하면 `appkey`와 `secretkey`가 발급됩니다. 발급받은 키는 `.env`에 보관하고 코드에 직접 하드코딩하지 마세요. ([`.env.example`](.env.example) 참고)
+
+### 모의투자에서 실전투자로 어떻게 전환하나요?
+
+`KiwoomAPI` 생성 시 `is_mock` 값만 바꾸면 됩니다. `is_mock=True`(모의투자) → `is_mock=False`(실전투자). 서버 URL은 라이브러리가 자동으로 전환합니다. 실전 전환 전 반드시 모의투자로 충분히 검증하세요.
+
+```python
+api = KiwoomAPI(app_key="...", app_secret="...", is_mock=False)  # 실전투자
+```
+
+### 접근토큰(access token)이 만료되면 어떻게 하나요?
+
+`api.login()`이 토큰 발급과 헤더 설정을 자동으로 처리합니다. 토큰 만료 시에도 라이브러리가 내부적으로 재발급을 관리하므로 별도 작업이 필요 없습니다.
+
+### Rate limit(호출 제한) 에러가 발생합니다.
+
+내장 토큰 버킷 Rate Limiter가 호출 빈도를 자동으로 조절합니다. 그래도 제한에 걸린다면 다중 프로세스/스레드에서 동시 호출 중인지 확인하고, 연속조회는 `request_all()`을 사용해 한 번에 처리하세요.
+
+### 조건검색(실시간)은 어떻게 사용하나요?
+
+`api.condition_search`로 조건식 목록 조회·검색·실시간 등록/해제를 지원합니다. 실시간 조건검색은 WebSocket 기반으로 동작합니다. ([지원 API 목록](#조건검색-apicondition_search---4개-websocket) 참고)
+
+### Windows가 아닌 macOS/Linux에서도 되나요?
+
+네. REST/WebSocket 기반이라 OCX·COM이 필요 없어 macOS·Linux·서버(헤드리스) 환경에서 모두 동작합니다.
+
+### pandas DataFrame으로 바로 받을 수 있나요?
+
+응답은 dict 형태로 반환되며, `pandas.DataFrame()`으로 손쉽게 변환할 수 있습니다. [`examples/pandas_usage.py`](examples/pandas_usage.py)에 예제가 있습니다.
 
 ## 환경 설정
 
