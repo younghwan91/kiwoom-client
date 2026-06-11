@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "kiwoom-api"
+name = "kiwoom-client"
 version = "0.1.13"
 description = "키움증권 REST API Python 래퍼 (국내주식 207개 엔드포인트 + 실시간 WebSocket)"
 readme = "README.md"
@@ -45,7 +45,7 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://pypi.org/project/kiwoom-api/"
+Homepage = "https://pypi.org/project/kiwoom-client/"
 Repository = "https://github.com/younghwan91/kiwoom-rest-api"
 Documentation = "https://github.com/younghwan91/kiwoom-rest-api#readme"
 Issues = "https://github.com/younghwan91/kiwoom-rest-api/issues"

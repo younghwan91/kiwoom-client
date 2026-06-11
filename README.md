@@ -2,8 +2,8 @@
 
 # kiwoom-rest-api — 키움증권 REST API Python 라이브러리
 
-[![PyPI version](https://img.shields.io/pypi/v/kiwoom-api)](https://pypi.org/project/kiwoom-api/)
-[![Downloads](https://img.shields.io/pypi/dm/kiwoom-api)](https://pypi.org/project/kiwoom-api/)
+[![PyPI version](https://img.shields.io/pypi/v/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
+[![Downloads](https://img.shields.io/pypi/dm/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
 [![CI](https://github.com/younghwan91/kiwoom-rest-api/actions/workflows/ci.yml/badge.svg)](https://github.com/younghwan91/kiwoom-rest-api/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/github/license/younghwan91/kiwoom-rest-api)](https://github.com/younghwan91/kiwoom-rest-api/blob/main/LICENSE)
 [![Python](https://img.shields.io/pypi/pyversions/kiwoom-rest-api)](https://pypi.org/project/kiwoom-rest-api/)
@@ -59,12 +59,12 @@
 ## 설치
 
 ```bash
-pip install kiwoom-api
+pip install kiwoom-client
 ```
 
 또는 [uv](https://docs.astral.sh/uv/) 사용:
 ```bash
-uv add kiwoom-api
+uv add kiwoom-client
 ```
 
 소스에서 설치:

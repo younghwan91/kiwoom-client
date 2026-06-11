@@ -2,8 +2,8 @@
 
 # kiwoom-rest-api — Python wrapper for Kiwoom Securities REST API
 
-[![PyPI version](https://img.shields.io/pypi/v/kiwoom-api)](https://pypi.org/project/kiwoom-api/)
-[![Downloads](https://img.shields.io/pypi/dm/kiwoom-api)](https://pypi.org/project/kiwoom-api/)
+[![PyPI version](https://img.shields.io/pypi/v/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
+[![Downloads](https://img.shields.io/pypi/dm/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
 [![CI](https://github.com/younghwan91/kiwoom-rest-api/actions/workflows/ci.yml/badge.svg)](https://github.com/younghwan91/kiwoom-rest-api/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/github/license/younghwan91/kiwoom-rest-api)](https://github.com/younghwan91/kiwoom-rest-api/blob/main/LICENSE)
 [![Python](https://img.shields.io/pypi/pyversions/kiwoom-rest-api)](https://pypi.org/project/kiwoom-rest-api/)
@@ -26,13 +26,13 @@ Unlike the legacy OpenAPI+ (OCX/COM) or `pykiwoom`, it has no 32-bit/Windows-onl
 ## Installation
 
 ```bash
-pip install kiwoom-api
+pip install kiwoom-client
 ```
 
 Or with [uv](https://docs.astral.sh/uv/):
 
 ```bash
-uv add kiwoom-api
+uv add kiwoom-client
 ```
 
 ## Prerequisites
