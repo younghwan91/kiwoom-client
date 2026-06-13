@@ -1,5 +1,7 @@
 """Tests for OAuth authentication."""
 
+import json
+
 import pytest
 
 from kiwoom_rest_api.auth import KiwoomAuth
@@ -15,6 +17,14 @@ class TestKiwoomAuth:
         result = auth.issue_token()
         assert result["token"] == "abc123"
         assert result["token_type"] == "Bearer"
+
+        # 요청 바디 필드명 검증: 키움 API 는 'secretkey' 를 기대한다 (regression guard)
+        body = json.loads(httpx_mock.get_requests()[0].content)
+        assert body == {
+            "grant_type": "client_credentials",
+            "appkey": "key",
+            "secretkey": "secret",
+        }
         auth.close()
 
     def test_revoke_token(self, httpx_mock):
@@ -25,4 +35,7 @@ class TestKiwoomAuth:
         auth = KiwoomAuth("key", "secret", "https://mockapi.kiwoom.com")
         result = auth.revoke_token("abc123")
         assert result["return_code"] == 0
+
+        body = json.loads(httpx_mock.get_requests()[0].content)
+        assert body == {"appkey": "key", "secretkey": "secret", "token": "abc123"}
         auth.close()
