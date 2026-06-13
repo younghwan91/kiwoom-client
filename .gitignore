@@ -15,11 +15,3 @@ uv.lock
 
 # 통합 스모크 테스트 산출물 (계좌성 데이터 포함 가능)
 tests/integration_report.json
-
-# 수급 차트 산출물 PNG
-examples/supply_demand_*.png
-
-# 수급 수집 DB 산출물
-data/
-*.db
-collect.log
