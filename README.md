@@ -29,6 +29,7 @@
 - [실시간 WebSocket 데이터](#실시간-websocket-데이터)
 - [연속 조회 (페이지네이션)](#연속-조회-페이지네이션)
 - [에러 처리](#에러-처리)
+- [요청 제한 (Rate Limit)](#요청-제한-rate-limit)
 - [자주 묻는 질문 (FAQ)](#자주-묻는-질문-faq)
 - [지원 API 목록](#지원-api-목록)
 
@@ -232,6 +233,33 @@ except KiwoomAPIError as e:
     print(f"전체 응답: {e.response}")
 ```
 
+## 요청 제한 (Rate Limit)
+
+키움 REST API는 **TR(api_id)별로 독립적인** 호출 제한을 둡니다. 실측 결과는 다음과 같습니다.
+
+| 항목 | 측정값 |
+|---|---|
+| 지속(sustained) 안전 속도 | **TR당 약 1 req/s** (이 속도에선 거부 0) |
+| 순간 버스트(burst) 허용량 | **TR당 약 2건** |
+| 초과 시 응답 | HTTP `429` + `{"return_code": 5, "return_msg": "허용된 요청 개수를 초과하였습니다"}` |
+| 제한 단위 | **TR(api_id)별 독립** — 서로 다른 TR은 영향 없음 |
+
+이에 맞춰 라이브러리는 **기본적으로 TR별 토큰 버킷 Rate Limiter(1 req/s, 버스트 2)** 를 적용하고, 그래도 `429`가 발생하면 **자동으로 백오프 후 재시도**합니다. 별도 설정 없이도 안전하게 동작합니다.
+
+```python
+# 기본값: TR당 1 req/s, 버스트 2, 429 자동 재시도
+api = KiwoomAPI(app_key="...", app_secret="...")
+
+# 직접 조정 (예: TR당 2 req/s, 버스트 3, 재시도 5회)
+api = KiwoomAPI(app_key="...", app_secret="...",
+                rate_limit=2.0, rate_burst=3, max_retries=5)
+
+# 클라이언트 측 스로틀 비활성화 (직접 제어할 때)
+api = KiwoomAPI(app_key="...", app_secret="...", rate_limit=None)
+```
+
+> 제한이 TR별이라, **서로 다른 TR을 섞어** 호출하면 합산 처리량은 더 높습니다. 반대로 **같은 TR을 반복**(연속조회 루프 등)할 때는 1 req/s에 수렴합니다 — 이 경우 [`request_all()`](#연속-조회-페이지네이션)을 쓰면 페이지네이션을 안전하게 자동 처리합니다.
+
 ## 자주 묻는 질문 (FAQ)
 
 ### 키움 앱키(appkey)와 시크릿키는 어떻게 발급받나요?
@@ -252,7 +280,7 @@ api = KiwoomAPI(app_key="...", app_secret="...", is_mock=False)  # 실전투자
 
 ### Rate limit(호출 제한) 에러가 발생합니다.
 
-내장 토큰 버킷 Rate Limiter가 호출 빈도를 자동으로 조절합니다. 그래도 제한에 걸린다면 다중 프로세스/스레드에서 동시 호출 중인지 확인하고, 연속조회는 `request_all()`을 사용해 한 번에 처리하세요.
+내장 TR별 토큰 버킷 Rate Limiter가 호출 빈도를 자동 조절하고 `429` 발생 시 재시도까지 처리합니다(실측 기준 TR당 1 req/s, 버스트 2). 그래도 제한에 걸린다면 다중 프로세스/스레드에서 **같은 TR을 동시 호출** 중인지 확인하고, 연속조회는 `request_all()`로 한 번에 처리하세요. 자세한 내용은 [요청 제한 (Rate Limit)](#요청-제한-rate-limit)을 참고하세요.
 
 ### 조건검색(실시간)은 어떻게 사용하나요?
 

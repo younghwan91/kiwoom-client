@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import time
 from typing import Any
 
 import httpx
 
-from kiwoom_rest_api.rate_limiter import RateLimiter
+from kiwoom_rest_api.rate_limiter import PerKeyRateLimiter
 
 
 class KiwoomAPIError(Exception):
@@ -22,15 +23,28 @@ class KiwoomAPIError(Exception):
 class BaseClient:
     """Base client handling authentication, requests, and pagination.
 
+    Rate limiting is **on by default** and mirrors Kiwoom's per-TR (api_id)
+    limit measured empirically (~1 req/s sustained, burst of 2). Requests that
+    still hit HTTP 429 are retried automatically with backoff. Pass
+    ``rate_limit=None`` to disable client-side throttling.
+
     Args:
         app_key: API app key from Kiwoom developer portal.
         app_secret: API app secret from Kiwoom developer portal.
         base_url: API base URL. Defaults to production.
         is_mock: Use mock trading server if True.
+        rate_limit: Per-TR sustained request rate (req/s). None disables.
+        rate_burst: Per-TR burst capacity (max instantaneous requests).
+        max_retries: Automatic retries on HTTP 429 / return_code 5.
+        retry_backoff: Base seconds to wait before a retry (grows per attempt).
     """
 
     PROD_URL = "https://api.kiwoom.com"
     MOCK_URL = "https://mockapi.kiwoom.com"
+
+    # Defaults tuned to the measured Kiwoom per-TR limit (1 req/s, burst 2).
+    DEFAULT_RATE_LIMIT = 1.0
+    DEFAULT_RATE_BURST = 2
 
     def __init__(
         self,
@@ -38,7 +52,10 @@ class BaseClient:
         app_secret: str,
         base_url: str | None = None,
         is_mock: bool = False,
-        rate_limit: float | None = None,
+        rate_limit: float | None = DEFAULT_RATE_LIMIT,
+        rate_burst: int = DEFAULT_RATE_BURST,
+        max_retries: int = 3,
+        retry_backoff: float = 1.1,
     ):
         self.app_key = app_key
         self.app_secret = app_secret
@@ -48,7 +65,11 @@ class BaseClient:
             self.base_url = self.MOCK_URL if is_mock else self.PROD_URL
         self._access_token: str | None = None
         self._client = httpx.Client(base_url=self.base_url, timeout=30.0)
-        self._rate_limiter: RateLimiter | None = RateLimiter(rate_limit) if rate_limit is not None else None
+        self._rate_limiter: PerKeyRateLimiter | None = (
+            PerKeyRateLimiter(rate_limit, rate_burst) if rate_limit is not None else None
+        )
+        self._max_retries = max_retries
+        self._retry_backoff = retry_backoff
 
     def close(self) -> None:
         self._client.close()
@@ -110,22 +131,38 @@ class BaseClient:
 
         Raises:
             KiwoomAPIError: If the API returns a non-zero return_code.
+            httpx.HTTPStatusError: If still rate-limited (429) after retries.
         """
-        if self._rate_limiter is not None:
-            self._rate_limiter.acquire()
         headers = self._build_headers(api_id, cont_yn, next_key, extra_headers)
-        resp = self._client.post(resource_url, headers=headers, json=body or {})
-        resp.raise_for_status()
-        data = resp.json()
 
-        return_code = data.get("return_code", 0)
-        if return_code != 0:
-            raise KiwoomAPIError(
-                code=return_code,
-                message=data.get("return_msg", "Unknown error"),
-                response=data,
-            )
-        return data
+        for attempt in range(self._max_retries + 1):
+            if self._rate_limiter is not None:
+                self._rate_limiter.acquire(api_id)
+            resp = self._client.post(resource_url, headers=headers, json=body or {})
+
+            # HTTP 429: rate limit exceeded — back off and retry.
+            if resp.status_code == 429 and attempt < self._max_retries:
+                time.sleep(self._retry_backoff * (attempt + 1))
+                continue
+            resp.raise_for_status()
+            data = resp.json()
+
+            return_code = data.get("return_code", 0)
+            # return_code 5 also signals "허용된 요청 개수를 초과" — retry.
+            if return_code == 5 and attempt < self._max_retries:
+                time.sleep(self._retry_backoff * (attempt + 1))
+                continue
+            if return_code != 0:
+                raise KiwoomAPIError(
+                    code=return_code,
+                    message=data.get("return_msg", "Unknown error"),
+                    response=data,
+                )
+            return data
+
+        # Unreachable: the final attempt either returns, raises KiwoomAPIError,
+        # or raise_for_status() raises. Guard for type-checkers.
+        raise RuntimeError("request retry loop exited unexpectedly")
 
     def request_all(
         self,
