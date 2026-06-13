@@ -38,7 +38,7 @@ class KiwoomAuth:
             json={
                 "grant_type": "client_credentials",
                 "appkey": self.app_key,
-                "appsecretkey": self.app_secret,
+                "secretkey": self.app_secret,
             },
             headers={"Content-Type": "application/json;charset=UTF-8"},
         )
@@ -60,7 +60,7 @@ class KiwoomAuth:
             "/oauth2/revoke",
             json={
                 "appkey": self.app_key,
-                "appsecretkey": self.app_secret,
+                "secretkey": self.app_secret,
                 "token": token,
             },
             headers={"Content-Type": "application/json;charset=UTF-8"},
