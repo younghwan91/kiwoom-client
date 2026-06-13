@@ -1,8 +1,6 @@
 """Tests for base client, auth, and pagination."""
 
-from unittest.mock import MagicMock, patch
 
-import httpx
 import pytest
 
 from kiwoom_rest_api.base import BaseClient, KiwoomAPIError
@@ -73,6 +71,25 @@ class TestBaseClient:
                 client.request("/api/dostk/stkinfo", "ka10001", {"stk_cd": "005930"})
             assert exc_info.value.code == -100
             assert "Invalid token" in str(exc_info.value)
+
+    def test_request_retries_on_429(self, httpx_mock):
+        """A 429 response should be retried automatically, then succeed."""
+        httpx_mock.add_response(
+            url="https://mockapi.kiwoom.com/api/dostk/stkinfo",
+            status_code=429,
+            json={"return_code": 5, "return_msg": "허용된 요청 개수를 초과하였습니다"},
+        )
+        httpx_mock.add_response(
+            url="https://mockapi.kiwoom.com/api/dostk/stkinfo",
+            json={"return_code": 0, "return_msg": "OK", "stk_nm": "삼성전자"},
+        )
+        with BaseClient(
+            "key", "secret", is_mock=True, retry_backoff=0.01
+        ) as client:
+            client.access_token = "token"
+            result = client.request("/api/dostk/stkinfo", "ka10001", {"stk_cd": "005930"})
+            assert result["stk_nm"] == "삼성전자"
+        assert len(httpx_mock.get_requests()) == 2  # first 429 + retry
 
     def test_request_all_pagination(self, httpx_mock):
         # First page

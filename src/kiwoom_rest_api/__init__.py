@@ -46,11 +46,17 @@ __all__ = ["KiwoomAPI", "KiwoomAPIError", "KiwoomWebSocket"]
 class KiwoomAPI:
     """Unified facade for all Kiwoom REST API endpoints.
 
+    Rate limiting (per-TR token bucket, ~1 req/s + burst 2) and automatic 429
+    retry are enabled by default; pass ``rate_limit=None`` to disable.
+
     Args:
         app_key: API app key from Kiwoom developer portal.
         app_secret: API app secret from Kiwoom developer portal.
         base_url: Override API base URL.
         is_mock: Use mock trading server if True.
+        rate_limit: Per-TR sustained request rate (req/s). None disables.
+        rate_burst: Per-TR burst capacity (max instantaneous requests).
+        max_retries: Automatic retries on HTTP 429 / return_code 5.
     """
 
     def __init__(
@@ -59,9 +65,14 @@ class KiwoomAPI:
         app_secret: str,
         base_url: str | None = None,
         is_mock: bool = False,
-        rate_limit: float | None = None,
+        rate_limit: float | None = BaseClient.DEFAULT_RATE_LIMIT,
+        rate_burst: int = BaseClient.DEFAULT_RATE_BURST,
+        max_retries: int = 3,
     ):
-        self._client = BaseClient(app_key, app_secret, base_url, is_mock, rate_limit)
+        self._client = BaseClient(
+            app_key, app_secret, base_url, is_mock,
+            rate_limit=rate_limit, rate_burst=rate_burst, max_retries=max_retries,
+        )
         self._auth = KiwoomAuth(app_key, app_secret, self._client.base_url)
         self._is_mock = is_mock
 
