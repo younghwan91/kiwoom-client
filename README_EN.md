@@ -138,3 +138,31 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
 ## License
 
 MIT
+
+---
+
+## ⭐ Found this useful?
+
+If this library helped you, please **[⭐ Star it](https://github.com/younghwan91/kiwoom-rest-api)** — it boosts discoverability so more developers can find it.
+
+- 🐛 Bugs & questions → [Issues](https://github.com/younghwan91/kiwoom-rest-api/issues)
+- 🔧 Improvements → PRs welcome ([CONTRIBUTING](CONTRIBUTING.md))
+- 📈 [Follow](https://github.com/younghwan91) for new endpoints & release updates
+
+## Related projects — Korean equity quant stack
+
+This library is one piece of an open-source **Korean equity quant stack**, spanning market-data, fundamentals & news APIs, a collection pipeline, and alpha research.
+
+| Project | What it is |
+|---|---|
+| **[krx-fundamentals-api](https://github.com/younghwan91/krx-fundamentals-api)** | Korean corporate fundamentals REST API — financials, ratios, dividends, screening (DART + KRX + Naver) |
+| **[krx-news-rest-api](https://github.com/younghwan91/krx-news-rest-api)** | Korean stock news & disclosure REST API (FastAPI + Redis) |
+| **[kr-quant-airflow](https://github.com/younghwan91/kr-quant-airflow)** | Airflow pipeline collecting Korean market data into TimescaleDB |
+| **[kr-quant](https://github.com/younghwan91/kr-quant)** | KOSPI/KOSDAQ alpha research with enforced walk-forward & random negative-control guardrails |
+| **[quantbox-engine](https://github.com/younghwan91/quantbox-engine)** | Crypto-futures backtest & execution engine — zero lookahead, backtest↔live parity |
+
+## Author
+
+**Younghwan Chae** · [GitHub @younghwan91](https://github.com/younghwan91) · [LinkedIn](https://www.linkedin.com/in/younghwan-chae/)
+
+See the full open-source quant stack on my [profile](https://github.com/younghwan91).
