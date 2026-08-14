@@ -18,19 +18,29 @@ def get_credentials() -> tuple[str, str]:
 
 
 def on_execution(data: dict[str, Any]) -> None:
-    """Callback for 0B (주식체결) real-time data."""
-    stk_cd = data.get("stk_cd", "")
-    cur_prc = data.get("cur_prc", "")
-    cum_vol = data.get("cum_vol", "")
-    print(f"[체결] {stk_cd} | 현재가: {cur_prc} | 누적거래량: {cum_vol}")
+    """Callback for 0B (주식체결) real-time data.
+
+    콜백은 REAL 프레임의 data 항목 하나를 그대로 받는다:
+    {"type": "0B", "item": "005930", "values": {"10": "+70000", ...}}
+    values 의 키는 FID 번호다 (10=현재가, 13=누적거래량).
+    """
+    values = data.get("values", {})
+    print(
+        f"[체결] {data.get('item', '')} | "
+        f"현재가: {values.get('10', '')} | 누적거래량: {values.get('13', '')}"
+    )
 
 
 def on_orderbook(data: dict[str, Any]) -> None:
-    """Callback for 0D (주식호가잔량) real-time data."""
-    stk_cd = data.get("stk_cd", "")
-    ask1 = data.get("ask_prc1", "")
-    bid1 = data.get("bid_prc1", "")
-    print(f"[호가] {stk_cd} | 매도1호가: {ask1} | 매수1호가: {bid1}")
+    """Callback for 0D (주식호가잔량) real-time data.
+
+    41=매도최우선호가, 51=매수최우선호가.
+    """
+    values = data.get("values", {})
+    print(
+        f"[호가] {data.get('item', '')} | "
+        f"매도1호가: {values.get('41', '')} | 매수1호가: {values.get('51', '')}"
+    )
 
 
 async def run(ws: KiwoomWebSocket, stock_codes: list[str]) -> None:

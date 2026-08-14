@@ -246,31 +246,54 @@ import asyncio
 from kiwoom_rest_api import KiwoomAPI
 
 api = KiwoomAPI(app_key="앱키", app_secret="시크릿키")
-api.login()
-
 ws = api.create_websocket()
 
 async def main():
+    # connect()가 LOGIN 핸드셰이크까지 끝냅니다. 실패하면 KiwoomWebSocketError
     await ws.connect()
 
-    # 실시간 체결 데이터 수신 콜백 등록
-    ws.on("0B", lambda data: print(f"체결: {data}"))
+    # 콜백은 REAL 프레임의 항목 하나를 받습니다:
+    # {"type": "0B", "item": "005930", "values": {"10": "+70000", ...}}
+    ws.on("0B", lambda d: print(f"체결 {d['item']}: {d['values'].get('10')}"))
+    ws.on("0D", lambda d: print(f"호가 {d['item']}: {d['values'].get('41')}"))
 
-    # 호가잔량 데이터 수신 콜백 등록
-    ws.on("0D", lambda data: print(f"호가: {data}"))
+    # async 콜백도 그대로 등록할 수 있습니다
+    async def save(d): ...
+    ws.on("0B", save)
 
     # 삼성전자 실시간 체결+호가 구독
     await ws.subscribe("0B", "005930")
-    await ws.subscribe("0D", "005930")
+    await ws.subscribe(["0B", "0D"], ["005930", "000660", "035420"])
 
-    # 여러 종목 동시 구독도 가능
-    await ws.subscribe("0B", ["005930", "000660", "035420"])
-
-    # 메시지 수신 대기 (Ctrl+C로 종료)
+    # PING 응답과 재연결(재로그인·구독 복원)은 listen()이 알아서 처리합니다
     await ws.listen()
 
 asyncio.run(main())
 ```
+
+`values`의 키는 키움 FID 번호입니다(10=현재가, 13=누적거래량, 41=매도최우선호가).
+
+### 조건검색
+
+조건검색도 같은 WebSocket을 씁니다. `api.condition_search`가 요청 페이로드를 만들고,
+`ws.send()`로 보낸 뒤 `ws.on_trnm()`으로 응답을 받습니다.
+
+```python
+await ws.connect()
+ws.on_trnm("CNSRLST", lambda d: print("조건식 목록:", d["data"]))
+ws.on_trnm("CNSRREQ", lambda d: print("검색 결과:", d.get("data")))
+
+# 조건식 목록을 먼저 조회해야 seq를 알 수 있습니다
+await ws.send(api.condition_search.condition_list())
+
+# seq로 검색 (search_type="1"이면 실시간 편입/이탈까지 수신)
+await ws.send(api.condition_search.condition_search_realtime(seq="1"))
+await ws.listen()
+```
+
+> **참고**: WebSocket 계층은 키움 공식 프로토콜 문서를 근거로 구현했고 로컬 테스트로
+> 검증했지만, 실계좌 검증은 아직입니다. 이상 동작을 만나면
+> [이슈](https://github.com/younghwan91/kiwoom-rest-api/issues)로 알려주세요.
 
 ## 연속 조회 (페이지네이션)
 

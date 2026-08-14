@@ -124,18 +124,33 @@ import asyncio
 from kiwoom_rest_api import KiwoomAPI
 
 api = KiwoomAPI(app_key="YOUR_KEY", app_secret="YOUR_SECRET")
-api.login()
-
 ws = api.create_websocket()
 
 async def main():
-    await ws.connect()
-    ws.on("0B", lambda data: print(f"Trade: {data}"))
+    await ws.connect()  # includes the LOGIN handshake
+
+    # Callbacks get one entry of the REAL frame:
+    # {"type": "0B", "item": "005930", "values": {"10": "+70000", ...}}
+    ws.on("0B", lambda d: print(f"Trade {d['item']}: {d['values'].get('10')}"))
+
     await ws.subscribe("0B", ["005930", "000660"])
-    await ws.listen()
+    await ws.listen()  # answers PING, reconnects and re-subscribes on drop
 
 asyncio.run(main())
 ```
+
+`values` keys are Kiwoom FID numbers (10 = current price, 13 = cumulative volume).
+
+Condition search rides the same socket:
+
+```python
+ws.on_trnm("CNSRLST", lambda d: print(d["data"]))
+await ws.send(api.condition_search.condition_list())
+await ws.send(api.condition_search.condition_search_realtime(seq="1"))
+```
+
+> **Note**: the WebSocket layer follows Kiwoom's published protocol and is covered by
+> local protocol tests, but has not been verified against a live account yet.
 
 ## API Categories
 

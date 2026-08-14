@@ -30,6 +30,10 @@
   - 종목코드(`"005930"`)와 날짜(`base_dt`)는 문자열로 남습니다.
 - `KiwoomAuthError` — 토큰 발급/폐기 실패 시 raw httpx 예외 대신 이 예외가 납니다.
 - `pandas` optional extra 추가.
+- **WebSocket 조건검색 연동.** `api.condition_search`가 만든 페이로드를
+  `ws.send()`로 보내고 `ws.on_trnm()`으로 응답을 받습니다.
+- WebSocket 콜백에 async 함수를 등록할 수 있습니다. `ws.on_message()`로 모든
+  프레임을 볼 수 있습니다.
 
 ### 변경
 
@@ -42,22 +46,40 @@
 - 엔드포인트 모듈이 `Generic[ResponseT]` 가 되었습니다. sync 사용자에게는
   타입이 그대로(`dict[str, Any]`)이지만, 모듈을 직접 임포트해 타입을 명시하던
   코드라면 `Account` → `Account[dict[str, Any]]` 로 파라미터를 채워야 합니다.
+- **WebSocket 콜백이 받는 데이터 모양이 바뀌었습니다.** 이제 REAL 프레임의 항목
+  하나(`{"type", "item", "values"}`)를 받습니다. `values` 의 키는 FID 번호입니다.
+  기존 콜백은 애초에 호출되지 않았으므로 실동작이 깨질 코드는 없습니다.
+- `KiwoomWebSocket.send_condition_search()` 가 `send()` 로 바뀌었습니다.
+- `create_websocket()` 이 `login()` 을 요구하지 않습니다.
 
 ### 수정
 
 - `kiwoom_rest_api.__version__` 이 `"0.1.0"` 으로 고정돼 있어 실제 버전과
   달랐습니다. 이제 패키지 메타데이터에서 읽습니다.
+- **WebSocket 프로토콜이 키움 스펙과 어긋나 있었습니다.** 아래 넷을 고쳤습니다.
+  - `LOGIN` 핸드셰이크를 보내지 않고 토큰을 HTTP 헤더에만 실었습니다.
+  - 서버 `PING` 에 응답하지 않아 연결이 끊겼습니다. 이제 프레임을 그대로 반향합니다.
+  - 등록 메시지가 `{"trnm":"subscribe","stk_cd_lst":[...]}` 였습니다.
+    실제 포맷은 `{"trnm":"REG","grp_no":"1","refresh":"1","data":[{"item":[...],"type":[...]}]}` 입니다.
+  - 수신 메시지를 `grp_no`/`api_id` 로 찾아 **`ws.on("0B", ...)` 콜백이 한 번도
+    호출되지 않았습니다.** 실제 구조는 `{"trnm":"REAL","data":[{"type":"0B",...}]}` 이며,
+    이제 항목별 `type` 으로 디스패치합니다.
+- 재연결 시 로그인과 구독을 복원하지 않아, 끊긴 뒤로는 데이터가 오지 않았습니다.
+- 조건검색 모듈이 REST 형식(`{"api_id":"ka10171"}`)을 만들었습니다. 조건검색은
+  WebSocket `trnm`(`CNSRLST`/`CNSRREQ`/`CNSRCLR`)으로 나갑니다.
 
 ### 개발
 
 - CI 에 ruff·mypy 검사 추가. ruff/mypy 설정을 `pyproject.toml` 에 고정했습니다.
-- 테스트 43개 → 125개.
+- 테스트 43개 → 144개. WebSocket 은 로컬 서버로 프로토콜을 검증합니다.
 
 ### 알려진 이슈
 
-- WebSocket 실시간 시세 계층은 이번 릴리스에서 손대지 않았습니다. 키움 WebSocket
-  프로토콜(LOGIN 핸드셰이크, PING/PONG, `trnm: "REAL"` 메시지 구조)과 현재 구현이
-  어긋나 보이는 부분이 있어, 실계좌 검증 후 별도 릴리스로 수정할 예정입니다.
+- WebSocket 수정은 키움 공식 프로토콜 문서를 근거로 구현하고 로컬 프로토콜
+  테스트로 검증했지만, **실계좌 검증은 아직입니다.** 특히 REAL 프레임 항목의
+  세부 필드명(`item`/`values`)은 등록 메시지 구조에서 유추한 부분이 있습니다.
+  실제 동작이 다르면 [이슈](https://github.com/younghwan91/kiwoom-rest-api/issues)로
+  알려주세요.
 
 ## [0.1.14] - 2026-08
 
