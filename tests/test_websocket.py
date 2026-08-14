@@ -74,10 +74,15 @@ class FakeKiwoomServer:
 
 
 async def _until(condition, timeout: float = 2.0) -> None:
-    """condition() 이 참이 될 때까지 이벤트 루프를 돌린다."""
-    async with asyncio.timeout(timeout):
+    """condition() 이 참이 될 때까지 이벤트 루프를 돌린다.
+
+    asyncio.timeout() 은 3.11+ 이라 wait_for 로 쓴다 (최소 지원 버전 3.10).
+    """
+    async def _poll() -> None:
         while not condition():
             await asyncio.sleep(0.01)
+
+    await asyncio.wait_for(_poll(), timeout)
 
 
 async def _drain(coro_task: asyncio.Task, condition, timeout: float = 2.0) -> None:
@@ -354,8 +359,8 @@ class TestReconnect:
             await asyncio.sleep(0.05)
 
             await ws.disconnect()
-            async with asyncio.timeout(2.0):
-                await listener  # 재연결 루프에 갇히지 않고 빠져나온다
+            # 재연결 루프에 갇히지 않고 빠져나온다
+            await asyncio.wait_for(listener, 2.0)
 
 
 class TestUrls:
