@@ -27,6 +27,8 @@
 - [설치](#설치)
 - [사전 준비](#사전-준비)
 - [빠른 시작](#빠른-시작)
+- [asyncio 사용법](#asyncio-사용법)
+- [응답을 숫자·DataFrame으로 받기](#응답을-숫자dataframe으로-받기)
 - [실시간 WebSocket 데이터](#실시간-websocket-데이터)
 - [연속 조회 (페이지네이션)](#연속-조회-페이지네이션)
 - [에러 처리](#에러-처리)
@@ -37,9 +39,11 @@
 ## 왜 이 라이브러리인가?
 
 - **크로스 플랫폼**: REST API 기반이라 Windows, macOS, Linux 어디서나 동작합니다. COM/OCX 방식과 달리 서버 환경에서도 사용 가능합니다.
-- **자동 토큰 관리**: `login()` 한 번으로 접근토큰 발급과 헤더 설정을 자동 처리합니다.
+- **자동 토큰 관리**: 토큰을 알아서 발급하고, 만료 전에 갱신하고, 401이 나면 재발급 후 재시도합니다. 장시간 도는 봇이 토큰 만료로 죽지 않습니다.
+- **sync / async 양쪽 지원**: `KiwoomAPI`와 `AsyncKiwoomAPI`가 같은 API를 제공합니다.
 - **자동 페이지네이션**: `request_all()`로 연속조회를 한 줄에 처리합니다.
-- **내장 Rate Limiter**: 토큰 버킷 방식으로 API 호출 제한을 자동 관리합니다.
+- **내장 Rate Limiter**: TR(api_id)별 토큰 버킷으로 호출 제한을 자동 관리합니다.
+- **바로 쓰는 응답**: `to_dataframe()`이 `"+70000"` 같은 문자열을 숫자로 바꿔 DataFrame으로 넘겨줍니다.
 - **완전한 커버리지**: 국내주식 207개 REST 엔드포인트 + 19종 실시간 WebSocket 데이터를 지원합니다.
 
 ## 기존 키움 OpenAPI / pykiwoom 과 무엇이 다른가?
@@ -62,6 +66,11 @@
 
 ```bash
 pip install kiwoom-client
+```
+
+pandas 변환(`to_dataframe()`)까지 함께 쓰려면:
+```bash
+pip install 'kiwoom-client[pandas]'
 ```
 
 또는 [uv](https://docs.astral.sh/uv/) 사용:
@@ -87,7 +96,7 @@ uv pip install -e .
 
 ## 빠른 시작
 
-### 1단계: 로그인
+### 1단계: 연결
 
 ```python
 from kiwoom_rest_api import KiwoomAPI
@@ -98,10 +107,10 @@ api = KiwoomAPI(
     app_secret="발급받은_시크릿키",
     is_mock=True,  # True=모의투자, False=실전투자
 )
-
-# 접근토큰 발급 (모든 API 호출 전에 반드시 필요)
-api.login()
 ```
+
+접근토큰은 첫 호출에서 자동 발급되고 만료 전에 갱신되므로 따로 할 일이 없습니다.
+키가 올바른지 즉시 확인하고 싶다면 `api.login()`을 호출하세요 (선택).
 
 ### 2단계: 종목 조회
 
@@ -161,10 +170,71 @@ api.order.modify_order(org_ord_no="원래주문번호", ord_qty=5, ord_uv=71000)
 api.order.cancel_order(org_ord_no="원래주문번호", ord_qty=5)
 ```
 
-### 5단계: 로그아웃
+### 5단계: 정리
 
 ```python
-api.logout()
+api.logout()  # 토큰 폐기 (선택)
+api.close()   # 연결 종료
+
+# with 문을 쓰면 close()는 자동입니다
+with KiwoomAPI(app_key="앱키", app_secret="시크릿키", is_mock=True) as api:
+    info = api.stock_info.basic_stock_info(stk_cd="005930")
+```
+
+## asyncio 사용법
+
+`AsyncKiwoomAPI`는 `KiwoomAPI`와 같은 엔드포인트를 제공하며, 호출 앞에 `await`만 붙이면 됩니다.
+
+```python
+import asyncio
+from kiwoom_rest_api import AsyncKiwoomAPI
+
+async def main():
+    async with AsyncKiwoomAPI(app_key="앱키", app_secret="시크릿키", is_mock=True) as api:
+        # 서로 다른 TR은 동시에 나간다 — 직렬로 돌리면 3배 걸린다
+        info, chart, ranking = await asyncio.gather(
+            api.stock_info.basic_stock_info(stk_cd="005930"),
+            api.chart.stock_daily_chart(stk_cd="005930", base_dt="20260326"),
+            api.ranking.top_volume_today(
+                mrkt_tp="0", stk_cnd="0", trde_qty_tp="0",
+                prc_tp="0", trde_amt_tp="0", updn_tp="0",
+            ),
+        )
+        print(info["stk_nm"])
+
+asyncio.run(main())
+```
+
+Rate Limiter는 TR(api_id)별로 걸립니다. 서로 다른 TR은 서로를 막지 않고 동시에 나가며,
+같은 TR을 반복 호출할 때만 초당 1건으로 조여집니다. 전체 예제는
+[`examples/async_usage.py`](examples/async_usage.py)를 참고하세요.
+
+## 응답을 숫자·DataFrame으로 받기
+
+키움은 모든 값을 문자열로 돌려줍니다. 가격은 `"+70000"`, 등락률은 `"-1.23"`,
+거래량은 `"1,234,567"` 같은 식이라 그대로는 계산에 쓸 수 없습니다.
+
+```python
+from kiwoom_rest_api import to_dataframe, to_number, normalize
+
+result = api.ranking.top_volume_today(...)
+
+# 페이로드 키를 자동으로 찾아 DataFrame으로 변환 (문자열 → 숫자 포함)
+df = to_dataframe(result)
+print(df["cur_prc"].mean())   # 바로 계산 가능
+
+# dict 그대로 쓰고 싶다면
+data = normalize(result)
+price = to_number("+70000")   # 70000
+```
+
+종목코드(`"005930"`)처럼 앞자리 0이 의미를 갖는 값과, `base_dt` 같은 날짜·식별자
+필드는 숫자로 바꾸지 않고 문자열로 남깁니다.
+
+`to_dataframe()`에는 pandas가 필요합니다:
+
+```bash
+pip install 'kiwoom-client[pandas]'
 ```
 
 ## 실시간 WebSocket 데이터
@@ -277,7 +347,9 @@ api = KiwoomAPI(app_key="...", app_secret="...", is_mock=False)  # 실전투자
 
 ### 접근토큰(access token)이 만료되면 어떻게 하나요?
 
-`api.login()`이 토큰 발급과 헤더 설정을 자동으로 처리합니다. 토큰 만료 시에도 라이브러리가 내부적으로 재발급을 관리하므로 별도 작업이 필요 없습니다.
+할 일이 없습니다. 토큰은 첫 호출에서 발급되고, 만료 60초 전에 선제 재발급되며, 그래도 API가 `401`을 돌려주면 재발급 후 한 번 더 시도합니다. 갱신 시점을 바꾸려면 `KiwoomAPI(..., expiry_margin=300)`처럼 조절하세요.
+
+여러 프로세스가 토큰을 공유해야 한다면 `TokenProvider` 프로토콜(`get_valid_token()` / `refresh_token()`)을 구현해 넘기면 Redis 등 외부 캐시를 쓸 수 있습니다.
 
 ### Rate limit(호출 제한) 에러가 발생합니다.
 
@@ -293,7 +365,11 @@ api = KiwoomAPI(app_key="...", app_secret="...", is_mock=False)  # 실전투자
 
 ### pandas DataFrame으로 바로 받을 수 있나요?
 
-응답은 dict 형태로 반환되며, `pandas.DataFrame()`으로 손쉽게 변환할 수 있습니다. [`examples/pandas_usage.py`](examples/pandas_usage.py)에 예제가 있습니다.
+`to_dataframe(result)` 한 줄이면 됩니다. 엔드포인트마다 다른 페이로드 키를 자동으로 찾고, `"+70000"` 같은 문자열도 숫자로 바꿔줍니다. [응답을 숫자·DataFrame으로 받기](#응답을-숫자dataframe으로-받기)와 [`examples/pandas_usage.py`](examples/pandas_usage.py)를 참고하세요.
+
+### asyncio를 지원하나요?
+
+네. `AsyncKiwoomAPI`가 `KiwoomAPI`와 같은 엔드포인트를 제공합니다. [asyncio 사용법](#asyncio-사용법)을 참고하세요.
 
 ## 환경 설정
 

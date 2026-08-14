@@ -39,6 +39,25 @@ Place a buy order, a sell order, modify the buy order price, then cancel the sel
 uv run python examples/trading.py
 ```
 
+### `async_usage.py`
+
+Fetch three different TRs concurrently with `AsyncKiwoomAPI`, then query several stocks at once.
+Shows how the per-TR rate limiter lets different TRs run in parallel.
+
+```bash
+uv run python examples/async_usage.py
+```
+
+### `pandas_usage.py`
+
+Turn API responses into pandas DataFrames with `to_dataframe()` — the payload key is found for
+you and `"+70000"`-style strings become numbers.
+
+```bash
+uv run python -m pip install 'kiwoom-client[pandas]'
+uv run python examples/pandas_usage.py
+```
+
 ### `realtime_websocket.py`
 
 Connect via WebSocket and subscribe to real-time execution data (0B 주식체결) and order book

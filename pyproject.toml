@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "kiwoom-client"
-version = "0.1.14"
-description = "키움증권 REST API Python 래퍼 (국내주식 207개 엔드포인트 + 실시간 WebSocket)"
+version = "0.2.0"
+description = "키움증권 REST API Python 래퍼 (국내주식 207개 엔드포인트 + async + 토큰 자동 갱신)"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
@@ -13,6 +13,7 @@ keywords = [
     "kiwoom", "키움증권", "키움", "kiwoom-securities", "openapi",
     "stock", "trading", "자동매매", "퀀트", "quant", "algorithmic-trading",
     "rest-api", "websocket", "kospi", "kosdaq", "korea-finance", "investment",
+    "asyncio", "async", "pandas", "주식", "증권", "자동주문",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -55,6 +56,7 @@ Homepage = "https://pypi.org/project/kiwoom-client/"
 Repository = "https://github.com/younghwan91/kiwoom-rest-api"
 Documentation = "https://github.com/younghwan91/kiwoom-rest-api#readme"
 Issues = "https://github.com/younghwan91/kiwoom-rest-api/issues"
+Changelog = "https://github.com/younghwan91/kiwoom-rest-api/blob/main/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/kiwoom_rest_api"]
