@@ -32,7 +32,7 @@ class TestBaseClient:
     def test_build_headers(self):
         client = BaseClient("key", "secret")
         client.access_token = "my_token"
-        headers = client._build_headers("ka10001", "N", "")
+        headers = client._build_headers("ka10001", client._current_token(), "N", "")
         assert headers["api-id"] == "ka10001"
         assert headers["cont-yn"] == "N"
         assert headers["authorization"] == "Bearer my_token"
@@ -41,7 +41,7 @@ class TestBaseClient:
 
     def test_build_headers_no_token(self):
         client = BaseClient("key", "secret")
-        headers = client._build_headers("ka10001")
+        headers = client._build_headers("ka10001", client._current_token())
         assert "authorization" not in headers
         client.close()
 

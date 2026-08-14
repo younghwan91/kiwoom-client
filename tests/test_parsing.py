@@ -75,7 +75,7 @@ class TestExtractRecords:
             "short": [{"a": 1}],
             "long": [{"a": 1}, {"a": 2}, {"a": 3}],
         }
-        key, records = extract_records(resp)
+        key, _ = extract_records(resp)
         assert key == "long"
 
     def test_explicit_key_wins(self):

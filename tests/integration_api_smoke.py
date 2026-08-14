@@ -359,7 +359,7 @@ def main() -> int:
             print(f"❌ 로그인 실패: {tok}")
             return 1
         print(f"✅ 로그인 성공 (token …{api._client.access_token[-6:]})\n")
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         print(f"❌ 로그인 예외: {type(e).__name__}: {e}")
         return 1
 
@@ -386,7 +386,7 @@ def main() -> int:
             resp = meth(**params)
             rc = resp.get("return_code", 0)
             msg = resp.get("return_msg", "")
-            keys = [k for k in resp.keys() if k not in ("return_code", "return_msg")]
+            keys = [k for k in resp if k not in ("return_code", "return_msg")]
             entry.update(status="OK", return_code=rc, return_msg=msg, data_keys=keys)
             counts["OK"] += 1
             print(f"  ✅ {meth_name:<34} {api_id}  rc={rc} keys={keys[:4]}")
@@ -394,7 +394,7 @@ def main() -> int:
             entry.update(status="API_ERROR", return_code=e.code, return_msg=e.message)
             counts["API_ERROR"] += 1
             print(f"  ⚠️  {meth_name:<34} {api_id}  rc={e.code} msg={e.message}")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             import httpx
             if isinstance(e, httpx.HTTPStatusError):
                 code = e.response.status_code

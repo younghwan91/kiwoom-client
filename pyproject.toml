@@ -62,3 +62,23 @@ packages = ["src/kiwoom_rest_api"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+# Pinned explicitly so a contributor's global ruff config can't change CI.
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+# 테스트는 픽스처 이름·중첩 with 관례를 따른다.
+"tests/*" = ["SIM117"]
+# 실계좌 스모크 스크립트: 207개 엔드포인트 호출 표라 줄바꿈이 오히려 읽기 나쁘다.
+"tests/integration_api_smoke.py" = ["E501", "SIM117"]
+
+[tool.mypy]
+python_version = "3.10"
+files = ["src/kiwoom_rest_api"]
+ignore_missing_imports = true
+warn_unused_ignores = true

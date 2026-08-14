@@ -2,7 +2,6 @@
 
 import json
 
-
 from kiwoom_rest_api.auth import KiwoomAuth
 
 

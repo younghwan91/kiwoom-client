@@ -224,7 +224,7 @@ class TestKiwoomAPIWiring:
             api.login()
             result = api.stock_info.basic_stock_info(stk_cd="005930")
         assert result["stk_nm"] == "삼성전자"
-        api_req = [r for r in httpx_mock.get_requests() if "stkinfo" in str(r.url)][0]
+        api_req = next(r for r in httpx_mock.get_requests() if "stkinfo" in str(r.url))
         assert api_req.headers["authorization"] == "Bearer t1"
 
     def test_api_recovers_from_expired_token(self, httpx_mock):

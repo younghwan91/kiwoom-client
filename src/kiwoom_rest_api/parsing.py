@@ -12,7 +12,8 @@ carries meaning (``"005930"``) and date-like fields that only look numeric
 from __future__ import annotations
 
 import re
-from typing import Any, Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
+from typing import Any
 
 __all__ = ["extract_records", "normalize", "to_dataframe", "to_number"]
 
