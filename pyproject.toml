@@ -38,10 +38,16 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+pandas = [
+    "pandas>=2.0",
+]
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.24.0",
     "pytest-httpx>=0.34.0",
+    "pandas>=2.0",
+    "ruff>=0.6",
+    "mypy>=1.11",
 ]
 
 [project.urls]

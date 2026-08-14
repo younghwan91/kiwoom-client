@@ -39,6 +39,7 @@ from kiwoom_rest_api.domestic.short_selling import ShortSelling
 from kiwoom_rest_api.domestic.slb import SLB
 from kiwoom_rest_api.domestic.stock_info import StockInfo
 from kiwoom_rest_api.domestic.theme import Theme
+from kiwoom_rest_api.parsing import extract_records, normalize, to_dataframe, to_number
 from kiwoom_rest_api.websocket import KiwoomWebSocket
 
 try:
@@ -53,6 +54,10 @@ __all__ = [
     "KiwoomAuthError",
     "KiwoomWebSocket",
     "__version__",
+    "extract_records",
+    "normalize",
+    "to_dataframe",
+    "to_number",
 ]
 
 
