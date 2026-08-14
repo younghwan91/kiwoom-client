@@ -7,6 +7,7 @@ from typing import Any
 
 import httpx
 
+from kiwoom_rest_api.auth import TokenProvider
 from kiwoom_rest_api.rate_limiter import PerKeyRateLimiter
 
 
@@ -37,6 +38,9 @@ class BaseClient:
         rate_burst: Per-TR burst capacity (max instantaneous requests).
         max_retries: Automatic retries on HTTP 429 / return_code 5.
         retry_backoff: Base seconds to wait before a retry (grows per attempt).
+        token_provider: Supplies (and refreshes) the access token. When set,
+            an expired token is reissued automatically on HTTP 401. When
+            omitted, the manually-assigned ``access_token`` is used as before.
     """
 
     PROD_URL = "https://api.kiwoom.com"
@@ -45,6 +49,9 @@ class BaseClient:
     # Defaults tuned to the measured Kiwoom per-TR limit (1 req/s, burst 2).
     DEFAULT_RATE_LIMIT = 1.0
     DEFAULT_RATE_BURST = 2
+
+    # Statuses that mean "your token is no longer good" — refresh and retry.
+    TOKEN_ERROR_STATUSES = (401,)
 
     def __init__(
         self,
@@ -56,6 +63,7 @@ class BaseClient:
         rate_burst: int = DEFAULT_RATE_BURST,
         max_retries: int = 3,
         retry_backoff: float = 1.1,
+        token_provider: TokenProvider | None = None,
     ):
         self.app_key = app_key
         self.app_secret = app_secret
@@ -70,6 +78,7 @@ class BaseClient:
         )
         self._max_retries = max_retries
         self._retry_backoff = retry_backoff
+        self.token_provider = token_provider
 
     def close(self) -> None:
         self._client.close()
@@ -88,6 +97,12 @@ class BaseClient:
     def access_token(self, token: str | None) -> None:
         self._access_token = token
 
+    def _current_token(self) -> str | None:
+        """The token to authorize with: provider first, manual token otherwise."""
+        if self.token_provider is not None:
+            return self.token_provider.get_valid_token()
+        return self._access_token
+
     def _build_headers(
         self,
         api_id: str,
@@ -101,8 +116,9 @@ class BaseClient:
             "cont-yn": cont_yn,
             "next-key": next_key,
         }
-        if self._access_token:
-            headers["authorization"] = f"Bearer {self._access_token}"
+        token = self._current_token()
+        if token:
+            headers["authorization"] = f"Bearer {token}"
         if extra_headers:
             headers.update(extra_headers)
         return headers
@@ -131,11 +147,15 @@ class BaseClient:
 
         Raises:
             KiwoomAPIError: If the API returns a non-zero return_code.
-            httpx.HTTPStatusError: If still rate-limited (429) after retries.
+            httpx.HTTPStatusError: If still rate-limited (429) after retries,
+                or still unauthorized (401) after a token refresh.
         """
-        headers = self._build_headers(api_id, cont_yn, next_key, extra_headers)
+        token_refreshed = False
 
         for attempt in range(self._max_retries + 1):
+            # Rebuilt every attempt: the token may have been refreshed since.
+            headers = self._build_headers(api_id, cont_yn, next_key, extra_headers)
+
             if self._rate_limiter is not None:
                 self._rate_limiter.acquire(api_id)
             resp = self._client.post(resource_url, headers=headers, json=body or {})
@@ -144,6 +164,18 @@ class BaseClient:
             if resp.status_code == 429 and attempt < self._max_retries:
                 time.sleep(self._retry_backoff * (attempt + 1))
                 continue
+
+            # HTTP 401: token expired — reissue once, then retry immediately.
+            if (
+                resp.status_code in self.TOKEN_ERROR_STATUSES
+                and self.token_provider is not None
+                and not token_refreshed
+                and attempt < self._max_retries
+            ):
+                token_refreshed = True
+                self.token_provider.refresh_token()
+                continue
+
             resp.raise_for_status()
             data = resp.json()
 

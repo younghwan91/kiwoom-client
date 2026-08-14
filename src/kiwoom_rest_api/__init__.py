@@ -18,9 +18,11 @@ Usage:
 
 from __future__ import annotations
 
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as _package_version
 from typing import Any
 
-from kiwoom_rest_api.auth import KiwoomAuth
+from kiwoom_rest_api.auth import KiwoomAuth, KiwoomAuthError
 from kiwoom_rest_api.base import BaseClient, KiwoomAPIError
 from kiwoom_rest_api.domestic.account import Account
 from kiwoom_rest_api.domestic.chart import Chart
@@ -39,8 +41,19 @@ from kiwoom_rest_api.domestic.stock_info import StockInfo
 from kiwoom_rest_api.domestic.theme import Theme
 from kiwoom_rest_api.websocket import KiwoomWebSocket
 
-__version__ = "0.1.0"
-__all__ = ["KiwoomAPI", "KiwoomAPIError", "KiwoomWebSocket"]
+try:
+    # Single source of truth is pyproject.toml — never hardcode it here.
+    __version__ = _package_version("kiwoom-client")
+except PackageNotFoundError:  # pragma: no cover - source tree without install
+    __version__ = "0.0.0"
+
+__all__ = [
+    "KiwoomAPI",
+    "KiwoomAPIError",
+    "KiwoomAuthError",
+    "KiwoomWebSocket",
+    "__version__",
+]
 
 
 class KiwoomAPI:
@@ -48,6 +61,10 @@ class KiwoomAPI:
 
     Rate limiting (per-TR token bucket, ~1 req/s + burst 2) and automatic 429
     retry are enabled by default; pass ``rate_limit=None`` to disable.
+
+    The access token is managed for you: it is issued on first use, reissued
+    before it expires, and reissued again if the API answers 401. Calling
+    ``login()`` explicitly is optional and simply issues the first token.
 
     Args:
         app_key: API app key from Kiwoom developer portal.
@@ -57,6 +74,8 @@ class KiwoomAPI:
         rate_limit: Per-TR sustained request rate (req/s). None disables.
         rate_burst: Per-TR burst capacity (max instantaneous requests).
         max_retries: Automatic retries on HTTP 429 / return_code 5.
+        retry_backoff: Base seconds to wait before a retry (grows per attempt).
+        expiry_margin: Reissue the token this many seconds before it expires.
     """
 
     def __init__(
@@ -68,12 +87,19 @@ class KiwoomAPI:
         rate_limit: float | None = BaseClient.DEFAULT_RATE_LIMIT,
         rate_burst: int = BaseClient.DEFAULT_RATE_BURST,
         max_retries: int = 3,
+        retry_backoff: float = 1.1,
+        expiry_margin: float = KiwoomAuth.DEFAULT_EXPIRY_MARGIN,
     ):
         self._client = BaseClient(
             app_key, app_secret, base_url, is_mock,
             rate_limit=rate_limit, rate_burst=rate_burst, max_retries=max_retries,
+            retry_backoff=retry_backoff,
         )
-        self._auth = KiwoomAuth(app_key, app_secret, self._client.base_url)
+        self._auth = KiwoomAuth(
+            app_key, app_secret, self._client.base_url, expiry_margin=expiry_margin
+        )
+        # Token lifecycle is delegated to the auth object from the start.
+        self._client.token_provider = self._auth
         self._is_mock = is_mock
 
         # Domestic stock modules
@@ -94,21 +120,24 @@ class KiwoomAPI:
         self._etf: ETF | None = None
 
     def login(self) -> dict[str, Any]:
-        """Authenticate and obtain access token.
+        """Authenticate and obtain an access token.
+
+        Optional — the first API call issues a token on its own. Call this
+        when you want to fail fast on bad credentials.
 
         Returns:
             Token response dict from the API.
         """
         result = self._auth.issue_token()
-        token = result.get("token") or result.get("access_token", "")
-        self._client.access_token = token
+        self._client.access_token = self._auth.token
         return result
 
     def logout(self) -> dict[str, Any]:
         """Revoke the current access token."""
-        if not self._client.access_token:
+        token = self._auth.token
+        if not token:
             raise RuntimeError("Not logged in")
-        result = self._auth.revoke_token(self._client.access_token)
+        result = self._auth.revoke_token(token)
         self._client.access_token = None
         return result
 
@@ -129,9 +158,7 @@ class KiwoomAPI:
         Returns:
             KiwoomWebSocket instance configured with current auth.
         """
-        if not self._client.access_token:
-            raise RuntimeError("Not logged in. Call login() first.")
-        return KiwoomWebSocket(self._client.access_token, self._is_mock)
+        return KiwoomWebSocket(self._auth.get_valid_token(), self._is_mock)
 
     # --- Lazy-loaded sub-module properties ---
 
