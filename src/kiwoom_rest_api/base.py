@@ -54,6 +54,13 @@ class _ClientCore:
     # Statuses that mean "your token is no longer good" — refresh and retry.
     TOKEN_ERROR_STATUSES = (401,)
 
+    # Kiwoom does not answer 401 for a bad token. Verified against
+    # api.kiwoom.com on 2026-08-15, an invalid token comes back as
+    #   HTTP 200 {"return_code": 3,
+    #             "return_msg": "인증에 실패했습니다[8005:Token이 유효하지 않습니다]"}
+    # so the refresh has to key off the payload, not the status line.
+    TOKEN_ERROR_RETURN_CODES = frozenset({3})
+
     def __init__(
         self,
         app_key: str,
@@ -252,6 +259,17 @@ class BaseClient(_ClientCore):
                 time.sleep(self._retry_backoff * (attempt + 1))
                 continue
 
+            # Expired token arrives here as a 200, not a 401.
+            if (
+                data.get("return_code") in self.TOKEN_ERROR_RETURN_CODES
+                and self.token_provider is not None
+                and not token_refreshed
+                and attempt < self._max_retries
+            ):
+                token_refreshed = True
+                self.token_provider.refresh_token()
+                continue
+
             self._check_return_code(data)
             return data
 
@@ -396,6 +414,17 @@ class AsyncBaseClient(_ClientCore):
 
             if data.get("return_code") == 5 and attempt < self._max_retries:
                 await asyncio.sleep(self._retry_backoff * (attempt + 1))
+                continue
+
+            # Expired token arrives here as a 200, not a 401.
+            if (
+                data.get("return_code") in self.TOKEN_ERROR_RETURN_CODES
+                and self.token_provider is not None
+                and not token_refreshed
+                and attempt < self._max_retries
+            ):
+                token_refreshed = True
+                await self.token_provider.refresh_token()
                 continue
 
             self._check_return_code(data)

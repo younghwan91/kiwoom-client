@@ -110,7 +110,23 @@ class KiwoomWebSocket:
 
         # The login reply is the first frame back; anything else means the
         # handshake changed, so surface it instead of guessing.
-        data = json.loads(await self._ws.recv())
+        try:
+            raw = await self._ws.recv()
+        except websockets.ConnectionClosed as exc:
+            # Observed against api.kiwoom.com: the server sometimes closes with
+            # code 1000 mid-handshake on rapid reconnects. Left alone this
+            # surfaces as a bare ConnectionClosedOK, which explains nothing.
+            raise KiwoomWebSocketError(
+                "서버가 LOGIN 응답 없이 연결을 종료했습니다 "
+                f"(code={exc.rcvd.code if exc.rcvd else '?'}). "
+                "짧은 간격의 재접속이었다면 잠시 후 다시 시도하세요."
+            ) from exc
+
+        try:
+            data = json.loads(raw)
+        except (TypeError, ValueError) as exc:
+            raise KiwoomWebSocketError(f"LOGIN 응답을 해석할 수 없습니다: {raw!r}") from exc
+
         if data.get("trnm") != "LOGIN":
             raise KiwoomWebSocketError(f"LOGIN 응답 대신 {data.get('trnm')!r} 수신: {data}")
         if data.get("return_code", 0) != 0:

@@ -292,9 +292,11 @@ await ws.send(api.condition_search.condition_search_realtime(seq="1"))
 await ws.listen()
 ```
 
-> **참고**: WebSocket 계층은 키움 공식 프로토콜 문서를 근거로 구현했고 로컬 테스트로
-> 검증했지만, 실계좌 검증은 아직입니다. 이상 동작을 만나면
+> **검증 상태**: 실서버(api.kiwoom.com) 대상으로 LOGIN 핸드셰이크 · PING 프레임 ·
+> REG 등록 응답까지 확인했습니다. 다만 **REAL 프레임의 항목 필드명(`item`/`values`)은
+> 장 마감 중이라 아직 미확정**입니다. 장중 이상 동작을 만나면
 > [이슈](https://github.com/younghwan91/kiwoom-rest-api/issues)로 알려주세요.
+> 직접 확인하려면 `python tests/integration_ws_smoke.py --prod` 를 돌리면 됩니다.
 
 ## 연속 조회 (페이지네이션)
 
@@ -371,7 +373,7 @@ api = KiwoomAPI(app_key="...", app_secret="...", is_mock=False)  # 실전투자
 
 ### 접근토큰(access token)이 만료되면 어떻게 하나요?
 
-할 일이 없습니다. 토큰은 첫 호출에서 발급되고, 만료 60초 전에 선제 재발급되며, 그래도 API가 `401`을 돌려주면 재발급 후 한 번 더 시도합니다. 갱신 시점을 바꾸려면 `KiwoomAPI(..., expiry_margin=300)`처럼 조절하세요.
+할 일이 없습니다. 토큰은 첫 호출에서 발급되고, 만료 60초 전에 선제 재발급되며, 그래도 인증 실패가 오면 재발급 후 한 번 더 시도합니다. (키움은 만료 토큰에 HTTP 401이 아니라 `200 + return_code 3`을 돌려주는데, 양쪽 다 인식합니다 — 실서버 확인 완료.) 갱신 시점을 바꾸려면 `KiwoomAPI(..., expiry_margin=300)`처럼 조절하세요.
 
 여러 프로세스가 토큰을 공유해야 한다면 `TokenProvider` 프로토콜(`get_valid_token()` / `refresh_token()`)을 구현해 넘기면 Redis 등 외부 캐시를 쓸 수 있습니다.
 

@@ -12,7 +12,7 @@ import httpx
 import pytest
 
 from kiwoom_rest_api.auth import KiwoomAuth, KiwoomAuthError
-from kiwoom_rest_api.base import BaseClient
+from kiwoom_rest_api.base import BaseClient, KiwoomAPIError
 
 BASE = "https://mockapi.kiwoom.com"
 TOKEN_URL = f"{BASE}/oauth2/token"
@@ -264,3 +264,66 @@ class TestVersion:
         import kiwoom_rest_api
 
         assert kiwoom_rest_api.__version__ != "0.1.0"
+
+
+class TestReturnCodeTokenError:
+    """키움은 만료 토큰에 401 이 아니라 200 + return_code 3 을 준다.
+
+    실서버 확인 (2026-08-15, api.kiwoom.com):
+        HTTP 200, {"return_code": 3,
+                   "return_msg": "인증에 실패했습니다[8005:Token이 유효하지 않습니다]"}
+    401 만 보고 있으면 자동 재발급이 영원히 트리거되지 않는다.
+    """
+
+    def test_return_code_3_triggers_refresh_and_retry(self, httpx_mock):
+        httpx_mock.add_response(
+            url=API_URL,
+            json={
+                "return_code": 3,
+                "return_msg": "인증에 실패했습니다[8005:Token이 유효하지 않습니다]",
+            },
+        )
+        httpx_mock.add_response(url=API_URL, json={"return_code": 0, "stk_nm": "삼성전자"})
+        provider = _FakeProvider(["stale", "fresh"])
+        with BaseClient(
+            "key", "secret", is_mock=True, token_provider=provider, retry_backoff=0.01
+        ) as client:
+            result = client.request("/api/dostk/stkinfo", "ka10001")
+        assert result["stk_nm"] == "삼성전자"
+        assert provider.refresh_calls == 1
+        reqs = httpx_mock.get_requests()
+        assert reqs[1].headers["authorization"] == "Bearer fresh", "재시도는 새 토큰으로"
+
+    def test_refreshes_only_once_then_raises(self, httpx_mock):
+        for _ in range(2):
+            httpx_mock.add_response(
+                url=API_URL, json={"return_code": 3, "return_msg": "인증에 실패했습니다"}
+            )
+        provider = _FakeProvider(["a", "b"])
+        with BaseClient(
+            "key", "secret", is_mock=True, token_provider=provider, retry_backoff=0.01
+        ) as client:
+            with pytest.raises(KiwoomAPIError) as exc:
+                client.request("/api/dostk/stkinfo", "ka10001")
+        assert exc.value.code == 3
+        assert provider.refresh_calls == 1
+
+    def test_without_provider_raises_immediately(self, httpx_mock):
+        """수동 토큰 사용자는 기존대로 KiwoomAPIError 를 받는다."""
+        httpx_mock.add_response(url=API_URL, json={"return_code": 3, "return_msg": "인증 실패"})
+        with BaseClient("key", "secret", is_mock=True, retry_backoff=0.01) as client:
+            client.access_token = "manual"
+            with pytest.raises(KiwoomAPIError):
+                client.request("/api/dostk/stkinfo", "ka10001")
+        assert len(httpx_mock.get_requests()) == 1
+
+    def test_other_error_codes_do_not_refresh(self, httpx_mock):
+        """인증과 무관한 오류는 재발급 없이 그대로 올린다."""
+        httpx_mock.add_response(url=API_URL, json={"return_code": -100, "return_msg": "입력 오류"})
+        provider = _FakeProvider(["a", "b"])
+        with BaseClient(
+            "key", "secret", is_mock=True, token_provider=provider, retry_backoff=0.01
+        ) as client:
+            with pytest.raises(KiwoomAPIError):
+                client.request("/api/dostk/stkinfo", "ka10001")
+        assert provider.refresh_calls == 0

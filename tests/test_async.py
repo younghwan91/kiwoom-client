@@ -204,3 +204,37 @@ class TestAsyncKiwoomAPI:
                 assert getattr(api, name) is getattr(api, name)
         finally:
             await api.close()
+
+
+class TestAsyncReturnCodeTokenError:
+    """실서버는 만료 토큰에 200 + return_code 3 을 준다 (sync 와 동일 처리)."""
+
+    async def test_return_code_3_triggers_refresh(self, httpx_mock):
+        httpx_mock.add_response(url=TOKEN_URL, json={"token": "t1", "expires_dt": "20990101000000"})
+        httpx_mock.add_response(
+            url=API_URL,
+            json={
+                "return_code": 3,
+                "return_msg": "인증에 실패했습니다[8005:Token이 유효하지 않습니다]",
+            },
+        )
+        httpx_mock.add_response(url=TOKEN_URL, json={"token": "t2", "expires_dt": "20990101000000"})
+        httpx_mock.add_response(url=API_URL, json={"return_code": 0, "ok": 1})
+        async with AsyncKiwoomAuth("key", "secret", BASE) as auth:
+            async with AsyncBaseClient(
+                "key", "secret", is_mock=True, token_provider=auth, retry_backoff=0.01
+            ) as client:
+                result = await client.request("/api/dostk/stkinfo", "ka10001")
+        assert result["ok"] == 1
+        last = [r for r in httpx_mock.get_requests() if "stkinfo" in str(r.url)][-1]
+        assert last.headers["authorization"] == "Bearer t2"
+
+    async def test_other_codes_do_not_refresh(self, httpx_mock):
+        httpx_mock.add_response(url=API_URL, json={"return_code": -100, "return_msg": "입력 오류"})
+        async with AsyncBaseClient(
+            "key", "secret", is_mock=True, retry_backoff=0.01
+        ) as client:
+            client.access_token = "manual"
+            with pytest.raises(KiwoomAPIError):
+                await client.request("/api/dostk/stkinfo", "ka10001")
+        assert len(httpx_mock.get_requests()) == 1
