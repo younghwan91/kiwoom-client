@@ -1,7 +1,6 @@
 """Tests for the token-bucket rate limiter."""
 import time
 
-
 from kiwoom_rest_api.base import BaseClient
 from kiwoom_rest_api.rate_limiter import PerKeyRateLimiter, RateLimiter
 

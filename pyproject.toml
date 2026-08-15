@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "kiwoom-client"
-version = "0.1.14"
-description = "키움증권 REST API Python 래퍼 (국내주식 207개 엔드포인트 + 실시간 WebSocket)"
+version = "0.2.0"
+description = "키움증권 REST API Python 래퍼 (국내주식 207개 엔드포인트 + async + 토큰 자동 갱신)"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
@@ -13,6 +13,7 @@ keywords = [
     "kiwoom", "키움증권", "키움", "kiwoom-securities", "openapi",
     "stock", "trading", "자동매매", "퀀트", "quant", "algorithmic-trading",
     "rest-api", "websocket", "kospi", "kosdaq", "korea-finance", "investment",
+    "asyncio", "async", "pandas", "주식", "증권", "자동주문",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -38,10 +39,16 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+pandas = [
+    "pandas>=2.0",
+]
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.24.0",
     "pytest-httpx>=0.34.0",
+    "pandas>=2.0",
+    "ruff>=0.6",
+    "mypy>=1.11",
 ]
 
 [project.urls]
@@ -49,6 +56,7 @@ Homepage = "https://pypi.org/project/kiwoom-client/"
 Repository = "https://github.com/younghwan91/kiwoom-rest-api"
 Documentation = "https://github.com/younghwan91/kiwoom-rest-api#readme"
 Issues = "https://github.com/younghwan91/kiwoom-rest-api/issues"
+Changelog = "https://github.com/younghwan91/kiwoom-rest-api/blob/main/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/kiwoom_rest_api"]
@@ -56,3 +64,23 @@ packages = ["src/kiwoom_rest_api"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+# Pinned explicitly so a contributor's global ruff config can't change CI.
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+# 테스트는 픽스처 이름·중첩 with 관례를 따른다.
+"tests/*" = ["SIM117"]
+# 실계좌 스모크 스크립트: 207개 엔드포인트 호출 표라 줄바꿈이 오히려 읽기 나쁘다.
+"tests/integration_api_smoke.py" = ["E501", "SIM117"]
+
+[tool.mypy]
+python_version = "3.10"
+files = ["src/kiwoom_rest_api"]
+ignore_missing_imports = true
+warn_unused_ignores = true

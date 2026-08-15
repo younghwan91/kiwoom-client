@@ -19,9 +19,11 @@ Unlike the legacy OpenAPI+ (OCX/COM) or `pykiwoom`, it has no 32-bit/Windows-onl
 ## Why this library?
 
 - **Cross-platform**: REST-based — works on Windows, macOS, Linux, and server environments. No COM/OCX dependency.
-- **Auto token management**: Call `login()` once and all subsequent requests are authenticated automatically.
+- **Auto token management**: The token is issued on first use, refreshed before it expires, and reissued on a 401. Long-running bots don't die on an expired token.
+- **Sync and async**: `KiwoomAPI` and `AsyncKiwoomAPI` expose the same endpoints.
 - **Auto pagination**: `request_all()` handles continuation queries in a single call.
-- **Built-in rate limiter**: Token-bucket rate limiting to stay within API limits.
+- **Built-in rate limiter**: Per-TR token-bucket rate limiting to stay within API limits.
+- **Usable responses**: `to_dataframe()` turns `"+70000"`-style strings into numbers and hands you a DataFrame.
 - **Full coverage**: 207 REST endpoints for Korean domestic stocks + 19 real-time WebSocket data types.
 
 ## Installation
@@ -55,8 +57,9 @@ api = KiwoomAPI(
     is_mock=True,
 )
 
-# Login (required before any API call)
-api.login()
+# No login step needed — the access token is issued on the first call and
+# refreshed before it expires. Call api.login() if you want to fail fast on
+# bad credentials.
 
 # Get stock info for Samsung Electronics (005930)
 info = api.stock_info.basic_stock_info(stk_cd="005930")
@@ -77,6 +80,43 @@ result = api.order.buy_order(
 api.logout()
 ```
 
+## Asyncio
+
+`AsyncKiwoomAPI` exposes the same endpoints — just `await` the calls. Different TRs
+run concurrently; the per-TR limiter only serializes repeated calls to the same TR.
+
+```python
+import asyncio
+from kiwoom_rest_api import AsyncKiwoomAPI
+
+async def main():
+    async with AsyncKiwoomAPI(app_key="...", app_secret="...", is_mock=True) as api:
+        info, chart = await asyncio.gather(
+            api.stock_info.basic_stock_info(stk_cd="005930"),
+            api.chart.stock_daily_chart(stk_cd="005930", base_dt="20260326"),
+        )
+        print(info["stk_nm"])
+
+asyncio.run(main())
+```
+
+## Working with responses
+
+Kiwoom returns every field as a string — a price as `"+70000"`, a volume as `"1,234,567"`.
+
+```python
+from kiwoom_rest_api import to_dataframe, to_number, normalize
+
+df = to_dataframe(api.ranking.top_volume_today(...))  # payload key found for you
+print(df["cur_prc"].mean())
+
+data = normalize(result)      # same conversion, still a dict
+price = to_number("+70000")   # 70000
+```
+
+Stock codes (`"005930"`) and date fields stay strings. `to_dataframe()` needs pandas:
+`pip install 'kiwoom-client[pandas]'`.
+
 ## Real-time WebSocket
 
 ```python
@@ -84,18 +124,33 @@ import asyncio
 from kiwoom_rest_api import KiwoomAPI
 
 api = KiwoomAPI(app_key="YOUR_KEY", app_secret="YOUR_SECRET")
-api.login()
-
 ws = api.create_websocket()
 
 async def main():
-    await ws.connect()
-    ws.on("0B", lambda data: print(f"Trade: {data}"))
+    await ws.connect()  # includes the LOGIN handshake
+
+    # Callbacks get one entry of the REAL frame:
+    # {"type": "0B", "item": "005930", "values": {"10": "+70000", ...}}
+    ws.on("0B", lambda d: print(f"Trade {d['item']}: {d['values'].get('10')}"))
+
     await ws.subscribe("0B", ["005930", "000660"])
-    await ws.listen()
+    await ws.listen()  # answers PING, reconnects and re-subscribes on drop
 
 asyncio.run(main())
 ```
+
+`values` keys are Kiwoom FID numbers (10 = current price, 13 = cumulative volume).
+
+Condition search rides the same socket:
+
+```python
+ws.on_trnm("CNSRLST", lambda d: print(d["data"]))
+await ws.send(api.condition_search.condition_list())
+await ws.send(api.condition_search.condition_search_realtime(seq="1"))
+```
+
+> **Note**: the WebSocket layer follows Kiwoom's published protocol and is covered by
+> local protocol tests, but has not been verified against a live account yet.
 
 ## API Categories
 

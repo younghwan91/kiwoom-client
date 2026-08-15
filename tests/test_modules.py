@@ -151,8 +151,9 @@ class TestThemeModule:
 
 class TestConditionSearchModule:
     def test_condition_list(self, api):
+        """조건검색은 REST 가 아니라 WebSocket trnm 으로 나간다."""
         result = api.condition_search.condition_list()
-        assert result["api_id"] == "ka10171"
+        assert result == {"trnm": "CNSRLST"}
 
 
 class TestELWModule:
