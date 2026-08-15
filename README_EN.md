@@ -6,12 +6,13 @@
 [![Downloads](https://img.shields.io/pypi/dm/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
 [![CI](https://github.com/younghwan91/kiwoom-rest-api/actions/workflows/ci.yml/badge.svg)](https://github.com/younghwan91/kiwoom-rest-api/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/github/license/younghwan91/kiwoom-rest-api)](https://github.com/younghwan91/kiwoom-rest-api/blob/main/LICENSE)
-[![Python](https://img.shields.io/pypi/pyversions/kiwoom-rest-api)](https://pypi.org/project/kiwoom-rest-api/)
+[![Python](https://img.shields.io/pypi/pyversions/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-younghwan--chae-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/younghwan-chae/)
 
 > A modern Python wrapper for the **Kiwoom Securities REST API** — a cross-platform replacement for the legacy
 > Kiwoom OpenAPI+ (OCX/COM). Automate Korean stock (KOSPI/KOSDAQ) trading, quotes, and real-time WebSocket
-> data on Windows, macOS, and Linux. 207 endpoints · 19 real-time data types · mock & live trading.
+> data on Windows, macOS, and Linux. Tokens refresh themselves, and both **sync and async** clients ship.
+> 186 endpoints · 19 real-time data types · mock & live trading.
 
 A Python wrapper for [Kiwoom Securities](https://www.kiwoom.com/) REST API, covering all domestic stock endpoints.
 Unlike the legacy OpenAPI+ (OCX/COM) or `pykiwoom`, it has no 32-bit/Windows-only constraints and runs in headless server environments.
@@ -24,7 +25,7 @@ Unlike the legacy OpenAPI+ (OCX/COM) or `pykiwoom`, it has no 32-bit/Windows-onl
 - **Auto pagination**: `request_all()` handles continuation queries in a single call.
 - **Built-in rate limiter**: Per-TR token-bucket rate limiting to stay within API limits.
 - **Usable responses**: `to_dataframe()` turns `"+70000"`-style strings into numbers and hands you a DataFrame.
-- **Full coverage**: 207 REST endpoints for Korean domestic stocks + 19 real-time WebSocket data types.
+- **Full coverage**: 182 REST endpoints for Korean domestic stocks + 4 condition-search calls + 19 real-time WebSocket data types.
 
 ## Installation
 

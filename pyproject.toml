@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "kiwoom-client"
 version = "0.2.0"
-description = "키움증권 REST API Python 래퍼 (국내주식 207개 엔드포인트 + async + 토큰 자동 갱신)"
+description = "키움증권 REST API Python 래퍼 (국내주식 186개 엔드포인트 + async + 토큰 자동 갱신)"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
@@ -76,7 +76,7 @@ select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
 [tool.ruff.lint.per-file-ignores]
 # 테스트는 픽스처 이름·중첩 with 관례를 따른다.
 "tests/*" = ["SIM117"]
-# 실계좌 스모크 스크립트: 207개 엔드포인트 호출 표라 줄바꿈이 오히려 읽기 나쁘다.
+# 실계좌 스모크 스크립트: 전 엔드포인트 호출 표라 줄바꿈이 오히려 읽기 나쁘다.
 "tests/integration_api_smoke.py" = ["E501", "SIM117"]
 
 [tool.mypy]

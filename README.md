@@ -6,19 +6,20 @@
 [![Downloads](https://img.shields.io/pypi/dm/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
 [![CI](https://github.com/younghwan91/kiwoom-rest-api/actions/workflows/ci.yml/badge.svg)](https://github.com/younghwan91/kiwoom-rest-api/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/github/license/younghwan91/kiwoom-rest-api)](https://github.com/younghwan91/kiwoom-rest-api/blob/main/LICENSE)
-[![Python](https://img.shields.io/pypi/pyversions/kiwoom-rest-api)](https://pypi.org/project/kiwoom-rest-api/)
+[![Python](https://img.shields.io/pypi/pyversions/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-younghwan--chae-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/younghwan-chae/)
 
 > **키움증권 OpenAPI를 대체하는 Python REST API 래퍼.**
 > COM/OCX 없이 Windows · macOS · Linux 어디서나 **국내주식 자동매매 · 시세조회 · 실시간 WebSocket**을 사용할 수 있습니다.
-> 207개 엔드포인트 · 19종 실시간 데이터 · 모의투자/실전투자 지원.
+> **토큰 자동 갱신**으로 봇이 만료에 죽지 않고, **sync / async** 양쪽을 지원합니다.
+> 186개 엔드포인트 · 19종 실시간 데이터 · 모의투자/실전투자 지원.
 
 키움증권 REST API를 Python으로 쉽게 사용할 수 있는 래퍼 라이브러리입니다.
 기존 키움 **OpenAPI+(OCX/COM)**나 `pykiwoom`과 달리, 32bit·Windows 제약 없이 64bit Python과 서버(헤드리스) 환경에서 그대로 동작합니다.
 
-국내주식 **207개 엔드포인트**와 **19종 실시간 WebSocket 데이터**를 지원합니다.
+국내주식 **186개 엔드포인트**(REST 182 + 조건검색 4)와 **19종 실시간 WebSocket 데이터**를 지원합니다.
 
-> 검색 키워드: 키움 OpenAPI 파이썬, 키움증권 자동매매 파이썬, 키움 REST API, pykiwoom 대안, 키움 모의투자 파이썬, KOSPI/KOSDAQ 시세 조회
+> 검색 키워드: 키움 OpenAPI 파이썬, 키움증권 자동매매 파이썬, 키움 REST API, pykiwoom 대안, 키움 모의투자 파이썬, KOSPI/KOSDAQ 시세 조회, 키움 asyncio, 키움 토큰 갱신
 
 ## 목차
 
@@ -44,7 +45,7 @@
 - **자동 페이지네이션**: `request_all()`로 연속조회를 한 줄에 처리합니다.
 - **내장 Rate Limiter**: TR(api_id)별 토큰 버킷으로 호출 제한을 자동 관리합니다.
 - **바로 쓰는 응답**: `to_dataframe()`이 `"+70000"` 같은 문자열을 숫자로 바꿔 DataFrame으로 넘겨줍니다.
-- **완전한 커버리지**: 국내주식 207개 REST 엔드포인트 + 19종 실시간 WebSocket 데이터를 지원합니다.
+- **완전한 커버리지**: 국내주식 182개 REST 엔드포인트 + 조건검색 4종 + 19종 실시간 WebSocket 데이터를 지원합니다.
 
 ## 기존 키움 OpenAPI / pykiwoom 과 무엇이 다른가?
 
