@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "kiwoom-client"
-version = "0.2.0"
+version = "0.2.1"
 description = "키움증권 REST API Python 래퍼 (국내주식 186개 엔드포인트 + async + 토큰 자동 갱신)"
 readme = "README.md"
 license = "MIT"

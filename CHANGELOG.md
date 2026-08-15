@@ -3,6 +3,51 @@
 이 프로젝트는 [Keep a Changelog](https://keepachangelog.com/ko/1.1.0/) 형식을 따르며,
 [유의적 버전](https://semver.org/lang/ko/)을 사용합니다.
 
+## [0.2.1] - 2026-08-15
+
+실서버 프로토콜 검증에서 드러난 문제를 고칩니다. **0.2.0 사용자는 업그레이드를
+권합니다** — 토큰 자동 갱신의 안전망이 실제로는 작동하지 않았습니다.
+
+### 수정
+
+- **만료 토큰 자동 재발급이 트리거되지 않던 문제.** 키움은 무효·만료 토큰에
+  HTTP 401 이 아니라 **HTTP 200 + `return_code: 3`**
+  (`"인증에 실패했습니다[8005:Token이 유효하지 않습니다]"`)을 돌려줍니다.
+  0.2.0 은 401 만 보고 있어서 재발급이 걸리지 않고 `KiwoomAPIError` 가
+  그대로 터졌습니다. 이제 `return_code` 도 함께 봅니다
+  (`BaseClient.TOKEN_ERROR_RETURN_CODES`).
+  선제 갱신 경로는 0.2.0 에서도 정상이었으므로, 그쪽으로 막히던 경우가
+  대부분이고 이번 수정은 안전망을 되살리는 것입니다.
+- WebSocket 핸드셰이크 중 서버가 연결을 끊으면 raw `ConnectionClosedOK` 가
+  올라와 원인을 알 수 없었습니다. 이제 `KiwoomWebSocketError` 로 상황을
+  설명합니다. LOGIN 응답이 JSON 이 아닌 경우도 마찬가지입니다.
+
+### 추가
+
+- `tests/integration_ws_smoke.py` — 실서버 프로토콜 검증 하네스. 라이브러리의
+  가정(만료 필드명·인증 실패 신호·WebSocket 프레임 구조)이 실제 서버와 맞는지
+  확인하고, 자동 재발급이 실제로 도는지까지 실증합니다. 비밀값은 출력하지
+  않습니다.
+
+  ```bash
+  python tests/integration_ws_smoke.py --prod --env-file /path/to/.env
+  ```
+
+### 실서버 확인 결과 (2026-08-15, api.kiwoom.com)
+
+| 항목 | 실제 |
+|---|---|
+| 토큰 만료 필드 | `expires_dt` (`yyyyMMddHHmmss`, 약 18시간) |
+| 토큰 키 | `token` |
+| 무효 토큰 | HTTP 200 + `return_code: 3` |
+| 토큰 재발급 | 유효기간 내에는 **같은 토큰**을 반환하고 기존 토큰도 유효 |
+| WS LOGIN 응답 | `{"trnm":"LOGIN","return_code":0,"return_msg":"","sor_yn":"Y"}` |
+| WS PING | `{"trnm":"PING"}` — 필드 없는 프레임 |
+| WS REG 응답 | `{"trnm":"REG","return_code":0,"return_msg":""}` |
+| WS 동시 세션 | 같은 토큰으로 2세션 동시 접속 가능 |
+
+REAL 프레임의 항목 필드명(`item`/`values`)은 장 마감 중이라 아직 미확정입니다.
+
 ## [0.2.0] - 2026-08-15
 
 0.1.x 를 쓰고 계셨다면 코드 수정 없이 그대로 업그레이드됩니다. 동작이 바뀌는 부분은
@@ -99,6 +144,7 @@
 
 - 토큰 발급/폐기 요청의 필드명을 `appsecretkey` → `secretkey` 로 수정.
 
+[0.2.1]: https://github.com/younghwan91/kiwoom-rest-api/releases/tag/v0.2.1
 [0.2.0]: https://github.com/younghwan91/kiwoom-rest-api/releases/tag/v0.2.0
 [0.1.14]: https://github.com/younghwan91/kiwoom-rest-api/releases/tag/v0.1.14
 [0.1.13]: https://github.com/younghwan91/kiwoom-rest-api/releases/tag/v0.1.13

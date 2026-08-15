@@ -150,8 +150,10 @@ await ws.send(api.condition_search.condition_list())
 await ws.send(api.condition_search.condition_search_realtime(seq="1"))
 ```
 
-> **Note**: the WebSocket layer follows Kiwoom's published protocol and is covered by
-> local protocol tests, but has not been verified against a live account yet.
+> **Verification status**: the LOGIN handshake, PING frame and REG acknowledgement are
+> confirmed against the live server (api.kiwoom.com). The REAL frame's per-item field
+> names (`item`/`values`) are still unconfirmed — the market was closed during testing.
+> Run `python tests/integration_ws_smoke.py --prod` to check for yourself.
 
 ## API Categories
 

@@ -368,3 +368,78 @@ class TestUrls:
         assert KiwoomWebSocket("t").ws_url == KiwoomWebSocket.PROD_WS_URL
         assert KiwoomWebSocket("t", is_mock=True).ws_url == KiwoomWebSocket.MOCK_WS_URL
         assert KiwoomWebSocket("t", ws_url="ws://x").ws_url == "ws://x"
+
+
+class TestHandshakeFailures:
+    """핸드셰이크 도중 끊기는 경우도 KiwoomWebSocketError 로 설명돼야 한다.
+
+    실서버에서 연속 재접속 중 서버가 LOGIN 응답 없이 code=1000 으로 끊는
+    경우를 관측했다 (2026-08-15, api.kiwoom.com). 그때 raw ConnectionClosedOK
+    가 그대로 올라와 원인을 알 수 없었다.
+    """
+
+    async def test_server_closing_during_handshake_raises_clear_error(self):
+        async def rude(conn):
+            await conn.recv()      # LOGIN 은 받고
+            await conn.close()     # 응답 없이 끊는다
+
+        server = await websockets.serve(rude, "127.0.0.1", 0)
+        host, port = server.sockets[0].getsockname()[:2]
+        try:
+            ws = KiwoomWebSocket("tok", ws_url=f"ws://{host}:{port}")
+            with pytest.raises(KiwoomWebSocketError) as exc:
+                await ws.connect()
+            assert "연결" in str(exc.value)
+        finally:
+            server.close()
+            await server.wait_closed()
+
+    async def test_non_json_handshake_reply_raises_clear_error(self):
+        async def garbage(conn):
+            await conn.recv()
+            await conn.send("not json at all")
+
+        server = await websockets.serve(garbage, "127.0.0.1", 0)
+        host, port = server.sockets[0].getsockname()[:2]
+        try:
+            ws = KiwoomWebSocket("tok", ws_url=f"ws://{host}:{port}")
+            with pytest.raises(KiwoomWebSocketError):
+                await ws.connect()
+            await ws.disconnect()
+        finally:
+            server.close()
+            await server.wait_closed()
+
+    async def test_login_response_shape_matches_live_server(self):
+        """실서버 LOGIN 응답에는 sor_yn 같은 추가 필드가 붙는다 — 무시해야 한다.
+
+        실측: {"trnm":"LOGIN","return_code":0,"return_msg":"","sor_yn":"Y"}
+        """
+        async def live_like(conn):
+            await conn.recv()
+            await conn.send(json.dumps({
+                "trnm": "LOGIN", "return_code": 0, "return_msg": "", "sor_yn": "Y"
+            }))
+            await asyncio.sleep(0.2)
+
+        server = await websockets.serve(live_like, "127.0.0.1", 0)
+        host, port = server.sockets[0].getsockname()[:2]
+        try:
+            ws = KiwoomWebSocket("tok", ws_url=f"ws://{host}:{port}")
+            await ws.connect()   # 추가 필드가 있어도 통과해야 한다
+            await ws.disconnect()
+        finally:
+            server.close()
+            await server.wait_closed()
+
+    async def test_bare_ping_frame_is_echoed(self):
+        """실서버 PING 은 필드 없는 {"trnm":"PING"} 이다 (실측)."""
+        async with FakeKiwoomServer() as server:
+            ws = KiwoomWebSocket("tok", ws_url=server.url)
+            await ws.connect()
+            listener = asyncio.create_task(ws.listen())
+            await server.push({"trnm": "PING"})
+            await _until(lambda: server.sent("PING"))
+            assert server.sent("PING") == [{"trnm": "PING"}]
+            await ws.disconnect()
+            listener.cancel()
