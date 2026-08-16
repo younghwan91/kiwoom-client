@@ -388,7 +388,7 @@ api = KiwoomAPI(app_key="...", app_secret="...", is_mock=False)  # 실전투자
 
 여러 프로세스가 토큰을 공유해야 한다면 `TokenProvider` 프로토콜(`get_valid_token()` / `refresh_token()`)을 구현해 넘기면 Redis 등 외부 캐시를 쓸 수 있습니다.
 
-### Rate limit(호출 제한) 에러가 발생합니다.
+### Rate limit(호출 제한) 에러가 나면 어떻게 하나요?
 
 내장 TR별 토큰 버킷 Rate Limiter가 호출 빈도를 자동 조절하고 `429` 발생 시 재시도까지 처리합니다(실측 기준 TR당 1 req/s, 버스트 2). 그래도 제한에 걸린다면 다중 프로세스/스레드에서 **같은 TR을 동시 호출** 중인지 확인하고, 연속조회는 `request_all()`로 한 번에 처리하세요. 자세한 내용은 [요청 제한 (Rate Limit)](#요청-제한-rate-limit)을 참고하세요.
 
