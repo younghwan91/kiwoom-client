@@ -14,6 +14,17 @@
 > **토큰 자동 갱신**으로 봇이 만료에 죽지 않고, **sync / async** 양쪽을 지원합니다.
 > 186개 엔드포인트 · 19종 실시간 데이터 · 모의투자/실전투자 지원.
 
+```bash
+pip install kiwoom-client
+```
+
+> ⚠️ **패키지 이름은 `kiwoom-client` 입니다.** 저장소 이름(`kiwoom-rest-api`)으로 설치하면
+> PyPI 에 먼저 등록된 **다른 사람의 패키지**가 깔립니다. 이 라이브러리가 아닙니다.
+
+**실제로 돌아가는 곳** — [quant-airflow](https://github.com/younghwan91/quant-airflow)의 일일 수집 DAG 가
+이 라이브러리로 시세·수급·신용·공매도를 매일 TimescaleDB 에 적재합니다. 같은 스택의 나머지는
+[README 하단](#관련-프로젝트--오픈소스-퀀트-스택)에 있습니다.
+
 키움증권 REST API를 Python으로 쉽게 사용할 수 있는 래퍼 라이브러리입니다.
 기존 키움 **OpenAPI+(OCX/COM)**나 `pykiwoom`과 달리, 32bit·Windows 제약 없이 64bit Python과 서버(헤드리스) 환경에서 그대로 동작합니다.
 
@@ -731,19 +742,19 @@ MIT
 - 🔧 개선 → PR 환영 ([CONTRIBUTING](CONTRIBUTING.md))
 - 📈 새 엔드포인트·기능 업데이트 소식을 받으려면 [팔로우](https://github.com/younghwan91)
 
-## 관련 프로젝트 — 한국 주식 퀀트 스택
+## 관련 프로젝트 — 오픈소스 퀀트 스택
 
-이 라이브러리는 제가 오픈소스로 공개하는 **한국 주식 퀀트 스택**의 일부입니다. 시세·펀더멘탈·뉴스 수집부터 데이터 파이프라인, 알파 리서치까지 이어집니다.
+한국·미국 주식과 암호화폐를 아우르는 오픈소스 스택입니다. 각 저장소는 독립적으로 쓸 수 있습니다.
 
-| 프로젝트 | 설명 |
-|---|---|
-| **[krx-fundamentals-api](https://github.com/younghwan91/krx-fundamentals-api)** | 국내 기업 펀더멘탈 REST API — 재무제표·투자지표·배당·종목 스크리닝 (DART + KRX + 네이버) |
-| **[krx-news-rest-api](https://github.com/younghwan91/krx-news-rest-api)** | 한국 주식 뉴스·공시 수집 REST API (FastAPI + Redis) |
-| **[quant-airflow](https://github.com/younghwan91/quant-airflow)** | 시세·수급·실적 데이터를 TimescaleDB로 수집하는 Airflow 파이프라인 |
-| **[kr-quant](https://github.com/younghwan91/kr-quant)** | 코스피·코스닥 알파 리서치 — walk-forward·랜덤 음성대조를 강제하는 검증 가드레일 |
-| **[opt_portfolio](https://github.com/younghwan91/opt_portfolio)** | VAA 기반 전술적 자산배분 백테스트·운용 시스템 |
-| **[automated-stock-trading-systems](https://github.com/younghwan91/automated-stock-trading-systems)** | Bensdorp의 7개 비상관 트레이딩 시스템 백테스터 (교육용 재구현) |
-| **[quantbox-engine](https://github.com/younghwan91/quantbox-engine)** | 암호화폐 선물 백테스트·실행 엔진 — 룩어헤드 0, 백테스트↔실거래 일체화 |
+| 축 | 프로젝트 | 설명 |
+|---|---|---|
+| 🇰🇷 한국 주식 | **[krx-fundamentals-api](https://github.com/younghwan91/krx-fundamentals-api)** | 국내 기업 펀더멘탈 REST API — 재무제표·투자지표·배당·종목 스크리닝 (DART + KRX + 네이버) |
+| 🇰🇷 한국 주식 | **[krx-news-rest-api](https://github.com/younghwan91/krx-news-rest-api)** | 한국 주식 뉴스·공시 수집 REST API (FastAPI + Redis) |
+| 🇰🇷 한국 주식 | **[quant-airflow](https://github.com/younghwan91/quant-airflow)** | 시세·수급·실적을 TimescaleDB 로 수집하는 Airflow 파이프라인 — 상장폐지 종목까지 담아 생존편향을 막는다 |
+| 🇰🇷 한국 주식 | **[kr-quant](https://github.com/younghwan91/kr-quant)** | 코스피·코스닥 알파 리서치 — walk-forward·랜덤 음성대조·purged CV·Deflated Sharpe 를 CI 가드레일로 강제 |
+| 🇺🇸 미국 주식 | **[opt_portfolio](https://github.com/younghwan91/opt_portfolio)** | 미국주식 팩터 엔진 — point-in-time·생존편향 보정 데이터 위에서 walk-forward 를 Deflated Sharpe 로 게이팅 (+ VAA 자산배분 백테스터) |
+| 🇺🇸 미국 주식 | **[automated-stock-trading-systems](https://github.com/younghwan91/automated-stock-trading-systems)** | Bensdorp 의 7개 비상관 트레이딩 시스템 백테스터 (교육용 재구현) |
+| ₿ 암호화폐 | **[quantbox-engine](https://github.com/younghwan91/quantbox-engine)** | 암호화폐 선물 백테스트·실행 엔진 — 룩어헤드 0, 백테스트↔실거래 일체화 |
 
 ## 만든 사람
 

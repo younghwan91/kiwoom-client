@@ -14,6 +14,18 @@
 > data on Windows, macOS, and Linux. Tokens refresh themselves, and both **sync and async** clients ship.
 > 186 endpoints · 19 real-time data types · mock & live trading.
 
+```bash
+pip install kiwoom-client
+```
+
+> ⚠️ **The package is `kiwoom-client`, not the repository name.** Installing `kiwoom-rest-api`
+> from PyPI gets you **someone else's package** that was registered under that name first.
+
+**Running in production** — the daily collection DAGs in
+[quant-airflow](https://github.com/younghwan91/quant-airflow) use this library to load prices,
+supply/demand, margin and short-sale data into TimescaleDB every day. The rest of the stack is
+[at the bottom of this README](#related-projects--open-source-quant-stack).
+
 A Python wrapper for [Kiwoom Securities](https://www.kiwoom.com/) REST API, covering all domestic stock endpoints.
 Unlike the legacy OpenAPI+ (OCX/COM) or `pykiwoom`, it has no 32-bit/Windows-only constraints and runs in headless server environments.
 
@@ -207,19 +219,19 @@ If this library helped you, please **[⭐ Star it](https://github.com/younghwan9
 - 🔧 Improvements → PRs welcome ([CONTRIBUTING](CONTRIBUTING.md))
 - 📈 [Follow](https://github.com/younghwan91) for new endpoints & release updates
 
-## Related projects — Korean equity quant stack
+## Related projects — open-source quant stack
 
-This library is one piece of an open-source **Korean equity quant stack**, spanning market-data, fundamentals & news APIs, a collection pipeline, and alpha research.
+Part of an open-source stack spanning Korean equities, US equities and crypto. Each repository stands on its own.
 
-| Project | What it is |
-|---|---|
-| **[krx-fundamentals-api](https://github.com/younghwan91/krx-fundamentals-api)** | Korean corporate fundamentals REST API — financials, ratios, dividends, screening (DART + KRX + Naver) |
-| **[krx-news-rest-api](https://github.com/younghwan91/krx-news-rest-api)** | Korean stock news & disclosure REST API (FastAPI + Redis) |
-| **[quant-airflow](https://github.com/younghwan91/quant-airflow)** | Airflow pipeline collecting Korean market data into TimescaleDB |
-| **[kr-quant](https://github.com/younghwan91/kr-quant)** | KOSPI/KOSDAQ alpha research with enforced walk-forward & random negative-control guardrails |
-| **[opt_portfolio](https://github.com/younghwan91/opt_portfolio)** | VAA-based tactical asset-allocation backtest & management system |
-| **[automated-stock-trading-systems](https://github.com/younghwan91/automated-stock-trading-systems)** | Backtester for Bensdorp's 7 non-correlated trading systems (educational reimplementation) |
-| **[quantbox-engine](https://github.com/younghwan91/quantbox-engine)** | Crypto-futures backtest & execution engine — zero lookahead, backtest↔live parity |
+| Market | Project | What it is |
+|---|---|---|
+| 🇰🇷 Korean equities | **[krx-fundamentals-api](https://github.com/younghwan91/krx-fundamentals-api)** | Korean corporate fundamentals REST API — financial statements, valuation, dividends, screening (DART + KRX + Naver) |
+| 🇰🇷 Korean equities | **[krx-news-rest-api](https://github.com/younghwan91/krx-news-rest-api)** | Korean market news & disclosure collection API (FastAPI + Redis) |
+| 🇰🇷 Korean equities | **[quant-airflow](https://github.com/younghwan91/quant-airflow)** | Airflow pipeline collecting Korean market data into TimescaleDB — delisted names included, so downstream backtests aren't survivorship-biased |
+| 🇰🇷 Korean equities | **[kr-quant](https://github.com/younghwan91/kr-quant)** | KOSPI/KOSDAQ alpha research — walk-forward, random null controls, purged CV and Deflated Sharpe enforced as CI guardrails |
+| 🇺🇸 US equities | **[opt_portfolio](https://github.com/younghwan91/opt_portfolio)** | US equity factor engine — walk-forward gated by Deflated Sharpe on point-in-time, survivorship-bias-free data (plus a VAA allocation backtester) |
+| 🇺🇸 US equities | **[automated-stock-trading-systems](https://github.com/younghwan91/automated-stock-trading-systems)** | Backtester for Bensdorp's seven non-correlated trading systems (educational reimplementation) |
+| ₿ Crypto | **[quantbox-engine](https://github.com/younghwan91/quantbox-engine)** | Crypto futures backtest & execution engine — zero lookahead, backtest↔live parity |
 
 ## Author
 
