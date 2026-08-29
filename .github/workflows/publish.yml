@@ -10,6 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     environment: release
     permissions:
+      # id-token 만 적으면 나머지 스코프가 전부 none 이 된다.
+      # 그러면 GITHUB_TOKEN 이 레포를 못 읽어 checkout 이
+      # "remote: Repository not found" 로 죽는다 (레포가 비공개일 때).
+      contents: read
       id-token: write
 
     steps:
