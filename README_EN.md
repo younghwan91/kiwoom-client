@@ -9,126 +9,50 @@
 [![Python](https://img.shields.io/pypi/pyversions/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-younghwan--chae-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/younghwan-chae/)
 
-> A modern Python wrapper for the **Kiwoom Securities REST API** — a cross-platform replacement for the legacy
-> Kiwoom OpenAPI+ (OCX/COM). Automate Korean stock (KOSPI/KOSDAQ) trading, quotes, and real-time WebSocket
-> data on Windows, macOS, and Linux. Tokens refresh themselves, and both **sync and async** clients ship.
-> 186 endpoints · 19 real-time data types · mock & live trading.
+> **A cross-platform replacement for the legacy Kiwoom OpenAPI+ (OCX/COM).** Automate Korean
+> stock (KOSPI/KOSDAQ) trading, quotes and real-time WebSocket data on Windows, macOS and Linux.
+> Tokens refresh themselves; sync and async clients both ship.
+> **182 REST endpoints · 4 condition-search calls · 19 real-time data types.**
 
 ```bash
 pip install kiwoom-client
 ```
 
-> ⚠️ **The package is `kiwoom-client`, not the repository name.** Installing `kiwoom-rest-api`
-> from PyPI gets you **someone else's package** that was registered under that name first.
-
-**Running in production** — the daily collection DAGs in
-[quant-airflow](https://github.com/younghwan91/quant-airflow) use this library to load prices,
-supply/demand, margin and short-sale data into TimescaleDB every day. The rest of the stack is
-[at the bottom of this README](#related-projects--open-source-quant-stack).
-
-A Python wrapper for [Kiwoom Securities](https://www.kiwoom.com/) REST API, covering all domestic stock endpoints.
-Unlike the legacy OpenAPI+ (OCX/COM) or `pykiwoom`, it has no 32-bit/Windows-only constraints and runs in headless server environments.
-
-## Why this library?
-
-- **Cross-platform**: REST-based — works on Windows, macOS, Linux, and server environments. No COM/OCX dependency.
-- **Auto token management**: The token is issued on first use, refreshed before it expires, and reissued on a 401. Long-running bots don't die on an expired token.
-- **Sync and async**: `KiwoomAPI` and `AsyncKiwoomAPI` expose the same endpoints.
-- **Auto pagination**: `request_all()` handles continuation queries in a single call.
-- **Built-in rate limiter**: Per-TR token-bucket rate limiting to stay within API limits.
-- **Usable responses**: `to_dataframe()` turns `"+70000"`-style strings into numbers and hands you a DataFrame.
-- **Full coverage**: 182 REST endpoints for Korean domestic stocks + 4 condition-search calls + 19 real-time WebSocket data types.
-
-## Installation
-
-```bash
-pip install kiwoom-client
-```
-
-Or with [uv](https://docs.astral.sh/uv/):
-
-```bash
-uv add kiwoom-client
-```
-
-## Prerequisites
-
-1. Sign up at the [Kiwoom REST API Portal](https://openapi.kiwoom.com).
-2. Apply for API access to get your `app_key` and `app_secret`.
-3. See [`.env.example`](.env.example) for environment variable setup.
-4. Start with the **mock trading server** (`is_mock=True`) before switching to live trading.
-
-## Quick Start
+> ⚠️ The package is **`kiwoom-client`**, not the repository name. Installing `kiwoom-rest-api`
+> from PyPI gets you **someone else's package** registered under that name first.
 
 ```python
-from kiwoom_rest_api import KiwoomAPI
+from kiwoom_rest_api import KiwoomAPI, to_dataframe
 
-# Connect to mock trading server
-api = KiwoomAPI(
-    app_key="YOUR_APP_KEY",
-    app_secret="YOUR_APP_SECRET",
-    is_mock=True,
-)
+api = KiwoomAPI(app_key="YOUR_KEY", app_secret="YOUR_SECRET", is_mock=True)  # no login step
 
-# No login step needed — the access token is issued on the first call and
-# refreshed before it expires. Call api.login() if you want to fail fast on
-# bad credentials.
+info = api.stock_info.basic_stock_info(stk_cd="005930")            # Samsung Electronics
+df   = to_dataframe(api.chart.stock_daily_chart(stk_cd="005930"))  # daily chart → DataFrame
 
-# Get stock info for Samsung Electronics (005930)
-info = api.stock_info.basic_stock_info(stk_cd="005930")
-
-# Get daily chart
-chart = api.chart.stock_daily_chart(stk_cd="005930", base_dt="20260326")
-
-# Place a buy order
-result = api.order.buy_order(
-    dmst_stex_tp="01",
-    stk_cd="005930",
-    ord_qty=10,
-    trde_tp="00",
-    ord_uv=70000,
-)
-
-# Logout
-api.logout()
+api.order.buy_order(dmst_stex_tp="01", stk_cd="005930",            # buy 10 @ 70,000
+                    ord_qty=10, trde_tp="00", ord_uv=70000)
 ```
-
-## Asyncio
-
-`AsyncKiwoomAPI` exposes the same endpoints — just `await` the calls. Different TRs
-run concurrently; the per-TR limiter only serializes repeated calls to the same TR.
-
-```python
-import asyncio
-from kiwoom_rest_api import AsyncKiwoomAPI
-
-async def main():
-    async with AsyncKiwoomAPI(app_key="...", app_secret="...", is_mock=True) as api:
-        info, chart = await asyncio.gather(
-            api.stock_info.basic_stock_info(stk_cd="005930"),
-            api.chart.stock_daily_chart(stk_cd="005930", base_dt="20260326"),
-        )
-        print(info["stk_nm"])
-
-asyncio.run(main())
-```
-
-## Working with responses
 
 Kiwoom returns every field as a string — a price as `"+70000"`, a volume as `"1,234,567"`.
+`to_dataframe()` finds the payload key and converts them, while leaving fields whose leading
+zero carries meaning (stock codes, dates) as strings.
 
-```python
-from kiwoom_rest_api import to_dataframe, to_number, normalize
+![to_dataframe() output — string responses become a computable DataFrame](docs/images/to_dataframe.png)
 
-df = to_dataframe(api.ranking.top_volume_today(...))  # payload key found for you
-print(df["cur_prc"].mean())
+## How it differs from Kiwoom OpenAPI+ / pykiwoom
 
-data = normalize(result)      # same conversion, still a dict
-price = to_number("+70000")   # 70000
-```
+| | Kiwoom OpenAPI+ (OCX) | pykiwoom | **kiwoom-client** |
+|------|---------------------|----------|---------------------|
+| Transport | COM/OCX | OCX wrapper | **REST + WebSocket** |
+| OS | Windows only | Windows only | **Windows · macOS · Linux** |
+| Python | 32-bit only | 32-bit only | **64-bit** |
+| Headless / server | hard (needs GUI) | hard | **yes** |
+| Real-time | event callbacks | event callbacks | **async WebSocket** |
+| Install | separate module | OCX + module | **one `pip install`** |
 
-Stock codes (`"005930"`) and date fields stay strings. `to_dataframe()` needs pandas:
-`pip install 'kiwoom-client[pandas]'`.
+On top of that: **automatic token refresh** (reissued before expiry, retried on auth failure),
+a **per-TR token-bucket rate limiter** with automatic 429 backoff, **`request_all()` pagination**,
+and **`AsyncKiwoomAPI`** exposing the identical interface.
 
 ## Real-time WebSocket
 
@@ -136,74 +60,46 @@ Stock codes (`"005930"`) and date fields stay strings. `to_dataframe()` needs pa
 import asyncio
 from kiwoom_rest_api import KiwoomAPI
 
-api = KiwoomAPI(app_key="YOUR_KEY", app_secret="YOUR_SECRET")
-ws = api.create_websocket()
+ws = KiwoomAPI(app_key="YOUR_KEY", app_secret="YOUR_SECRET").create_websocket()
 
 async def main():
-    await ws.connect()  # includes the LOGIN handshake
-
-    # Callbacks get one entry of the REAL frame:
-    # {"type": "0B", "item": "005930", "values": {"10": "+70000", ...}}
+    await ws.connect()                    # includes the LOGIN handshake
     ws.on("0B", lambda d: print(f"Trade {d['item']}: {d['values'].get('10')}"))
-
-    await ws.subscribe("0B", ["005930", "000660"])
-    await ws.listen()  # answers PING, reconnects and re-subscribes on drop
+    await ws.subscribe(["0B", "0D"], ["005930", "000660"])
+    await ws.listen()                     # answers PING, reconnects and re-subscribes
 
 asyncio.run(main())
 ```
 
 `values` keys are Kiwoom FID numbers (10 = current price, 13 = cumulative volume).
+Condition search rides the same socket: `api.condition_search` builds the payload, `ws.send()` sends it.
 
-Condition search rides the same socket:
+> **Verification status**: the LOGIN handshake, PING frame and REG acknowledgement are confirmed
+> against the live server (api.kiwoom.com). The REAL frame's per-item field names (`item`/`values`)
+> have not yet been verified during market hours — please
+> [open an issue](https://github.com/younghwan91/kiwoom-rest-api/issues) if you see otherwise.
 
-```python
-ws.on_trnm("CNSRLST", lambda d: print(d["data"]))
-await ws.send(api.condition_search.condition_list())
-await ws.send(api.condition_search.condition_search_realtime(seq="1"))
-```
+## Coverage
 
-> **Verification status**: the LOGIN handshake, PING frame and REG acknowledgement are
-> confirmed against the live server (api.kiwoom.com). The REAL frame's per-item field
-> names (`item`/`values`) are still unconfirmed — the market was closed during testing.
-> Run `python tests/integration_ws_smoke.py --prod` to check for yourself.
+182 REST endpoints + 4 condition-search calls (WebSocket) + 19 real-time data types.
 
-## API Categories
+Account 33 · Stock info 31 · Market data 25 · Rankings 23 · Charts 21 · ELW 11 · ETF 9 ·
+Orders 8 · Sectors 6 · Credit orders 4 · Foreign/institutional 4 · SLB 4 · Condition search 4 ·
+Themes 2 · Short selling 1
 
-| Category | Module | Endpoints |
-|----------|--------|-----------|
-| Account | `api.account` | 33 |
-| Stock Info | `api.stock_info` | 31 |
-| Market Data | `api.market` | 25 |
-| Charts | `api.chart` | 21 |
-| Rankings | `api.ranking` | 23 |
-| Orders | `api.order` | 8 |
-| Credit Orders | `api.credit_order` | 4 |
-| Sectors | `api.sector` | 6 |
-| Foreign/Institutional | `api.foreign_institution` | 4 |
-| Short Selling | `api.short_selling` | 1 |
-| Stock Lending (SLB) | `api.slb` | 4 |
-| Themes | `api.theme` | 2 |
-| Condition Search | `api.condition_search` | 4 |
-| ELW | `api.elw` | 11 |
-| ETF | `api.etf` | 9 |
-| Real-time WebSocket | `api.create_websocket()` | 19 types |
+The full reference with method names and API IDs is in
+**[docs/api-reference.md](docs/api-reference.md)** (Korean).
 
-For the full endpoint reference with method names and API IDs, see the [Korean README](README.md).
+## More
 
-## Error Handling
+- **[Usage guide](docs/guide.md)** — setup, mock↔live, accounts & orders, asyncio, pagination, rate limits (Korean)
+- **[FAQ](docs/faq.md)** — app keys, token expiry, handling 429 (Korean)
+- **[Examples](examples/)** — basic, market data, trading, async, pandas, WebSocket
+- [CHANGELOG](CHANGELOG.md) · [CONTRIBUTING](CONTRIBUTING.md) · [Official Kiwoom guide](https://openapi.kiwoom.com/guide/apiguide)
 
-```python
-from kiwoom_rest_api.base import KiwoomAPIError
-
-try:
-    result = api.order.buy_order(stk_cd="005930", ord_qty=10, ord_uv=70000)
-except KiwoomAPIError as e:
-    print(f"Code: {e.code}, Message: {e.message}")
-```
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
+**Running in production** — the daily collection DAGs in
+[quant-airflow](https://github.com/younghwan91/quant-airflow) use this library to load prices,
+supply/demand, margin and short-sale data into TimescaleDB every day.
 
 ## License
 
@@ -213,11 +109,8 @@ MIT
 
 ## ⭐ Found this useful?
 
-If this library helped you, please **[⭐ Star it](https://github.com/younghwan91/kiwoom-rest-api)** — it boosts discoverability so more developers can find it.
-
-- 🐛 Bugs & questions → [Issues](https://github.com/younghwan91/kiwoom-rest-api/issues)
-- 🔧 Improvements → PRs welcome ([CONTRIBUTING](CONTRIBUTING.md))
-- 📈 [Follow](https://github.com/younghwan91) for new endpoints & release updates
+Please **[⭐ Star it](https://github.com/younghwan91/kiwoom-rest-api)** — it boosts discoverability.
+Bugs and questions go to [Issues](https://github.com/younghwan91/kiwoom-rest-api/issues); PRs welcome.
 
 ## Related projects — open-source quant stack
 
