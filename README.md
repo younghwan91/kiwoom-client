@@ -246,6 +246,10 @@ price = to_number("+70000")   # 70000
 종목코드(`"005930"`)처럼 앞자리 0이 의미를 갖는 값과, `base_dt` 같은 날짜·식별자
 필드는 숫자로 바꾸지 않고 문자열로 남깁니다.
 
+![to_dataframe() 실행 결과 — 문자열 응답이 계산 가능한 DataFrame 이 된다](https://raw.githubusercontent.com/younghwan91/kiwoom-rest-api/main/docs/images/to_dataframe.png)
+
+<sub>샘플 응답을 `to_dataframe()` 에 넣은 실제 출력입니다. 시세 값 자체는 예시입니다 — `stk_cd` 는 문자열로 남고 가격·거래량만 숫자가 되는 것을 보세요.</sub>
+
 `to_dataframe()`에는 pandas가 필요합니다:
 
 ```bash
