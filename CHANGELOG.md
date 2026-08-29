@@ -3,6 +3,29 @@
 이 프로젝트는 [Keep a Changelog](https://keepachangelog.com/ko/1.1.0/) 형식을 따르며,
 [유의적 버전](https://semver.org/lang/ko/)을 사용합니다.
 
+## [0.2.2] - 2026-08-30
+
+문서·배포 파이프라인만 손봅니다. **라이브러리 코드는 0.2.1 과 한 줄도 다르지
+않으므로, 0.2.1 사용자가 굳이 올릴 이유는 없습니다.**
+
+### 문서
+
+- README 를 축약 이전의 전체 문서로 되돌렸습니다. PyPI 프로젝트 페이지 본문이
+  README 라, 이 릴리즈로 페이지가 함께 갱신됩니다.
+- 사실 오류를 고쳤습니다 — "186개 엔드포인트"는 REST **182개 + 조건검색 4종**
+  입니다(코드의 고유 `api_id` 는 182개이고 조건검색 4개는 `api_id` 가 없습니다).
+  조건검색 표의 `ka10171`~`ka10174` 는 코드에 없는 ID 라 `trnm`
+  (`CNSRLST`/`CNSRREQ`/`CNSRCLR`) 기준으로 다시 썼고, `api.login()` 주석의
+  `au10001`/`au10002` 도 걷어냈습니다. 무인자로 부르던
+  `top_volume_today()` 예제에 필수 파라미터 6개를 채웠습니다.
+
+### CI
+
+- 배포 워크플로가 `actions/checkout` 에서 죽던 문제를 고쳤습니다. `permissions`
+  블록에 `id-token: write` 만 적혀 있어 `contents` 가 `none` 으로 깎였고,
+  `GITHUB_TOKEN` 에 읽기 권한이 없어 GitHub 이 404 를 돌려주고 있었습니다
+  (`remote: Repository not found`). `contents: read` 를 추가했습니다.
+
 ## [0.2.1] - 2026-08-15
 
 실서버 프로토콜 검증에서 드러난 문제를 고칩니다. **0.2.0 사용자는 업그레이드를
