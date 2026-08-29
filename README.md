@@ -38,6 +38,8 @@ api.order.buy_order(dmst_stex_tp="01", stk_cd="005930",            # 10주 지�
 
 ![to_dataframe() 실행 결과 — 문자열 응답이 계산 가능한 DataFrame 이 된다](docs/images/to_dataframe.png)
 
+<sub>샘플 응답을 `to_dataframe()` 에 넣은 실제 출력입니다. 시세 값 자체는 예시입니다 — `stk_cd` 는 문자열로 남고 가격·거래량만 숫자가 되는 것을 보세요.</sub>
+
 ## 기존 키움 OpenAPI+ / pykiwoom 과 무엇이 다른가
 
 | 항목 | 키움 OpenAPI+ (OCX) | pykiwoom | **kiwoom-client** |
@@ -49,9 +51,10 @@ api.order.buy_order(dmst_stex_tp="01", stk_cd="005930",            # 10주 지�
 | 실시간 데이터 | 이벤트 콜백 | 이벤트 콜백 | **async WebSocket** |
 | 설치 | 별도 모듈 설치 | OCX + 모듈 | **`pip install` 한 줄** |
 
-여기에 더해 **토큰 자동 갱신**(만료 전 선제 재발급 + 인증 실패 시 재시도), **TR별 토큰 버킷
-Rate Limiter**(429 자동 백오프), **`request_all()` 자동 페이지네이션**, 그리고 `KiwoomAPI` 와
-동일한 인터페이스의 **`AsyncKiwoomAPI`** 가 기본 탑재입니다.
+봇을 오래 돌리다 보면 걸리는 것들은 라이브러리가 대신 처리합니다. **토큰은 만료 전에 미리
+갱신**하고 인증이 실패하면 재발급 후 다시 시도합니다. **TR 별 토큰 버킷 Rate Limiter** 가
+429 를 만나면 알아서 물러섰다 재시도하고, **`request_all()`** 은 연속조회를 끝까지 돌립니다.
+`AsyncKiwoomAPI` 는 `KiwoomAPI` 와 인터페이스가 같아 `await` 만 붙이면 됩니다.
 
 ## 실시간 WebSocket
 

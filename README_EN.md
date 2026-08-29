@@ -39,6 +39,8 @@ zero carries meaning (stock codes, dates) as strings.
 
 ![to_dataframe() output — string responses become a computable DataFrame](docs/images/to_dataframe.png)
 
+<sub>Real output of `to_dataframe()` on a sample payload — the quote values are illustrative. Note that `stk_cd` stays a string while prices and volumes become numeric.</sub>
+
 ## How it differs from Kiwoom OpenAPI+ / pykiwoom
 
 | | Kiwoom OpenAPI+ (OCX) | pykiwoom | **kiwoom-client** |
