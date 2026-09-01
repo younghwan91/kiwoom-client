@@ -10,6 +10,7 @@ name: Commit Identity Guard
 # 설정으로는 막을 수 없다(`-c`가 항상 이긴다). 그래서 CI에서 막는다.
 #
 # 허용 목록을 바꾸려면 ALLOWED_EMAILS를 수정하라.
+# dependabot[bot] 은 봇 신원이다 — 회사 주소가 아니라서 허용한다.
 
 on:
   push:
@@ -38,6 +39,7 @@ jobs:
             48156556+younghwan91@users.noreply.github.com
             noreply@anthropic.com
             noreply@github.com
+            49699333+dependabot[bot]@users.noreply.github.com
         run: |
           set -euo pipefail
 
