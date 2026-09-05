@@ -12,7 +12,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/pypi_downloads_dark.png">
-  <img alt="kiwoom-client 월별 PyPI 다운로드 추이" src="docs/images/pypi_downloads_light.png" width="640">
+  <img alt="kiwoom-client 누적 PyPI 다운로드 추이" src="docs/images/pypi_downloads_light.png" width="640">
 </picture>
 
 > **키움증권 OpenAPI를 대체하는 Python REST API 래퍼.**

@@ -12,7 +12,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/pypi_downloads_dark.png">
-  <img alt="kiwoom-client monthly PyPI downloads" src="docs/images/pypi_downloads_light.png" width="640">
+  <img alt="kiwoom-client cumulative PyPI downloads" src="docs/images/pypi_downloads_light.png" width="640">
 </picture>
 
 > A modern Python wrapper for the **Kiwoom Securities REST API** — a cross-platform replacement for the legacy
