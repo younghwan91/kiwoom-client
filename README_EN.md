@@ -10,6 +10,11 @@
 [![Python](https://img.shields.io/pypi/pyversions/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-younghwan--chae-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/younghwan-chae/)
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/pypi_downloads_dark.png">
+  <img alt="kiwoom-client monthly PyPI downloads" src="docs/images/pypi_downloads_light.png" width="640">
+</picture>
+
 > A modern Python wrapper for the **Kiwoom Securities REST API** — a cross-platform replacement for the legacy
 > Kiwoom OpenAPI+ (OCX/COM). Automate Korean stock (KOSPI/KOSDAQ) trading, quotes, and real-time WebSocket
 > data on Windows, macOS, and Linux. Tokens refresh themselves, and both **sync and async** clients ship.

@@ -10,6 +10,11 @@
 [![Python](https://img.shields.io/pypi/pyversions/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-younghwan--chae-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/younghwan-chae/)
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/pypi_downloads_dark.png">
+  <img alt="kiwoom-client 월별 PyPI 다운로드 추이" src="docs/images/pypi_downloads_light.png" width="640">
+</picture>
+
 > **키움증권 OpenAPI를 대체하는 Python REST API 래퍼.**
 > COM/OCX 없이 Windows · macOS · Linux 어디서나 **국내주식 자동매매 · 시세조회 · 실시간 WebSocket**을 사용할 수 있습니다.
 > **토큰 자동 갱신**으로 봇이 만료에 죽지 않고, **sync / async** 양쪽을 지원합니다.
