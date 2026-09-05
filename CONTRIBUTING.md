@@ -1,12 +1,12 @@
 # Contributing
 
-kiwoom-rest-api에 기여해주셔서 감사합니다!
+kiwoom-client에 기여해주셔서 감사합니다!
 
 ## 개발 환경 설정
 
 ```bash
-git clone https://github.com/younghwan91/kiwoom-rest-api.git
-cd kiwoom-rest-api
+git clone https://github.com/younghwan91/kiwoom-client.git
+cd kiwoom-client
 pip install -e ".[dev]"
 # 또는
 uv pip install -e ".[dev]"
@@ -29,4 +29,4 @@ pytest tests/ -v
 
 ## 버그 리포트 & 기능 요청
 
-[GitHub Issues](https://github.com/younghwan91/kiwoom-rest-api/issues)에서 이슈를 생성해주세요.
+[GitHub Issues](https://github.com/younghwan91/kiwoom-client/issues)에서 이슈를 생성해주세요.

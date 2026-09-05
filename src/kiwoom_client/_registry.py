@@ -10,22 +10,22 @@ from __future__ import annotations
 
 from typing import Generic
 
-from kiwoom_rest_api.base import ClientProtocol, ResponseT
-from kiwoom_rest_api.domestic.account import Account
-from kiwoom_rest_api.domestic.chart import Chart
-from kiwoom_rest_api.domestic.condition_search import ConditionSearch
-from kiwoom_rest_api.domestic.credit_order import CreditOrder
-from kiwoom_rest_api.domestic.elw import ELW
-from kiwoom_rest_api.domestic.etf import ETF
-from kiwoom_rest_api.domestic.foreign_institution import ForeignInstitution
-from kiwoom_rest_api.domestic.market import Market
-from kiwoom_rest_api.domestic.order import Order
-from kiwoom_rest_api.domestic.ranking import Ranking
-from kiwoom_rest_api.domestic.sector import Sector
-from kiwoom_rest_api.domestic.short_selling import ShortSelling
-from kiwoom_rest_api.domestic.slb import SLB
-from kiwoom_rest_api.domestic.stock_info import StockInfo
-from kiwoom_rest_api.domestic.theme import Theme
+from kiwoom_client.base import ClientProtocol, ResponseT
+from kiwoom_client.domestic.account import Account
+from kiwoom_client.domestic.chart import Chart
+from kiwoom_client.domestic.condition_search import ConditionSearch
+from kiwoom_client.domestic.credit_order import CreditOrder
+from kiwoom_client.domestic.elw import ELW
+from kiwoom_client.domestic.etf import ETF
+from kiwoom_client.domestic.foreign_institution import ForeignInstitution
+from kiwoom_client.domestic.market import Market
+from kiwoom_client.domestic.order import Order
+from kiwoom_client.domestic.ranking import Ranking
+from kiwoom_client.domestic.sector import Sector
+from kiwoom_client.domestic.short_selling import ShortSelling
+from kiwoom_client.domestic.slb import SLB
+from kiwoom_client.domestic.stock_info import StockInfo
+from kiwoom_client.domestic.theme import Theme
 
 #: Property name → module class, in the order they appear on the facades.
 MODULE_NAMES = (

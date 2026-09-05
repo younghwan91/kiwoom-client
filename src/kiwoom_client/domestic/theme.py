@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Generic
 
-from kiwoom_rest_api.base import ClientProtocol, ResponseT
+from kiwoom_client.base import ClientProtocol, ResponseT
 
 
 class Theme(Generic[ResponseT]):

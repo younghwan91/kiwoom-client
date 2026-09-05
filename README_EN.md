@@ -1,12 +1,12 @@
 [한국어](README.md) | [English](README_EN.md)
 
-# kiwoom-rest-api — Python wrapper for Kiwoom Securities REST API
+# kiwoom-client — Python wrapper for Kiwoom Securities REST API
 
 [![PyPI version](https://img.shields.io/pypi/v/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
 [![Downloads](https://img.shields.io/pypi/dm/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
 [![Total Downloads](https://static.pepy.tech/badge/kiwoom-client)](https://pepy.tech/project/kiwoom-client)
-[![CI](https://github.com/younghwan91/kiwoom-rest-api/actions/workflows/ci.yml/badge.svg)](https://github.com/younghwan91/kiwoom-rest-api/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/github/license/younghwan91/kiwoom-rest-api)](https://github.com/younghwan91/kiwoom-rest-api/blob/main/LICENSE)
+[![CI](https://github.com/younghwan91/kiwoom-client/actions/workflows/ci.yml/badge.svg)](https://github.com/younghwan91/kiwoom-client/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/github/license/younghwan91/kiwoom-client)](https://github.com/younghwan91/kiwoom-client/blob/main/LICENSE)
 [![Python](https://img.shields.io/pypi/pyversions/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-younghwan--chae-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/younghwan-chae/)
 
@@ -18,9 +18,6 @@
 ```bash
 pip install kiwoom-client
 ```
-
-> ⚠️ **The package is `kiwoom-client`, not the repository name.** Installing `kiwoom-rest-api`
-> from PyPI gets you **someone else's package** that was registered under that name first.
 
 **Running in production** — the daily collection DAGs in
 [quant-airflow](https://github.com/younghwan91/quant-airflow) use this library to load prices,
@@ -62,7 +59,7 @@ uv add kiwoom-client
 ## Quick Start
 
 ```python
-from kiwoom_rest_api import KiwoomAPI
+from kiwoom_client import KiwoomAPI
 
 # Connect to mock trading server
 api = KiwoomAPI(
@@ -101,7 +98,7 @@ run concurrently; the per-TR limiter only serializes repeated calls to the same 
 
 ```python
 import asyncio
-from kiwoom_rest_api import AsyncKiwoomAPI
+from kiwoom_client import AsyncKiwoomAPI
 
 async def main():
     async with AsyncKiwoomAPI(app_key="...", app_secret="...", is_mock=True) as api:
@@ -119,7 +116,7 @@ asyncio.run(main())
 Kiwoom returns every field as a string — a price as `"+70000"`, a volume as `"1,234,567"`.
 
 ```python
-from kiwoom_rest_api import to_dataframe, to_number, normalize
+from kiwoom_client import to_dataframe, to_number, normalize
 
 df = to_dataframe(api.ranking.top_volume_today(...))  # payload key found for you
 print(df["cur_prc"].mean())
@@ -135,7 +132,7 @@ Stock codes (`"005930"`) and date fields stay strings. `to_dataframe()` needs pa
 
 ```python
 import asyncio
-from kiwoom_rest_api import KiwoomAPI
+from kiwoom_client import KiwoomAPI
 
 api = KiwoomAPI(app_key="YOUR_KEY", app_secret="YOUR_SECRET")
 ws = api.create_websocket()
@@ -194,7 +191,7 @@ For the full endpoint reference with method names and API IDs, see the [Korean R
 ## Error Handling
 
 ```python
-from kiwoom_rest_api.base import KiwoomAPIError
+from kiwoom_client.base import KiwoomAPIError
 
 try:
     result = api.order.buy_order(stk_cd="005930", ord_qty=10, ord_uv=70000)
@@ -214,9 +211,9 @@ MIT
 
 ## ⭐ Found this useful?
 
-If this library helped you, please **[⭐ Star it](https://github.com/younghwan91/kiwoom-rest-api)** — it boosts discoverability so more developers can find it.
+If this library helped you, please **[⭐ Star it](https://github.com/younghwan91/kiwoom-client)** — it boosts discoverability so more developers can find it.
 
-- 🐛 Bugs & questions → [Issues](https://github.com/younghwan91/kiwoom-rest-api/issues)
+- 🐛 Bugs & questions → [Issues](https://github.com/younghwan91/kiwoom-client/issues)
 - 🔧 Improvements → PRs welcome ([CONTRIBUTING](CONTRIBUTING.md))
 - 📈 [Follow](https://github.com/younghwan91) for new endpoints & release updates
 

@@ -8,7 +8,7 @@ import asyncio
 import os
 import sys
 
-from kiwoom_rest_api import AsyncKiwoomAPI, to_number
+from kiwoom_client import AsyncKiwoomAPI, to_number
 
 
 def get_credentials() -> tuple[str, str]:

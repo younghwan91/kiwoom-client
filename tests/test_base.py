@@ -3,7 +3,7 @@
 
 import pytest
 
-from kiwoom_rest_api.base import BaseClient, KiwoomAPIError
+from kiwoom_client.base import BaseClient, KiwoomAPIError
 
 
 class TestBaseClient:

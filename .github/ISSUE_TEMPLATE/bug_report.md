@@ -8,7 +8,7 @@ labels: bug
 ## 환경
 
 - **Python 버전**: (예: 3.12)
-- **kiwoom-rest-api 버전**: (예: 0.1.12)
+- **kiwoom-client 버전**: (예: 0.1.12)
 - **OS**: (예: Windows 11, macOS 15, Ubuntu 24.04)
 - **서버**: 모의투자 / 실전투자
 

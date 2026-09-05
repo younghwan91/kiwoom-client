@@ -11,8 +11,8 @@ import time
 import httpx
 import pytest
 
-from kiwoom_rest_api.auth import KiwoomAuth, KiwoomAuthError
-from kiwoom_rest_api.base import BaseClient, KiwoomAPIError
+from kiwoom_client.auth import KiwoomAuth, KiwoomAuthError
+from kiwoom_client.base import BaseClient, KiwoomAPIError
 
 BASE = "https://mockapi.kiwoom.com"
 TOKEN_URL = f"{BASE}/oauth2/token"
@@ -216,7 +216,7 @@ class TestBaseClientTokenProvider:
 
 class TestKiwoomAPIWiring:
     def test_login_wires_provider_and_reuses_token(self, httpx_mock):
-        from kiwoom_rest_api import KiwoomAPI
+        from kiwoom_client import KiwoomAPI
 
         httpx_mock.add_response(url=TOKEN_URL, json={"token": "t1", "expires_in": 3600})
         httpx_mock.add_response(url=API_URL, json={"return_code": 0, "stk_nm": "삼성전자"})
@@ -228,7 +228,7 @@ class TestKiwoomAPIWiring:
         assert api_req.headers["authorization"] == "Bearer t1"
 
     def test_api_recovers_from_expired_token(self, httpx_mock):
-        from kiwoom_rest_api import KiwoomAPI
+        from kiwoom_client import KiwoomAPI
 
         httpx_mock.add_response(url=TOKEN_URL, json={"token": "t1", "expires_in": 3600})
         httpx_mock.add_response(url=API_URL, status_code=401, json={})
@@ -243,7 +243,7 @@ class TestKiwoomAPIWiring:
 
     def test_auto_login_on_first_request(self, httpx_mock):
         """login() 을 안 불러도 첫 요청에서 토큰을 발급한다."""
-        from kiwoom_rest_api import KiwoomAPI
+        from kiwoom_client import KiwoomAPI
 
         httpx_mock.add_response(url=TOKEN_URL, json={"token": "t1", "expires_in": 3600})
         httpx_mock.add_response(url=API_URL, json={"return_code": 0, "stk_nm": "삼성전자"})
@@ -256,14 +256,14 @@ class TestVersion:
     def test_version_matches_installed_metadata(self):
         from importlib.metadata import version
 
-        import kiwoom_rest_api
+        import kiwoom_client
 
-        assert kiwoom_rest_api.__version__ == version("kiwoom-client")
+        assert kiwoom_client.__version__ == version("kiwoom-client")
 
     def test_version_is_not_hardcoded_stale(self):
-        import kiwoom_rest_api
+        import kiwoom_client
 
-        assert kiwoom_rest_api.__version__ != "0.1.0"
+        assert kiwoom_client.__version__ != "0.1.0"
 
 
 class TestReturnCodeTokenError:

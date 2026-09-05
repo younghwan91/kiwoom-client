@@ -29,8 +29,8 @@ from typing import Any
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from kiwoom_rest_api import KiwoomAPI  # noqa: E402
-from kiwoom_rest_api.base import BaseClient, KiwoomAPIError  # noqa: E402
+from kiwoom_client import KiwoomAPI  # noqa: E402
+from kiwoom_client.base import BaseClient, KiwoomAPIError  # noqa: E402
 
 # --- 테스트 기준 상수 -------------------------------------------------------
 STK = "005930"            # 삼성전자

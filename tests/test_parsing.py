@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiwoom_rest_api.parsing import extract_records, normalize, to_dataframe, to_number
+from kiwoom_client.parsing import extract_records, normalize, to_dataframe, to_number
 
 
 class TestToNumber:

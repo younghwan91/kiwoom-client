@@ -7,7 +7,7 @@ Do NOT run against production without reviewing the parameters carefully.
 import os
 import sys
 
-from kiwoom_rest_api import KiwoomAPI
+from kiwoom_client import KiwoomAPI
 
 
 def get_credentials() -> tuple[str, str]:

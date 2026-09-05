@@ -2,7 +2,7 @@
 
 import json
 
-from kiwoom_rest_api.auth import KiwoomAuth
+from kiwoom_client.auth import KiwoomAuth
 
 
 class TestKiwoomAuth:

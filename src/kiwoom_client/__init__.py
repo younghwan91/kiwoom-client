@@ -4,7 +4,7 @@ A comprehensive Python client for Kiwoom Securities REST API,
 covering all domestic stock (국내주식) endpoints.
 
 Usage:
-    from kiwoom_rest_api import KiwoomAPI
+    from kiwoom_client import KiwoomAPI
 
     api = KiwoomAPI(app_key="YOUR_KEY", app_secret="YOUR_SECRET")
 
@@ -15,7 +15,7 @@ Usage:
     result = api.order.buy_order(stk_cd="005930", ord_qty=10, ord_uv=70000, ...)
 
 Asyncio:
-    from kiwoom_rest_api import AsyncKiwoomAPI
+    from kiwoom_client import AsyncKiwoomAPI
 
     async with AsyncKiwoomAPI(app_key="...", app_secret="...") as api:
         info = await api.stock_info.basic_stock_info(stk_cd="005930")
@@ -28,11 +28,11 @@ from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _package_version
 from typing import Any
 
-from kiwoom_rest_api._registry import ModuleRegistry
-from kiwoom_rest_api.auth import AsyncKiwoomAuth, KiwoomAuth, KiwoomAuthError
-from kiwoom_rest_api.base import AsyncBaseClient, BaseClient, KiwoomAPIError
-from kiwoom_rest_api.parsing import extract_records, normalize, to_dataframe, to_number
-from kiwoom_rest_api.websocket import KiwoomWebSocket
+from kiwoom_client._registry import ModuleRegistry
+from kiwoom_client.auth import AsyncKiwoomAuth, KiwoomAuth, KiwoomAuthError
+from kiwoom_client.base import AsyncBaseClient, BaseClient, KiwoomAPIError
+from kiwoom_client.parsing import extract_records, normalize, to_dataframe, to_number
+from kiwoom_client.websocket import KiwoomWebSocket
 
 try:
     # Single source of truth is pyproject.toml — never hardcode it here.

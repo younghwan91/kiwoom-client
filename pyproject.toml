@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "kiwoom-client"
-version = "0.2.2"
+version = "0.3.0"
 description = "키움증권 REST API Python 래퍼 (국내주식 186개 엔드포인트 + async + 토큰 자동 갱신)"
 readme = "README.md"
 license = "MIT"
@@ -53,13 +53,13 @@ dev = [
 
 [project.urls]
 Homepage = "https://pypi.org/project/kiwoom-client/"
-Repository = "https://github.com/younghwan91/kiwoom-rest-api"
-Documentation = "https://github.com/younghwan91/kiwoom-rest-api#readme"
-Issues = "https://github.com/younghwan91/kiwoom-rest-api/issues"
-Changelog = "https://github.com/younghwan91/kiwoom-rest-api/blob/main/CHANGELOG.md"
+Repository = "https://github.com/younghwan91/kiwoom-client"
+Documentation = "https://github.com/younghwan91/kiwoom-client#readme"
+Issues = "https://github.com/younghwan91/kiwoom-client/issues"
+Changelog = "https://github.com/younghwan91/kiwoom-client/blob/main/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/kiwoom_rest_api"]
+packages = ["src/kiwoom_client"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -81,6 +81,6 @@ select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
 
 [tool.mypy]
 python_version = "3.10"
-files = ["src/kiwoom_rest_api"]
+files = ["src/kiwoom_client"]
 ignore_missing_imports = true
 warn_unused_ignores = true

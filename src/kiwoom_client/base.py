@@ -8,8 +8,8 @@ from typing import Any, Protocol, TypeVar
 
 import httpx
 
-from kiwoom_rest_api.auth import AsyncTokenProvider, TokenProvider
-from kiwoom_rest_api.rate_limiter import AsyncPerKeyRateLimiter, PerKeyRateLimiter
+from kiwoom_client.auth import AsyncTokenProvider, TokenProvider
+from kiwoom_client.rate_limiter import AsyncPerKeyRateLimiter, PerKeyRateLimiter
 
 #: What a module method hands back — a dict for the sync client, an awaitable
 #: of one for the async client. Lets both share the 15 endpoint modules.

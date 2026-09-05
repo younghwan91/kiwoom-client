@@ -1,6 +1,6 @@
 # Examples
 
-Runnable example scripts for the `kiwoom-rest-api` library.
+Runnable example scripts for the `kiwoom-client` library.
 All scripts use `is_mock=True` and connect to the Kiwoom mock trading server.
 
 ## Prerequisites

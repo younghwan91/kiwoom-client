@@ -5,7 +5,7 @@ import os
 import sys
 from typing import Any
 
-from kiwoom_rest_api import KiwoomAPI, KiwoomWebSocket
+from kiwoom_client import KiwoomAPI, KiwoomWebSocket
 
 
 def get_credentials() -> tuple[str, str]:

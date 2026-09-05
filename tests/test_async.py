@@ -8,10 +8,10 @@ import time
 import httpx
 import pytest
 
-from kiwoom_rest_api import AsyncKiwoomAPI
-from kiwoom_rest_api.auth import AsyncKiwoomAuth, KiwoomAuthError
-from kiwoom_rest_api.base import AsyncBaseClient, KiwoomAPIError
-from kiwoom_rest_api.rate_limiter import AsyncPerKeyRateLimiter
+from kiwoom_client import AsyncKiwoomAPI
+from kiwoom_client.auth import AsyncKiwoomAuth, KiwoomAuthError
+from kiwoom_client.base import AsyncBaseClient, KiwoomAPIError
+from kiwoom_client.rate_limiter import AsyncPerKeyRateLimiter
 
 BASE = "https://mockapi.kiwoom.com"
 TOKEN_URL = f"{BASE}/oauth2/token"
@@ -192,8 +192,8 @@ class TestAsyncKiwoomAPI:
 
     async def test_all_modules_are_exposed(self):
         """sync 와 같은 엔드포인트 모듈 집합을 갖는다."""
-        from kiwoom_rest_api import KiwoomAPI
-        from kiwoom_rest_api._registry import MODULE_NAMES
+        from kiwoom_client import KiwoomAPI
+        from kiwoom_client._registry import MODULE_NAMES
 
         api = AsyncKiwoomAPI("key", "secret", is_mock=True)
         try:

@@ -37,10 +37,10 @@ sys.path.insert(0, str(ROOT / "src"))
 
 import httpx  # noqa: E402
 
-from kiwoom_rest_api import KiwoomAPI  # noqa: E402
-from kiwoom_rest_api.auth import KiwoomAuth, KiwoomAuthError  # noqa: E402
-from kiwoom_rest_api.base import BaseClient  # noqa: E402
-from kiwoom_rest_api.websocket import KiwoomWebSocket  # noqa: E402
+from kiwoom_client import KiwoomAPI  # noqa: E402
+from kiwoom_client.auth import KiwoomAuth, KiwoomAuthError  # noqa: E402
+from kiwoom_client.base import BaseClient  # noqa: E402
+from kiwoom_client.websocket import KiwoomWebSocket  # noqa: E402
 
 PROD = "https://api.kiwoom.com"
 MOCK = "https://mockapi.kiwoom.com"

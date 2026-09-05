@@ -2,7 +2,7 @@
 
 import pytest
 
-from kiwoom_rest_api import KiwoomAPI
+from kiwoom_client import KiwoomAPI
 
 
 @pytest.fixture

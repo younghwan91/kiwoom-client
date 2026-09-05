@@ -1,12 +1,12 @@
 [한국어](README.md) | [English](README_EN.md)
 
-# kiwoom-rest-api — 키움증권 REST API Python 라이브러리
+# kiwoom-client — 키움증권 REST API Python 라이브러리
 
 [![PyPI version](https://img.shields.io/pypi/v/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
 [![Downloads](https://img.shields.io/pypi/dm/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
 [![Total Downloads](https://static.pepy.tech/badge/kiwoom-client)](https://pepy.tech/project/kiwoom-client)
-[![CI](https://github.com/younghwan91/kiwoom-rest-api/actions/workflows/ci.yml/badge.svg)](https://github.com/younghwan91/kiwoom-rest-api/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/github/license/younghwan91/kiwoom-rest-api)](https://github.com/younghwan91/kiwoom-rest-api/blob/main/LICENSE)
+[![CI](https://github.com/younghwan91/kiwoom-client/actions/workflows/ci.yml/badge.svg)](https://github.com/younghwan91/kiwoom-client/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/github/license/younghwan91/kiwoom-client)](https://github.com/younghwan91/kiwoom-client/blob/main/LICENSE)
 [![Python](https://img.shields.io/pypi/pyversions/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-younghwan--chae-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/younghwan-chae/)
 
@@ -18,9 +18,6 @@
 ```bash
 pip install kiwoom-client
 ```
-
-> ⚠️ **패키지 이름은 `kiwoom-client` 입니다.** 저장소 이름(`kiwoom-rest-api`)으로 설치하면
-> PyPI 에 먼저 등록된 **다른 사람의 패키지**가 깔립니다. 이 라이브러리가 아닙니다.
 
 **실제로 돌아가는 곳** — [quant-airflow](https://github.com/younghwan91/quant-airflow)의 일일 수집 DAG 가
 이 라이브러리로 시세·수급·신용·공매도를 매일 TimescaleDB 에 적재합니다. 같은 스택의 나머지는
@@ -64,7 +61,7 @@ pip install kiwoom-client
 기존 키움 **OpenAPI+(OCX/COM)**나 이를 감싼 `pykiwoom`은 32bit Windows에 묶여 있어 서버 배포·자동화가 어렵습니다.
 이 라이브러리는 키움의 **신규 REST API**를 사용하므로 그 제약이 없습니다.
 
-| 항목 | 키움 OpenAPI+ (OCX) | pykiwoom | **kiwoom-rest-api** |
+| 항목 | 키움 OpenAPI+ (OCX) | pykiwoom | **kiwoom-client** |
 |------|---------------------|----------|---------------------|
 | 연동 방식 | COM/OCX | OCX 래퍼 | **REST + WebSocket** |
 | 운영체제 | Windows 전용 | Windows 전용 | **Windows · macOS · Linux** |
@@ -93,8 +90,8 @@ uv add kiwoom-client
 
 소스에서 설치:
 ```bash
-git clone https://github.com/younghwan91/kiwoom-rest-api.git
-cd kiwoom-rest-api
+git clone https://github.com/younghwan91/kiwoom-client.git
+cd kiwoom-client
 pip install -e .
 # 또는
 uv pip install -e .
@@ -112,7 +109,7 @@ uv pip install -e .
 ### 1단계: 연결
 
 ```python
-from kiwoom_rest_api import KiwoomAPI
+from kiwoom_client import KiwoomAPI
 
 # 모의투자 서버로 연결
 api = KiwoomAPI(
@@ -203,7 +200,7 @@ with KiwoomAPI(app_key="앱키", app_secret="시크릿키", is_mock=True) as api
 
 ```python
 import asyncio
-from kiwoom_rest_api import AsyncKiwoomAPI
+from kiwoom_client import AsyncKiwoomAPI
 
 async def main():
     async with AsyncKiwoomAPI(app_key="앱키", app_secret="시크릿키", is_mock=True) as api:
@@ -231,7 +228,7 @@ Rate Limiter는 TR(api_id)별로 걸립니다. 서로 다른 TR은 서로를 막
 거래량은 `"1,234,567"` 같은 식이라 그대로는 계산에 쓸 수 없습니다.
 
 ```python
-from kiwoom_rest_api import to_dataframe, to_number, normalize
+from kiwoom_client import to_dataframe, to_number, normalize
 
 result = api.ranking.top_volume_today(...)
 
@@ -247,7 +244,7 @@ price = to_number("+70000")   # 70000
 종목코드(`"005930"`)처럼 앞자리 0이 의미를 갖는 값과, `base_dt` 같은 날짜·식별자
 필드는 숫자로 바꾸지 않고 문자열로 남깁니다.
 
-![to_dataframe() 실행 결과 — 문자열 응답이 계산 가능한 DataFrame 이 된다](https://raw.githubusercontent.com/younghwan91/kiwoom-rest-api/main/docs/images/to_dataframe.png)
+![to_dataframe() 실행 결과 — 문자열 응답이 계산 가능한 DataFrame 이 된다](https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/to_dataframe.png)
 
 <sub>샘플 응답을 `to_dataframe()` 에 넣은 실제 출력입니다. 시세 값 자체는 예시입니다 — `stk_cd` 는 문자열로 남고 가격·거래량만 숫자가 되는 것을 보세요.</sub>
 
@@ -263,7 +260,7 @@ pip install 'kiwoom-client[pandas]'
 
 ```python
 import asyncio
-from kiwoom_rest_api import KiwoomAPI
+from kiwoom_client import KiwoomAPI
 
 api = KiwoomAPI(app_key="앱키", app_secret="시크릿키")
 ws = api.create_websocket()
@@ -314,7 +311,7 @@ await ws.listen()
 > **검증 상태**: 실서버(api.kiwoom.com) 대상으로 LOGIN 핸드셰이크 · PING 프레임 ·
 > REG 등록 응답까지 확인했습니다. 다만 **REAL 프레임의 항목 필드명(`item`/`values`)은
 > 장 마감 중이라 아직 미확정**입니다. 장중 이상 동작을 만나면
-> [이슈](https://github.com/younghwan91/kiwoom-rest-api/issues)로 알려주세요.
+> [이슈](https://github.com/younghwan91/kiwoom-client/issues)로 알려주세요.
 > 직접 확인하려면 `python tests/integration_ws_smoke.py --prod` 를 돌리면 됩니다.
 
 ## 연속 조회 (페이지네이션)
@@ -329,7 +326,7 @@ result = api.account.filled_orders()
 next_result = api.account.filled_orders(cont_yn="Y", next_key=result["next_key"])
 
 # 방법 2: 자동 전체 조회 (모든 페이지를 한번에)
-from kiwoom_rest_api.base import BaseClient
+from kiwoom_client.base import BaseClient
 all_data = api._client.request_all(
     "/api/dostk/acnt", "ka10076",
     data_key="filled_list",  # 응답에서 리스트 데이터의 키 이름
@@ -339,7 +336,7 @@ all_data = api._client.request_all(
 ## 에러 처리
 
 ```python
-from kiwoom_rest_api.base import KiwoomAPIError
+from kiwoom_client.base import KiwoomAPIError
 
 try:
     result = api.order.buy_order(stk_cd="005930", ord_qty=10, ord_uv=70000)
@@ -747,9 +744,9 @@ MIT
 
 ## ⭐ 도움이 되셨다면
 
-이 라이브러리가 유용했다면 우측 상단 **[⭐ Star](https://github.com/younghwan91/kiwoom-rest-api)** 를 눌러주세요. 검색·추천 노출이 올라가 더 많은 개발자가 찾을 수 있습니다.
+이 라이브러리가 유용했다면 우측 상단 **[⭐ Star](https://github.com/younghwan91/kiwoom-client)** 를 눌러주세요. 검색·추천 노출이 올라가 더 많은 개발자가 찾을 수 있습니다.
 
-- 🐛 버그·질문 → [Issues](https://github.com/younghwan91/kiwoom-rest-api/issues)
+- 🐛 버그·질문 → [Issues](https://github.com/younghwan91/kiwoom-client/issues)
 - 🔧 개선 → PR 환영 ([CONTRIBUTING](CONTRIBUTING.md))
 - 📈 새 엔드포인트·기능 업데이트 소식을 받으려면 [팔로우](https://github.com/younghwan91)
 

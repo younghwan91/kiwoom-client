@@ -3,6 +3,26 @@
 이 프로젝트는 [Keep a Changelog](https://keepachangelog.com/ko/1.1.0/) 형식을 따르며,
 [유의적 버전](https://semver.org/lang/ko/)을 사용합니다.
 
+## [0.3.0] - 2026-09-05
+
+### ⚠️ Breaking
+
+- **임포트 경로가 바뀌었습니다.** 저장소·PyPI 배포명(`kiwoom-client`)과
+  실제 파이썬 모듈명이 서로 달라 혼란을 준다는 지적에 따라, 모듈명을
+  `kiwoom_rest_api` 에서 `kiwoom_client` 로 통일했습니다.
+
+  ```python
+  # 이전 (0.2.x)
+  from kiwoom_rest_api import KiwoomAPI
+
+  # 이후 (0.3.0+)
+  from kiwoom_client import KiwoomAPI
+  ```
+
+  `sed -i 's/kiwoom_rest_api/kiwoom_client/g'` 로 기존 코드베이스를 일괄
+  치환할 수 있습니다. GitHub 저장소 이름도 `kiwoom-rest-api` 에서
+  `kiwoom-client` 로 함께 바꿨습니다 (GitHub 이 이전 URL을 자동 리다이렉트).
+
 ## [0.2.2] - 2026-08-30
 
 문서·배포 파이프라인만 손봅니다. **라이브러리 코드는 0.2.1 과 한 줄도 다르지
@@ -146,7 +166,7 @@ REAL 프레임의 항목 필드명(`item`/`values`)은 장 마감 중이라 아�
 - WebSocket 수정은 키움 공식 프로토콜 문서를 근거로 구현하고 로컬 프로토콜
   테스트로 검증했지만, **실계좌 검증은 아직입니다.** 특히 REAL 프레임 항목의
   세부 필드명(`item`/`values`)은 등록 메시지 구조에서 유추한 부분이 있습니다.
-  실제 동작이 다르면 [이슈](https://github.com/younghwan91/kiwoom-rest-api/issues)로
+  실제 동작이 다르면 [이슈](https://github.com/younghwan91/kiwoom-client/issues)로
   알려주세요.
 
 ## [0.1.14] - 2026-08
@@ -167,7 +187,7 @@ REAL 프레임의 항목 필드명(`item`/`values`)은 장 마감 중이라 아�
 
 - 토큰 발급/폐기 요청의 필드명을 `appsecretkey` → `secretkey` 로 수정.
 
-[0.2.1]: https://github.com/younghwan91/kiwoom-rest-api/releases/tag/v0.2.1
-[0.2.0]: https://github.com/younghwan91/kiwoom-rest-api/releases/tag/v0.2.0
-[0.1.14]: https://github.com/younghwan91/kiwoom-rest-api/releases/tag/v0.1.14
-[0.1.13]: https://github.com/younghwan91/kiwoom-rest-api/releases/tag/v0.1.13
+[0.2.1]: https://github.com/younghwan91/kiwoom-client/releases/tag/v0.2.1
+[0.2.0]: https://github.com/younghwan91/kiwoom-client/releases/tag/v0.2.0
+[0.1.14]: https://github.com/younghwan91/kiwoom-client/releases/tag/v0.1.14
+[0.1.13]: https://github.com/younghwan91/kiwoom-client/releases/tag/v0.1.13

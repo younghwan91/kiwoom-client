@@ -6,7 +6,7 @@
 import os
 import sys
 
-from kiwoom_rest_api import KiwoomAPI, to_dataframe
+from kiwoom_client import KiwoomAPI, to_dataframe
 
 
 def get_credentials() -> tuple[str, str]:

@@ -13,7 +13,7 @@ import json
 import pytest
 import websockets
 
-from kiwoom_rest_api.websocket import KiwoomWebSocket, KiwoomWebSocketError
+from kiwoom_client.websocket import KiwoomWebSocket, KiwoomWebSocketError
 
 
 class FakeKiwoomServer:
@@ -299,7 +299,7 @@ class TestConditionSearch:
         assert server.sent("CNSRLST") == [{"trnm": "CNSRLST"}]
 
     async def test_condition_search_module_builds_ws_payloads(self):
-        from kiwoom_rest_api.domestic.condition_search import ConditionSearch
+        from kiwoom_client.domestic.condition_search import ConditionSearch
 
         cs = ConditionSearch(None)
         assert cs.condition_list() == {"trnm": "CNSRLST"}
