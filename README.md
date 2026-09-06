@@ -38,6 +38,7 @@ pip install kiwoom-client
 ## 목차
 
 - [왜 이 라이브러리인가?](#왜-이-라이브러리인가)
+- [아키텍처](#아키텍처)
 - [기존 키움 OpenAPI / pykiwoom 과 무엇이 다른가?](#기존-키움-openapi--pykiwoom-과-무엇이-다른가)
 - [설치](#설치)
 - [사전 준비](#사전-준비)
@@ -60,6 +61,33 @@ pip install kiwoom-client
 - **내장 Rate Limiter**: TR(api_id)별 토큰 버킷으로 호출 제한을 자동 관리합니다.
 - **바로 쓰는 응답**: `to_dataframe()`이 `"+70000"` 같은 문자열을 숫자로 바꿔 DataFrame으로 넘겨줍니다.
 - **완전한 커버리지**: 국내주식 182개 REST 엔드포인트 + 조건검색 4종 + 19종 실시간 WebSocket 데이터를 지원합니다.
+
+## 아키텍처
+
+`KiwoomAPI`(sync) / `AsyncKiwoomAPI`(async)는 같은 구조를 공유하는 파사드입니다.
+15개 엔드포인트 모듈은 `ModuleRegistry`가 지연 생성하고, 실제 HTTP 호출·인증·재시도는
+`BaseClient`/`AsyncBaseClient` 한 곳에 모여 있습니다. 실시간 데이터는 REST와 별도로
+`KiwoomWebSocket`이 같은 토큰을 재사용해 처리합니다.
+
+```mermaid
+flowchart LR
+    User["사용자 코드"] --> API["KiwoomAPI / AsyncKiwoomAPI\n(ModuleRegistry 파사드)"]
+
+    API --> Modules["15개 엔드포인트 모듈\naccount · stock_info · market · chart\norder · credit_order · ranking · sector\nforeign_institution · short_selling · slb\ntheme · condition_search · elw · etf"]
+
+    Modules --> Client["BaseClient / AsyncBaseClient\n(request / request_all)"]
+
+    Client --> Auth["KiwoomAuth\n(토큰 발급 · 만료전 갱신 · 401 재발급)"]
+    Client --> RateLimiter["PerKeyRateLimiter\n(TR별 토큰 버킷, 429 자동 재시도)"]
+    Client --> Parsing["parsing\n(to_number / to_dataframe)"]
+
+    Auth -->|"POST /oauth2/token"| REST["키움 REST API\napi.kiwoom.com / mockapi.kiwoom.com"]
+    Client -->|"POST /api/dostk/..."| REST
+
+    API --> WS["KiwoomWebSocket"]
+    Auth -->|"access_token 재사용"| WS
+    WS <-->|"REG/REMOVE/REAL, 조건검색"| WSS["키움 실시간 WebSocket\nwss://.../api/dostk/websocket"]
+```
 
 ## 기존 키움 OpenAPI / pykiwoom 과 무엇이 다른가?
 
