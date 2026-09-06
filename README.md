@@ -28,13 +28,6 @@ pip install kiwoom-client
 이 라이브러리로 시세·수급·신용·공매도를 매일 TimescaleDB 에 적재합니다. 같은 스택의 나머지는
 [README 하단](#관련-프로젝트--오픈소스-퀀트-스택)에 있습니다.
 
-키움증권 REST API를 Python으로 쉽게 사용할 수 있는 래퍼 라이브러리입니다.
-기존 키움 **OpenAPI+(OCX/COM)**나 `pykiwoom`과 달리, 32bit·Windows 제약 없이 64bit Python과 서버(헤드리스) 환경에서 그대로 동작합니다.
-
-국내주식 **182개 REST 엔드포인트**와 **조건검색 4종**(WebSocket), **19종 실시간 WebSocket 데이터**를 지원합니다.
-
-> 검색 키워드: 키움 OpenAPI 파이썬, 키움증권 자동매매 파이썬, 키움 REST API, pykiwoom 대안, 키움 모의투자 파이썬, KOSPI/KOSDAQ 시세 조회, 키움 asyncio, 키움 토큰 갱신
-
 ## 목차
 
 - [왜 이 라이브러리인가?](#왜-이-라이브러리인가)
@@ -48,7 +41,6 @@ pip install kiwoom-client
 - [연속 조회 (페이지네이션)](#연속-조회-페이지네이션)
 - [에러 처리](#에러-처리)
 - [요청 제한 (Rate Limit)](#요청-제한-rate-limit)
-- [자주 묻는 질문 (FAQ)](#자주-묻는-질문-faq)
 - [아키텍처](#아키텍처)
 - [지원 API 목록](#지원-api-목록)
 
@@ -379,46 +371,6 @@ api = KiwoomAPI(app_key="...", app_secret="...", rate_limit=None)
 
 > 제한이 TR별이라, **서로 다른 TR을 섞어** 호출하면 합산 처리량은 더 높습니다. 반대로 **같은 TR을 반복**(연속조회 루프 등)할 때는 1 req/s에 수렴합니다 — 이 경우 [`request_all()`](#연속-조회-페이지네이션)을 쓰면 페이지네이션을 안전하게 자동 처리합니다.
 
-## 자주 묻는 질문 (FAQ)
-
-### 키움 앱키(appkey)와 시크릿키는 어떻게 발급받나요?
-
-[키움 REST API 포털](https://openapi.kiwoom.com)에 로그인한 뒤 **API 사용신청** 메뉴에서 신청하면 `appkey`와 `secretkey`가 발급됩니다. 발급받은 키는 `.env`에 보관하고 코드에 직접 하드코딩하지 마세요. ([`.env.example`](.env.example) 참고)
-
-### 모의투자에서 실전투자로 어떻게 전환하나요?
-
-`KiwoomAPI` 생성 시 `is_mock` 값만 바꾸면 됩니다. `is_mock=True`(모의투자) → `is_mock=False`(실전투자). 서버 URL은 라이브러리가 자동으로 전환합니다. 실전 전환 전 반드시 모의투자로 충분히 검증하세요.
-
-```python
-api = KiwoomAPI(app_key="...", app_secret="...", is_mock=False)  # 실전투자
-```
-
-### 접근토큰(access token)이 만료되면 어떻게 하나요?
-
-할 일이 없습니다. 토큰은 첫 호출에서 발급되고, 만료 60초 전에 선제 재발급되며, 그래도 인증 실패가 오면 재발급 후 한 번 더 시도합니다. (키움은 만료 토큰에 HTTP 401이 아니라 `200 + return_code 3`을 돌려주는데, 양쪽 다 인식합니다 — 실서버 확인 완료.) 갱신 시점을 바꾸려면 `KiwoomAPI(..., expiry_margin=300)`처럼 조절하세요.
-
-여러 프로세스가 토큰을 공유해야 한다면 `TokenProvider` 프로토콜(`get_valid_token()` / `refresh_token()`)을 구현해 넘기면 Redis 등 외부 캐시를 쓸 수 있습니다.
-
-### Rate limit(호출 제한) 에러가 나면 어떻게 하나요?
-
-내장 TR별 토큰 버킷 Rate Limiter가 호출 빈도를 자동 조절하고 `429` 발생 시 재시도까지 처리합니다(실측 기준 TR당 1 req/s, 버스트 2). 그래도 제한에 걸린다면 다중 프로세스/스레드에서 **같은 TR을 동시 호출** 중인지 확인하고, 연속조회는 `request_all()`로 한 번에 처리하세요. 자세한 내용은 [요청 제한 (Rate Limit)](#요청-제한-rate-limit)을 참고하세요.
-
-### 조건검색(실시간)은 어떻게 사용하나요?
-
-`api.condition_search`로 조건식 목록 조회·검색·실시간 등록/해제를 지원합니다. 실시간 조건검색은 WebSocket 기반으로 동작합니다. ([지원 API 목록](#조건검색-apicondition_search---4개-websocket) 참고)
-
-### Windows가 아닌 macOS/Linux에서도 되나요?
-
-네. REST/WebSocket 기반이라 OCX·COM이 필요 없어 macOS·Linux·서버(헤드리스) 환경에서 모두 동작합니다.
-
-### pandas DataFrame으로 바로 받을 수 있나요?
-
-`to_dataframe(result)` 한 줄이면 됩니다. 엔드포인트마다 다른 페이로드 키를 자동으로 찾고, `"+70000"` 같은 문자열도 숫자로 바꿔줍니다. [응답을 숫자·DataFrame으로 받기](#응답을-숫자dataframe으로-받기)와 [`examples/pandas_usage.py`](examples/pandas_usage.py)를 참고하세요.
-
-### asyncio를 지원하나요?
-
-네. `AsyncKiwoomAPI`가 `KiwoomAPI`와 같은 엔드포인트를 제공합니다. [asyncio 사용법](#asyncio-사용법)을 참고하세요.
-
 ## 아키텍처
 
 `KiwoomAPI`(sync) / `AsyncKiwoomAPI`(async)는 같은 구조를 공유하는 파사드입니다.
@@ -463,305 +415,29 @@ api.login()      # 접근토큰 발급 (선택 — 첫 호출에서 자동 발�
 api.logout()     # 접근토큰 폐기
 ```
 
-### 페이지네이션 (연속조회)
+### 모듈별 커버리지 (182개 REST 엔드포인트)
 
-```python
-# 단일 조회
-result = api.stock_info.basic_stock_info(stk_cd="005930")
+| 모듈 | 개수 | 설명 |
+|---|---|---|
+| `api.account` | 33 | 계좌 — 예수금·잔고·손익·증거금·주문내역 |
+| `api.stock_info` | 31 | 종목정보 — 기본정보·거래원·신용동향·업종코드 |
+| `api.market` | 25 | 시세 — 호가·기관/외국인 매매·프로그램매매 |
+| `api.ranking` | 23 | 순위정보 — 거래량·등락률·신용비율·외국인 상위 |
+| `api.chart` | 21 | 차트 — 틱·분·일·주·월·년봉 (종목·업종·금현물) |
+| `api.elw` | 11 | ELW — 민감도지표·괴리율·조건검색 |
+| `api.etf` | 9 | ETF — 수익율·시세·시간대별 체결 |
+| `api.order` | 8 | 주문 — 매수·매도·정정·취소 (금현물 포함) |
+| `api.sector` | 6 | 업종 — 현재가·지수·투자자 순매수 |
+| `api.credit_order` | 4 | 신용주문 — 매수·매도·정정·취소 |
+| `api.foreign_institution` | 4 | 기관/외국인 매매 동향 |
+| `api.slb` | 4 | 대차거래 — 추이·상위종목 |
+| `api.condition_search` | 4 | 조건검색 (WebSocket, `trnm` 기반) |
+| `api.theme` | 2 | 테마 — 그룹·구성종목 |
+| `api.short_selling` | 1 | 공매도 추이 |
+| `api.create_websocket()` | 19종 | 실시간 시세 — 체결·호가·잔고·VI 등 |
 
-# 연속 조회 (다음 페이지)
-result = api.account.filled_orders(cont_yn="Y", next_key="다음키값")
-```
-
----
-
-### 계좌 (`api.account`) - 33개
-
-| 메서드 | API ID | 설명 |
-|--------|--------|------|
-| `realized_profit_by_date()` | ka10072 | 일자별종목별실현손익요청_일자 |
-| `realized_profit_by_period()` | ka10073 | 일자별종목별실현손익요청_기간 |
-| `daily_realized_profit()` | ka10074 | 일자별실현손익요청 |
-| `unfilled_orders()` | ka10075 | 미체결요청 |
-| `filled_orders()` | ka10076 | 체결요청 |
-| `today_realized_profit_detail()` | ka10077 | 당일실현손익상세요청 |
-| `account_return_rate()` | ka10085 | 계좌수익률요청 |
-| `unfilled_split_order_detail()` | ka10088 | 미체결 분할주문 상세 |
-| `today_trading_journal()` | ka10170 | 당일매매일지요청 |
-| `deposit_detail()` | kt00001 | 예수금상세현황요청 |
-| `daily_estimated_deposit()` | kt00002 | 일별추정예탁자산현황요청 |
-| `estimated_asset()` | kt00003 | 추정자산조회요청 |
-| `account_evaluation()` | kt00004 | 계좌평가현황요청 |
-| `filled_position()` | kt00005 | 체결잔고요청 |
-| `order_execution_detail()` | kt00007 | 계좌별주문체결내역상세요청 |
-| `next_day_settlement()` | kt00008 | 계좌별익일결제예정내역요청 |
-| `order_execution_status()` | kt00009 | 계좌별주문체결현황요청 |
-| `withdrawable_amount()` | kt00010 | 주문인출가능금액요청 |
-| `orderable_qty_by_margin()` | kt00011 | 증거금율별주문가능수량조회요청 |
-| `orderable_qty_by_credit()` | kt00012 | 신용보증금율별주문가능수량조회요청 |
-| `margin_detail()` | kt00013 | 증거금세부내역조회요청 |
-| `comprehensive_transaction_history()` | kt00015 | 위탁종합거래내역요청 |
-| `daily_return_detail()` | kt00016 | 일별계좌수익률상세현황요청 |
-| `today_account_status()` | kt00017 | 계좌별당일현황요청 |
-| `evaluation_balance_detail()` | kt00018 | 계좌평가잔고내역요청 |
-| `account_number_inquiry()` | ka00001 | 계좌번호조회 |
-| `daily_balance_return_rate()` | ka01690 | 일별잔고수익률 |
-| `gold_spot_balance()` | kt50020 | 금현물 잔고확인 |
-| `gold_spot_deposit()` | kt50021 | 금현물 예수금 |
-| `gold_spot_order_execution_all()` | kt50030 | 금현물 주문체결전체조회 |
-| `gold_spot_order_execution()` | kt50031 | 금현물 주문체결조회 |
-| `gold_spot_transaction_history()` | kt50032 | 금현물 거래내역조회 |
-| `gold_spot_unfilled_orders()` | kt50075 | 금현물 미체결조회 |
-
-### 종목정보 (`api.stock_info`) - 31개
-
-| 메서드 | API ID | 설명 |
-|--------|--------|------|
-| `basic_stock_info()` | ka10001 | 주식기본정보요청 |
-| `stock_trading_agent()` | ka10002 | 주식거래원요청 |
-| `execution_info()` | ka10003 | 체결정보요청 |
-| `credit_trading_trend()` | ka10013 | 신용매매동향요청 |
-| `daily_transaction_detail()` | ka10015 | 일별거래상세요청 |
-| `new_high_low()` | ka10016 | 신고저가요청 |
-| `upper_lower_limit()` | ka10017 | 상하한가요청 |
-| `near_high_low()` | ka10018 | 고저가근접요청 |
-| `rapid_price_change()` | ka10019 | 가격급등락요청 |
-| `trading_volume_update()` | ka10024 | 거래량갱신요청 |
-| `volume_concentration()` | ka10025 | 매물대집중요청 |
-| `high_low_per()` | ka10026 | 고저PER요청 |
-| `change_rate_vs_opening()` | ka10028 | 시가대비등락률요청 |
-| `trading_agent_supply_demand()` | ka10043 | 거래원매물대분석요청 |
-| `trading_agent_instant_volume()` | ka10052 | 거래원순간거래량요청 |
-| `vi_triggered_stocks()` | ka10054 | 변동성완화장치발동종목요청 |
-| `today_vs_yesterday_volume()` | ka10055 | 당일전일체결량요청 |
-| `daily_trading_by_investor()` | ka10058 | 투자자별일별매매종목요청 |
-| `investor_institution_by_stock()` | ka10059 | 종목별투자자기관별요청 |
-| `investor_institution_aggregate()` | ka10061 | 종목별투자자기관별합계요청 |
-| `today_vs_yesterday_execution()` | ka10084 | 당일전일체결요청 |
-| `watchlist_stock_info()` | ka10095 | 관심종목정보요청 |
-| `stock_info_list()` | ka10099 | 종목정보 리스트 |
-| `stock_info_inquiry()` | ka10100 | 종목정보 조회 |
-| `industry_code_list()` | ka10101 | 업종코드 리스트 |
-| `member_company_list()` | ka10102 | 회원사 리스트 |
-| `program_buy_top50()` | ka90003 | 프로그램순매수상위50요청 |
-| `program_trading_by_stock()` | ka90004 | 종목별프로그램매매현황요청 |
-| `realtime_stock_inquiry_rank()` | ka00198 | 실시간종목조회순위 |
-| `margin_loan_available_stocks()` | kt20016 | 신용융자 가능종목요청 |
-| `margin_loan_inquiry()` | kt20017 | 신용융자 가능문의 |
-
-### 시세 (`api.market`) - 25개
-
-| 메서드 | API ID | 설명 |
-|--------|--------|------|
-| `stock_quote()` | ka10004 | 주식호가요청 |
-| `stock_daily_weekly_monthly()` | ka10005 | 주식일주월시분요청 |
-| `stock_minute_price()` | ka10006 | 주식시분요청 |
-| `order_book_info()` | ka10007 | 시세표성정보요청 |
-| `rights_issue_price()` | ka10011 | 신주인수권전체시세요청 |
-| `daily_institutional_trading()` | ka10044 | 일별기관매매종목요청 |
-| `institutional_trading_trend()` | ka10045 | 종목별기관매매추이요청 |
-| `hourly_execution_strength()` | ka10046 | 체결강도추이시간별요청 |
-| `daily_execution_strength()` | ka10047 | 체결강도추이일별요청 |
-| `intraday_investor_trading()` | ka10063 | 장중투자자별매매요청 |
-| `after_hours_investor_trading()` | ka10066 | 장마감후투자자별매매요청 |
-| `broker_stock_trading_trend()` | ka10078 | 증권사별종목매매동향요청 |
-| `daily_stock_price()` | ka10086 | 일별주가요청 |
-| `after_hours_single_price()` | ka10087 | 시간외단일가요청 |
-| `program_trading_by_time()` | ka90005 | 프로그램매매추이요청 시간대별 |
-| `program_arbitrage_balance()` | ka90006 | 프로그램매매차익잔고추이요청 |
-| `cumulative_program_trading()` | ka90007 | 프로그램매매누적추이요청 |
-| `program_trading_by_stock_time()` | ka90008 | 종목시간별프로그램매매추이요청 |
-| `program_trading_by_date()` | ka90010 | 프로그램매매추이요청 일자별 |
-| `program_trading_by_stock_day()` | ka90013 | 종목일별프로그램매매추이요청 |
-| `gold_spot_execution_trend()` | ka50010 | 금현물체결추이 |
-| `gold_spot_daily_trend()` | ka50012 | 금현물일별추이 |
-| `gold_spot_expected_execution()` | ka50087 | 금현물예상체결 |
-| `gold_spot_price_info()` | ka50100 | 금현물 시세정보 |
-| `gold_spot_order_book()` | ka50101 | 금현물 호가 |
-
-### 주문 (`api.order`) - 8개
-
-| 메서드 | API ID | 설명 |
-|--------|--------|------|
-| `buy_order()` | kt10000 | 주식 매수주문 |
-| `sell_order()` | kt10001 | 주식 매도주문 |
-| `modify_order()` | kt10002 | 주식 정정주문 |
-| `cancel_order()` | kt10003 | 주식 취소주문 |
-| `gold_spot_buy_order()` | kt50000 | 금현물 매수주문 |
-| `gold_spot_sell_order()` | kt50001 | 금현물 매도주문 |
-| `gold_spot_modify_order()` | kt50002 | 금현물 정정주문 |
-| `gold_spot_cancel_order()` | kt50003 | 금현물 취소주문 |
-
-### 신용주문 (`api.credit_order`) - 4개
-
-| 메서드 | API ID | 설명 |
-|--------|--------|------|
-| `margin_buy_order()` | kt10006 | 신용 매수주문 |
-| `margin_sell_order()` | kt10007 | 신용 매도주문 |
-| `margin_modify_order()` | kt10008 | 신용 정정주문 |
-| `margin_cancel_order()` | kt10009 | 신용 취소주문 |
-
-### 차트 (`api.chart`) - 21개
-
-| 메서드 | API ID | 설명 |
-|--------|--------|------|
-| `investor_institution_chart()` | ka10060 | 종목별투자자기관별차트요청 |
-| `intraday_investor_chart()` | ka10064 | 장중투자자별매매차트요청 |
-| `stock_tick_chart()` | ka10079 | 주식틱차트조회요청 |
-| `stock_minute_chart()` | ka10080 | 주식분봉차트조회요청 |
-| `stock_daily_chart()` | ka10081 | 주식일봉차트조회요청 |
-| `stock_weekly_chart()` | ka10082 | 주식주봉차트조회요청 |
-| `stock_monthly_chart()` | ka10083 | 주식월봉차트조회요청 |
-| `stock_yearly_chart()` | ka10094 | 주식년봉차트조회요청 |
-| `industry_tick_chart()` | ka20004 | 업종틱차트조회요청 |
-| `industry_minute_chart()` | ka20005 | 업종분봉조회요청 |
-| `industry_daily_chart()` | ka20006 | 업종일봉조회요청 |
-| `industry_weekly_chart()` | ka20007 | 업종주봉조회요청 |
-| `industry_monthly_chart()` | ka20008 | 업종월봉조회요청 |
-| `industry_yearly_chart()` | ka20019 | 업종년봉조회요청 |
-| `gold_spot_tick_chart()` | ka50079 | 금현물틱차트조회요청 |
-| `gold_spot_minute_chart()` | ka50080 | 금현물분봉차트조회요청 |
-| `gold_spot_daily_chart()` | ka50081 | 금현물일봉차트조회요청 |
-| `gold_spot_weekly_chart()` | ka50082 | 금현물주봉차트조회요청 |
-| `gold_spot_monthly_chart()` | ka50083 | 금현물월봉차트조회요청 |
-| `gold_spot_intraday_tick_chart()` | ka50091 | 금현물당일틱차트조회요청 |
-| `gold_spot_intraday_minute_chart()` | ka50092 | 금현물당일분봉차트조회요청 |
-
-### 순위정보 (`api.ranking`) - 23개
-
-| 메서드 | API ID | 설명 |
-|--------|--------|------|
-| `top_order_book_volume()` | ka10020 | 호가잔량상위요청 |
-| `sudden_order_book_increase()` | ka10021 | 호가잔량급증요청 |
-| `sudden_order_ratio_increase()` | ka10022 | 잔량율급증요청 |
-| `sudden_volume_increase()` | ka10023 | 거래량급증요청 |
-| `top_change_rate()` | ka10027 | 전일대비등락률상위요청 |
-| `top_expected_change_rate()` | ka10029 | 예상체결등락률상위요청 |
-| `top_volume_today()` | ka10030 | 당일거래량상위요청 |
-| `top_volume_yesterday()` | ka10031 | 전일거래량상위요청 |
-| `top_trading_value()` | ka10032 | 거래대금상위요청 |
-| `top_credit_ratio()` | ka10033 | 신용비율상위요청 |
-| `top_foreign_trades_by_period()` | ka10034 | 외인기간별매매상위요청 |
-| `top_foreign_consecutive_buy()` | ka10035 | 외인연속순매매상위요청 |
-| `top_foreign_limit_increase()` | ka10036 | 외인한도소진율증가상위 |
-| `top_foreign_broker_trading()` | ka10037 | 외국계창구매매상위요청 |
-| `broker_ranking_by_stock()` | ka10038 | 종목별증권사순위요청 |
-| `top_broker_by_stock()` | ka10039 | 증권사별매매상위요청 |
-| `main_brokers_today()` | ka10040 | 당일주요거래원요청 |
-| `top_net_buying_brokers()` | ka10042 | 순매수거래원순위요청 |
-| `departed_brokers_today()` | ka10053 | 당일상위이탈원요청 |
-| `same_day_net_buying_rank()` | ka10062 | 동일순매매순위요청 |
-| `top_intraday_investor_trading()` | ka10065 | 장중투자자별매매상위요청 |
-| `after_hours_change_rate_rank()` | ka10098 | 시간외단일가등락율순위요청 |
-| `top_foreign_institution_trades()` | ka90009 | 외국인기관매매상위요청 |
-
-### 업종 (`api.sector`) - 6개
-
-| 메서드 | API ID | 설명 |
-|--------|--------|------|
-| `industry_program_trading()` | ka10010 | 업종프로그램요청 |
-| `industry_investor_net_buy()` | ka10051 | 업종별투자자순매수요청 |
-| `industry_current_price()` | ka20001 | 업종현재가요청 |
-| `industry_stock_price()` | ka20002 | 업종별주가요청 |
-| `all_industry_index()` | ka20003 | 전업종지수요청 |
-| `industry_daily_price()` | ka20009 | 업종현재가일별요청 |
-
-### 기관/외국인 (`api.foreign_institution`) - 4개
-
-| 메서드 | API ID | 설명 |
-|--------|--------|------|
-| `foreign_trading_trend()` | ka10008 | 주식외국인종목별매매동향 |
-| `institutional_stock()` | ka10009 | 주식기관요청 |
-| `consecutive_trading_status()` | ka10131 | 기관외국인연속매매현황요청 |
-| `gold_spot_investor_status()` | ka52301 | 금현물투자자현황 |
-
-### 공매도 (`api.short_selling`) - 1개
-
-| 메서드 | API ID | 설명 |
-|--------|--------|------|
-| `short_selling_trend()` | ka10014 | 공매도추이요청 |
-
-### 대차거래 (`api.slb`) - 4개
-
-| 메서드 | API ID | 설명 |
-|--------|--------|------|
-| `lending_trend()` | ka10068 | 대차거래추이요청 |
-| `top10_lending()` | ka10069 | 대차거래상위10종목요청 |
-| `lending_trend_by_stock()` | ka20068 | 대차거래추이요청(종목별) |
-| `lending_details()` | ka90012 | 대차거래내역요청 |
-
-### 테마 (`api.theme`) - 2개
-
-| 메서드 | API ID | 설명 |
-|--------|--------|------|
-| `theme_group_list()` | ka90001 | 테마그룹별요청 |
-| `theme_component_stocks()` | ka90002 | 테마구성종목요청 |
-
-### 조건검색 (`api.condition_search`) - 4개 (WebSocket)
-
-조건검색은 REST 가 아니라 실시간과 같은 WebSocket 을 타며, `api_id` 가 아닌 `trnm` 으로
-구분합니다. 아래 메서드는 요청 페이로드를 만들어 줄 뿐이고, 실제 전송은 `ws.send()` 입니다.
-
-| 메서드 | trnm | 설명 |
-|--------|------|------|
-| `condition_list()` | `CNSRLST` | 조건검색 목록조회 |
-| `condition_search(seq)` | `CNSRREQ` | 조건검색 요청 (일반) |
-| `condition_search_realtime(seq)` | `CNSRREQ` | 조건검색 요청 (`search_type="1"`, 실시간 편입/이탈 포함) |
-| `condition_search_cancel(seq)` | `CNSRCLR` | 조건검색 실시간 해제 |
-
-### ELW (`api.elw`) - 11개
-
-| 메서드 | API ID | 설명 |
-|--------|--------|------|
-| `daily_sensitivity_indicator()` | ka10048 | ELW일별민감도지표요청 |
-| `sensitivity_indicator()` | ka10050 | ELW민감도지표요청 |
-| `price_spike()` | ka30001 | ELW가격급등락요청 |
-| `top_net_buying_by_broker()` | ka30002 | 거래원별ELW순매매상위요청 |
-| `lp_daily_holding_trend()` | ka30003 | ELWLP보유일별추이요청 |
-| `premium_rate()` | ka30004 | ELW괴리율요청 |
-| `condition_search()` | ka30005 | ELW조건검색요청 |
-| `change_rate_ranking()` | ka30009 | ELW등락율순위요청 |
-| `order_volume_ranking()` | ka30010 | ELW잔량순위요청 |
-| `proximity_rate()` | ka30011 | ELW근접율요청 |
-| `detailed_stock_info()` | ka30012 | ELW종목상세정보요청 |
-
-### ETF (`api.etf`) - 9개
-
-| 메서드 | API ID | 설명 |
-|--------|--------|------|
-| `return_rate()` | ka40001 | ETF수익율요청 |
-| `stock_info()` | ka40002 | ETF종목정보요청 |
-| `daily_trend()` | ka40003 | ETF일별추이요청 |
-| `overall_market_price()` | ka40004 | ETF전체시세요청 |
-| `time_segment_trend()` | ka40006 | ETF시간대별추이요청 |
-| `time_segment_execution()` | ka40007 | ETF시간대별체결요청 |
-| `daily_execution()` | ka40008 | ETF일자별체결요청 |
-| `time_nav()` | ka40009 | ETF시간대별체결요청 |
-| `time_trend()` | ka40010 | ETF시간대별추이요청 |
-
-### 실시간시세 (`api.create_websocket()`) - 19종
-
-| 코드 | 설명 |
-|------|------|
-| 00 | 주문체결 |
-| 04 | 잔고 |
-| 0A | 주식기세 |
-| 0B | 주식체결 |
-| 0C | 주식우선호가 |
-| 0D | 주식호가잔량 |
-| 0E | 주식시간외호가 |
-| 0F | 주식당일거래원 |
-| 0G | ETF NAV |
-| 0H | 주식예상체결 |
-| 0I | 국제금환산가격 |
-| 0J | 업종지수 |
-| 0U | 업종등락 |
-| 0g | 주식종목정보 |
-| 0m | ELW 이론가 |
-| 0s | 장시작시간 |
-| 0u | ELW 지표 |
-| 0w | 종목프로그램매매 |
-| 1h | VI발동/해제 |
+메서드 이름과 파라미터 전체 목록은 [`src/kiwoom_client/domestic/`](src/kiwoom_client/domestic/) 소스나
+IDE 자동완성으로 확인할 수 있습니다. API ID(`ka10001` 등)는 키움 공식 가이드의 TR 코드와 동일합니다.
 
 ## 참고
 
