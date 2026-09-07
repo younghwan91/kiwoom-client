@@ -43,6 +43,7 @@ pip install kiwoom-client
 - [요청 제한 (Rate Limit)](#요청-제한-rate-limit)
 - [아키텍처](#아키텍처)
 - [환경 설정](#환경-설정)
+- [MCP 서버로 사용하기](#mcp-서버로-사용하기)
 - [지원 API 목록](#지원-api-목록)
 
 ## 왜 이 라이브러리인가?
@@ -406,6 +407,42 @@ flowchart LR
 | `is_mock` | `False` (기본값) | `True` |
 | REST URL | `https://api.kiwoom.com` | `https://mockapi.kiwoom.com` |
 | WebSocket URL | `wss://api.kiwoom.com:10000` | `wss://mockapi.kiwoom.com:10000` |
+
+## MCP 서버로 사용하기
+
+Claude Code, Cursor 등 MCP(Model Context Protocol)를 지원하는 도구에서 이 라이브러리를 직접 호출할 수 있습니다. 15개 도메인 모듈의 REST 엔드포인트 전부와 조건검색(condition_search) 4종이 MCP 도구로 노출됩니다.
+
+```bash
+pip install 'kiwoom-client[mcp]'
+```
+
+MCP 클라이언트 설정(예: Claude Code `.mcp.json`)에 추가:
+
+```json
+{
+  "mcpServers": {
+    "kiwoom-client": {
+      "command": "kiwoom-client-mcp",
+      "env": {
+        "KIWOOM_APP_KEY": "발급받은_앱키",
+        "KIWOOM_APP_SECRET": "발급받은_시크릿키",
+        "KIWOOM_IS_MOCK": "true"
+      }
+    }
+  }
+}
+```
+
+| 환경변수 | 설명 | 기본값 |
+|---|---|---|
+| `KIWOOM_APP_KEY` | 앱키 (필수) | — |
+| `KIWOOM_APP_SECRET` | 시크릿키 (필수) | — |
+| `KIWOOM_IS_MOCK` | 모의투자 서버 사용 여부 | `false` |
+| `KIWOOM_MCP_ALLOW_LIVE_ORDERS` | 실전투자 계좌에서 주문 도구(매수/매도/정정/취소·신용주문)를 노출할지 여부 | `false` |
+
+**실주문 가드**: `KIWOOM_IS_MOCK=false`(실전투자)이고 `KIWOOM_MCP_ALLOW_LIVE_ORDERS`가 `true`가 아니면, 주문 관련 도구는 서버 시작 시점에 아예 등록되지 않습니다 — MCP 클라이언트(AI 에이전트)가 그 도구의 존재 자체를 모릅니다. 모의투자(`KIWOOM_IS_MOCK=true`)는 이 가드 없이 항상 사용 가능합니다. 이 가드는 MCP 서버 경로에만 적용되며, 파이썬 코드에서 `KiwoomAPI`/`AsyncKiwoomAPI`를 직접 쓰는 기존 방식에는 영향이 없습니다.
+
+조회성 도구는 `{"params": {...}}` 형태로 TR 요청 필드를 그대로 전달합니다(필드 목록은 [키움 REST API 가이드](https://openapi.kiwoom.com) 참고). 예: `stock_info_basic_stock_info` 도구에 `{"params": {"stk_cd": "005930"}}`.
 
 ## 지원 API 목록
 
