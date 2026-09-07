@@ -20,8 +20,12 @@ from mcp.server import Server, ServerRequestContext
 from mcp.server.stdio import stdio_server
 
 from kiwoom_client import AsyncKiwoomAPI
+from kiwoom_client.base import KiwoomAPIError
 from kiwoom_client.domestic.condition_search import ConditionSearch
-from kiwoom_client.mcp.condition_search_session import ConditionSearchSession
+from kiwoom_client.mcp.condition_search_session import (
+    ConditionSearchSession,
+    ConditionSearchTimeout,
+)
 from kiwoom_client.mcp.guard import live_orders_allowed
 from kiwoom_client.mcp.tools import RestToolSpec, discover_rest_tools
 
@@ -64,18 +68,60 @@ _CONDITION_SEARCH_SPECS: list[RestToolSpec] = [
 
 
 def build_server(
-    api: AsyncKiwoomAPI | None, *, allow_live_orders: bool
+    api: AsyncKiwoomAPI | None,
+    *,
+    allow_live_orders: bool,
+    session: ConditionSearchSession | None = None,
 ) -> tuple[Server, list[RestToolSpec]]:
-    """Assemble the MCP Server and the filtered list of tool specs.
+    """Assemble the MCP Server, wired with its ``tools/list``/``tools/call``
+    handlers, and the filtered list of tool specs.
 
-    Pure assembly — no stdio, no network. ``api`` may be ``None`` here since
-    this only reads tool metadata, not credentials.
+    No stdio, no network of its own. ``api``/``session`` may be ``None`` when
+    the caller only wants ``specs`` for tool-filtering tests — that's safe as
+    long as the registered handlers are never actually invoked, since both
+    are closures that only touch ``api``/``session`` when called.
     """
     rest_specs = [
         spec for spec in discover_rest_tools() if not spec.guarded or allow_live_orders
     ]
     all_specs = rest_specs + _CONDITION_SEARCH_SPECS
+    spec_by_name = {spec.tool_name: spec for spec in all_specs}
     app: Server = Server("kiwoom-client")
+
+    async def on_list_tools(
+        _ctx: ServerRequestContext[Any], _params: types.PaginatedRequestParams | None
+    ) -> types.ListToolsResult:
+        return types.ListToolsResult(
+            tools=[
+                types.Tool(
+                    name=spec.tool_name,
+                    description=spec.description,
+                    input_schema=_input_schema(spec),
+                )
+                for spec in all_specs
+            ]
+        )
+
+    async def on_call_tool(
+        _ctx: ServerRequestContext[Any], params: types.CallToolRequestParams
+    ) -> types.CallToolResult:
+        assert api is not None
+        try:
+            result = await dispatch_tool(
+                api, session, spec_by_name, params.name, params.arguments or {}
+            )
+        except (KiwoomAPIError, ConditionSearchTimeout, ValueError) as exc:
+            return types.CallToolResult(
+                content=[types.TextContent(type="text", text=str(exc))],
+                is_error=True,
+            )
+        return types.CallToolResult(
+            content=[types.TextContent(type="text", text=json.dumps(result, ensure_ascii=False))]
+        )
+
+    app.add_request_handler("tools/list", types.PaginatedRequestParams, on_list_tools)
+    app.add_request_handler("tools/call", types.CallToolRequestParams, on_call_tool)
+
     return app, all_specs
 
 
@@ -187,51 +233,22 @@ def main() -> None:
 
     api = AsyncKiwoomAPI(app_key, app_secret, is_mock=is_mock)
     allow_live_orders = live_orders_allowed(is_mock=is_mock)
-    app, specs = build_server(api, allow_live_orders=allow_live_orders)
-    spec_by_name = {spec.tool_name: spec for spec in specs}
+    session = ConditionSearchSession(connect=lambda: _connect_condition_search(api))
+    app, specs = build_server(api, allow_live_orders=allow_live_orders, session=session)
     registered_rest = [s for s in specs if s.module_name != "condition_search"]
     excluded = len(discover_rest_tools()) - len(registered_rest)
     if excluded:
         logger.info("실주문 opt-in 미설정 — 주문 도구 %d개를 등록하지 않았습니다.", excluded)
 
-    session = ConditionSearchSession(connect=lambda: _connect_condition_search(api))
-
-    async def on_list_tools(
-        _ctx: ServerRequestContext[Any], _params: types.PaginatedRequestParams | None
-    ) -> types.ListToolsResult:
-        return types.ListToolsResult(
-            tools=[
-                types.Tool(
-                    name=spec.tool_name,
-                    description=spec.description,
-                    input_schema=_input_schema(spec),
-                )
-                for spec in specs
-            ]
-        )
-
-    async def on_call_tool(
-        _ctx: ServerRequestContext[Any], params: types.CallToolRequestParams
-    ) -> types.CallToolResult:
-        result = await dispatch_tool(
-            api, session, spec_by_name, params.name, params.arguments or {}
-        )
-        return types.CallToolResult(
-            content=[types.TextContent(type="text", text=json.dumps(result, ensure_ascii=False))]
-        )
-
-    app.add_request_handler("tools/list", types.PaginatedRequestParams, on_list_tools)
-    app.add_request_handler("tools/call", types.CallToolRequestParams, on_call_tool)
-
     async def _run() -> None:
-        async with stdio_server() as (read_stream, write_stream):
-            await app.run(read_stream, write_stream, app.create_initialization_options())
+        try:
+            async with stdio_server() as (read_stream, write_stream):
+                await app.run(read_stream, write_stream, app.create_initialization_options())
+        finally:
+            await session.close()
+            await api.close()
 
-    try:
-        asyncio.run(_run())
-    finally:
-        asyncio.run(session.close())
-        asyncio.run(api.close())
+    asyncio.run(_run())
 
 
 async def _connect_condition_search(api: AsyncKiwoomAPI):

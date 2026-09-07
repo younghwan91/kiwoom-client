@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from mcp import types
 
 from kiwoom_client import AsyncKiwoomAPI
 from kiwoom_client.base import KiwoomAPIError
@@ -88,3 +89,58 @@ class TestDispatchToolRest:
             await dispatch_tool(
                 api=api, session=None, spec_by_name={}, name="nope", arguments={}
             )
+
+
+class TestRegisteredHandlers:
+    """Exercises the tools/list and tools/call handlers build_server wires up."""
+
+    async def test_list_tools_returns_the_filtered_specs(self):
+        app, specs = build_server(api=None, allow_live_orders=False)
+        handler = app.get_request_handler("tools/list").handler
+        result = await handler(None, types.PaginatedRequestParams())
+        assert isinstance(result, types.ListToolsResult)
+        assert {t.name for t in result.tools} == {s.tool_name for s in specs}
+        assert "order_buy_order" not in {t.name for t in result.tools}
+
+    async def test_call_tool_returns_the_dispatch_result_as_text(self, httpx_mock, api):
+        httpx_mock.add_response(
+            url="https://mockapi.kiwoom.com/api/dostk/stkinfo",
+            json={"return_code": 0, "return_msg": "OK", "stk_cd": "005930"},
+        )
+        app, _specs = build_server(api, allow_live_orders=True)
+        handler = app.get_request_handler("tools/call").handler
+        result = await handler(
+            None,
+            types.CallToolRequestParams(
+                name="stock_info_basic_stock_info", arguments={"params": {"stk_cd": "005930"}}
+            ),
+        )
+        assert isinstance(result, types.CallToolResult)
+        assert result.is_error is False
+        assert "005930" in result.content[0].text
+
+    async def test_call_tool_returns_kiwoom_api_error_as_call_tool_result(self, httpx_mock, api):
+        httpx_mock.add_response(
+            url="https://mockapi.kiwoom.com/api/dostk/stkinfo",
+            status_code=200,
+            json={"return_code": 4, "return_msg": "종목코드 오류"},
+        )
+        app, _specs = build_server(api, allow_live_orders=True)
+        handler = app.get_request_handler("tools/call").handler
+        result = await handler(
+            None,
+            types.CallToolRequestParams(
+                name="stock_info_basic_stock_info", arguments={"params": {"stk_cd": "BAD"}}
+            ),
+        )
+        assert isinstance(result, types.CallToolResult)
+        assert result.is_error is True
+        assert "종목코드 오류" in result.content[0].text
+
+    async def test_call_tool_returns_unknown_tool_error_as_call_tool_result(self, api):
+        app, _specs = build_server(api, allow_live_orders=True)
+        handler = app.get_request_handler("tools/call").handler
+        result = await handler(None, types.CallToolRequestParams(name="nope", arguments={}))
+        assert isinstance(result, types.CallToolResult)
+        assert result.is_error is True
+        assert "Unknown tool" in result.content[0].text
