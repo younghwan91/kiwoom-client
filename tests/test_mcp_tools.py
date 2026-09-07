@@ -54,7 +54,7 @@ class TestDiscoverRestTools:
             assert spec.guarded == (spec.module_name in GUARDED_MODULES)
 
     def test_guarded_modules_is_order_and_credit_order(self):
-        assert GUARDED_MODULES == frozenset({"order", "credit_order"})
+        assert frozenset({"order", "credit_order"}) == GUARDED_MODULES
 
     def test_returns_rest_tool_spec_instances(self):
         specs = discover_rest_tools()
