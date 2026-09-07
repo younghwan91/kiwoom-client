@@ -19,6 +19,7 @@
 > Kiwoom OpenAPI+ (OCX/COM). Automate Korean stock (KOSPI/KOSDAQ) trading, quotes, and real-time WebSocket
 > data on Windows, macOS, and Linux. Tokens refresh themselves, and both **sync and async** clients ship.
 > **182 REST endpoints · 4 condition-search calls · 19 real-time data types** · mock & live trading.
+> Also ships as an **MCP (Model Context Protocol) server**, so AI agents like Claude Code and Cursor can call quotes, account, and order APIs as tools.
 
 ```bash
 pip install kiwoom-client
@@ -41,6 +42,7 @@ Unlike the legacy OpenAPI+ (OCX/COM) or `pykiwoom`, it has no 32-bit/Windows-onl
 - **Built-in rate limiter**: Per-TR token-bucket rate limiting to stay within API limits.
 - **Usable responses**: `to_dataframe()` turns `"+70000"`-style strings into numbers and hands you a DataFrame.
 - **Full coverage**: 182 REST endpoints for Korean domestic stocks + 4 condition-search calls + 19 real-time WebSocket data types.
+- **Built-in MCP server**: Call this library's tools directly from Model Context Protocol clients like Claude Code and Cursor, no glue code required. ([details](#using-as-an-mcp-server))
 
 ## Installation
 

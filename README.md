@@ -19,6 +19,7 @@
 > COM/OCX 없이 Windows · macOS · Linux 어디서나 **국내주식 자동매매 · 시세조회 · 실시간 WebSocket**을 사용할 수 있습니다.
 > **토큰 자동 갱신**으로 봇이 만료에 죽지 않고, **sync / async** 양쪽을 지원합니다.
 > **182개 REST 엔드포인트 · 조건검색 4종 · 19종 실시간 데이터** · 모의투자/실전투자 지원.
+> **MCP(Model Context Protocol) 서버**로도 제공되어, Claude Code · Cursor 등 AI 에이전트가 도구 호출로 직접 시세·계좌·주문 API를 씁니다.
 
 ```bash
 pip install kiwoom-client
@@ -55,6 +56,7 @@ pip install kiwoom-client
 - **내장 Rate Limiter**: TR(api_id)별 토큰 버킷으로 호출 제한을 자동 관리합니다.
 - **바로 쓰는 응답**: `to_dataframe()`이 `"+70000"` 같은 문자열을 숫자로 바꿔 DataFrame으로 넘겨줍니다.
 - **완전한 커버리지**: 국내주식 182개 REST 엔드포인트 + 조건검색 4종 + 19종 실시간 WebSocket 데이터를 지원합니다.
+- **MCP 서버 내장**: Claude Code, Cursor 등 Model Context Protocol 클라이언트에서 별도 코드 없이 이 라이브러리의 도구를 바로 호출할 수 있습니다. ([자세히](#mcp-서버로-사용하기))
 
 ## 기존 키움 OpenAPI / pykiwoom 과 무엇이 다른가?
 
