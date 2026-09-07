@@ -170,6 +170,42 @@ await ws.send(api.condition_search.condition_search_realtime(seq="1"))
 > names (`item`/`values`) are still unconfirmed — the market was closed during testing.
 > Run `python tests/integration_ws_smoke.py --prod` to check for yourself.
 
+## Using as an MCP Server
+
+This library can be called directly from MCP (Model Context Protocol) clients such as Claude Code and Cursor. Every REST endpoint across all 15 domain modules, plus the 4 condition_search tools, is exposed as an MCP tool.
+
+```bash
+pip install 'kiwoom-client[mcp]'
+```
+
+Add to your MCP client config (e.g. Claude Code `.mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "kiwoom-client": {
+      "command": "kiwoom-client-mcp",
+      "env": {
+        "KIWOOM_APP_KEY": "your_app_key",
+        "KIWOOM_APP_SECRET": "your_app_secret",
+        "KIWOOM_IS_MOCK": "true"
+      }
+    }
+  }
+}
+```
+
+| Env var | Description | Default |
+|---|---|---|
+| `KIWOOM_APP_KEY` | App key (required) | — |
+| `KIWOOM_APP_SECRET` | App secret (required) | — |
+| `KIWOOM_IS_MOCK` | Use the mock trading server | `false` |
+| `KIWOOM_MCP_ALLOW_LIVE_ORDERS` | Expose order tools (buy/sell/modify/cancel, credit orders) against a live account | `false` |
+
+**Live-order guard**: when `KIWOOM_IS_MOCK=false` (live account) and `KIWOOM_MCP_ALLOW_LIVE_ORDERS` is not `true`, order-related tools are not registered at server startup at all — the MCP client (AI agent) never sees they exist. Mock trading (`KIWOOM_IS_MOCK=true`) always has them available, no guard. This guard applies only to the MCP path — direct use of `KiwoomAPI`/`AsyncKiwoomAPI` from Python code is unaffected.
+
+Query-style tools take `{"params": {...}}`, passed straight through as the TR request body (see the [Kiwoom REST API guide](https://openapi.kiwoom.com) for field names). Example: `stock_info_basic_stock_info` with `{"params": {"stk_cd": "005930"}}`.
+
 ## API Categories
 
 | Category | Module | Endpoints |

@@ -14,6 +14,7 @@ keywords = [
     "stock", "trading", "자동매매", "퀀트", "quant", "algorithmic-trading",
     "rest-api", "websocket", "kospi", "kosdaq", "korea-finance", "investment",
     "asyncio", "async", "pandas", "주식", "증권", "자동주문",
+    "mcp", "model-context-protocol", "ai-agents", "claude-code", "cursor",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -42,6 +43,9 @@ dependencies = [
 pandas = [
     "pandas>=2.0",
 ]
+mcp = [
+    "mcp>=1.0",
+]
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.24.0",
@@ -50,6 +54,9 @@ dev = [
     "ruff>=0.6",
     "mypy>=1.11",
 ]
+
+[project.scripts]
+kiwoom-client-mcp = "kiwoom_client.mcp.server:main"
 
 [project.urls]
 Homepage = "https://pypi.org/project/kiwoom-client/"

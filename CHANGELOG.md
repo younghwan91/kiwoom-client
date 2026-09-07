@@ -3,6 +3,15 @@
 이 프로젝트는 [Keep a Changelog](https://keepachangelog.com/ko/1.1.0/) 형식을 따르며,
 [유의적 버전](https://semver.org/lang/ko/)을 사용합니다.
 
+## [Unreleased]
+
+### Added
+
+- **MCP 서버.** `pip install 'kiwoom-client[mcp]'` 후 `kiwoom-client-mcp`로
+  실행하면 Claude Code/Cursor 등에서 182개 REST 엔드포인트 + condition_search
+  4종을 도구로 직접 호출할 수 있습니다. 주문/신용주문 도구는 실전투자 계좌에서
+  `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true`를 명시해야 노출됩니다.
+
 ## [0.3.0] - 2026-09-05
 
 ### ⚠️ Breaking
