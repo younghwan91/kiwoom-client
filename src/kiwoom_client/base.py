@@ -253,6 +253,16 @@ class BaseClient(_ClientCore):
 
             resp.raise_for_status()
             data = resp.json()
+            # Kiwoom returns pagination continuation as RESPONSE HEADERS, not
+            # in the JSON body -- request_all()/_accumulate() below reads
+            # data['cont-yn']/data['next-key'], so fold the headers in here.
+            # (Found 2026-09-12: request_all() silently stopped after page 1
+            # on every endpoint that actually needs continuation, since these
+            # keys were never in the body to begin with.)
+            if "cont-yn" not in data:
+                data["cont-yn"] = resp.headers.get("cont-yn", "N")
+            if "next-key" not in data:
+                data["next-key"] = resp.headers.get("next-key", "")
 
             # return_code 5 also signals "허용된 요청 개수를 초과" — retry.
             if data.get("return_code") == 5 and attempt < self._max_retries:
@@ -411,6 +421,16 @@ class AsyncBaseClient(_ClientCore):
 
             resp.raise_for_status()
             data = resp.json()
+            # Kiwoom returns pagination continuation as RESPONSE HEADERS, not
+            # in the JSON body -- request_all()/_accumulate() below reads
+            # data['cont-yn']/data['next-key'], so fold the headers in here.
+            # (Found 2026-09-12: request_all() silently stopped after page 1
+            # on every endpoint that actually needs continuation, since these
+            # keys were never in the body to begin with.)
+            if "cont-yn" not in data:
+                data["cont-yn"] = resp.headers.get("cont-yn", "N")
+            if "next-key" not in data:
+                data["next-key"] = resp.headers.get("next-key", "")
 
             if data.get("return_code") == 5 and attempt < self._max_retries:
                 await asyncio.sleep(self._retry_backoff * (attempt + 1))

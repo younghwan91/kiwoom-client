@@ -118,3 +118,27 @@ class TestBaseClient:
             assert len(result) == 3
             assert result[0]["name"] == "A"
             assert result[2]["name"] == "C"
+
+    def test_request_all_pagination_via_response_headers(self, httpx_mock):
+        # Kiwoom's real API signals continuation via RESPONSE HEADERS
+        # (cont-yn/next-key), not JSON body fields -- unlike the mock above.
+        # request_all()/_accumulate() previously only checked the body and
+        # silently stopped after page 1 on every real endpoint that needs
+        # continuation (found 2026-09-12 while wiring scalp-it onto this
+        # client -- scalp-it's own kiwoom.py has this documented from real
+        # observed responses).
+        httpx_mock.add_response(
+            url="https://mockapi.kiwoom.com/api/dostk/acnt",
+            headers={"cont-yn": "Y", "next-key": "page2"},
+            json={"return_code": 0, "items": [{"name": "A"}]},
+        )
+        httpx_mock.add_response(
+            url="https://mockapi.kiwoom.com/api/dostk/acnt",
+            headers={"cont-yn": "N", "next-key": ""},
+            json={"return_code": 0, "items": [{"name": "B"}]},
+        )
+        with BaseClient("key", "secret", is_mock=True) as client:
+            client.access_token = "token"
+            result = client.request_all("/api/dostk/acnt", "ka10076", data_key="items")
+            assert len(result) == 2
+            assert [r["name"] for r in result] == ["A", "B"]

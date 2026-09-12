@@ -7,6 +7,16 @@
 
 ### Added
 
+### Fixed
+
+- **`request_all()`가 실제 페이지네이션이 필요한 엔드포인트에서 1페이지 만에
+  조용히 멈췄습니다.** Kiwoom은 연속조회 여부(`cont-yn`/`next-key`)를 응답
+  **헤더**로 주는데, `_accumulate()`는 JSON 바디에서만 그 키를 찾고 있었습니다
+  — 실제로는 바디에 없으니 매번 즉시 종료, 에러도 없이 데이터만 덜 옵니다.
+  `request()`가 이제 응답 헤더를 바디에 옮겨 넣어 채워줍니다. (scalp-it을
+  이 클라이언트로 옮기려다 발견 — 테마·차트처럼 페이지가 여러 장 나오는
+  엔드포인트를 실제로 쓰는 코드가 아직 없어서 안 걸렸던 것으로 보입니다.)
+
 - **MCP 서버.** `pip install 'kiwoom-client[mcp]'` 후 `kiwoom-client-mcp`로
   실행하면 Claude Code/Cursor 등에서 182개 REST 엔드포인트 + condition_search
   4종을 도구로 직접 호출할 수 있습니다. 주문/신용주문 도구는 실전투자 계좌에서
