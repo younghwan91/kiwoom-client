@@ -185,6 +185,23 @@ api.order.modify_order(org_ord_no="원래주문번호", ord_qty=5, ord_uv=71000)
 api.order.cancel_order(org_ord_no="원래주문번호", ord_qty=5)
 ```
 
+### 호가단위 (지정가 주문 전에)
+
+지정가(`ord_uv`)는 KRX 호가단위의 배수여야 합니다 — 아니면 거부되거나
+의도와 다른 가로 체결됩니다. 가격대별 경계값을 직접 외울 필요 없습니다:
+
+```python
+from kiwoom_client import round_to_tick, tick_size
+
+tick_size(70123)        # 100  (5만~20만원대는 1틱 100원)
+round_to_tick(70123)    # 70100 (직전 유효 호가로 내림)
+
+api.order.buy_order(
+    dmst_stex_tp="01", stk_cd="005930", ord_qty=10,
+    trde_tp="00", ord_uv=round_to_tick(target_price),
+)
+```
+
 ### 5단계: 정리
 
 ```python
