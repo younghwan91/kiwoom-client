@@ -30,7 +30,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-__all__ = ["tick_size", "round_to_tick", "ticks_in"]
+__all__ = ["round_to_tick", "tick_size", "ticks_in"]
 
 # (upper_bound_exclusive, tick_size) pairs, ascending by price. The last
 # entry's upper bound is unused (falls through as "and above").
