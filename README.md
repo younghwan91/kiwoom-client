@@ -34,6 +34,7 @@ pip install kiwoom-client
 - [왜 이 라이브러리인가?](#왜-이-라이브러리인가)
 - [기존 키움 OpenAPI / pykiwoom 과 무엇이 다른가?](#기존-키움-openapi--pykiwoom-과-무엇이-다른가)
 - [설치](#설치)
+- [요구 사항](#요구-사항)
 - [사전 준비](#사전-준비)
 - [빠른 시작](#빠른-시작)
 - [asyncio 사용법](#asyncio-사용법)
@@ -46,6 +47,7 @@ pip install kiwoom-client
 - [환경 설정](#환경-설정)
 - [MCP 서버로 사용하기](#mcp-서버로-사용하기)
 - [지원 API 목록](#지원-api-목록)
+- [자주 묻는 질문 (FAQ)](#자주-묻는-질문-faq)
 
 ## 왜 이 라이브러리인가?
 
@@ -98,6 +100,12 @@ pip install -e .
 # 또는
 uv pip install -e .
 ```
+
+## 요구 사항
+
+- Python **3.10 이상** (Windows · macOS · Linux 모두 지원)
+- 키움증권 REST API **앱키(appkey) / 시크릿키(secretkey)** — [사전 준비](#사전-준비) 참고
+- DataFrame 변환(`to_dataframe()`)을 쓸 경우에만 `pandas` 추가 설치
 
 ## 사전 준비
 
@@ -495,6 +503,40 @@ api.logout()     # 접근토큰 폐기
 
 메서드 이름과 파라미터 전체 목록은 [`src/kiwoom_client/domestic/`](src/kiwoom_client/domestic/) 소스나
 IDE 자동완성으로 확인할 수 있습니다. API ID(`ka10001` 등)는 키움 공식 가이드의 TR 코드와 동일합니다.
+
+## 자주 묻는 질문 (FAQ)
+
+**Q. sync(`KiwoomAPI`)와 async(`AsyncKiwoomAPI`) 중 뭘 써야 하나요?**
+단발성 조회·간단한 스크립트라면 sync로 충분합니다. 여러 종목을 동시에 조회하거나
+실시간 WebSocket과 함께 쓴다면 async가 유리합니다.
+
+**Q. 인증 에러(`유효하지 않은 토큰` 등)가 나요.**
+토큰 만료라면 라이브러리가 자동으로 재발급 후 재시도합니다. 계속 실패한다면
+`is_mock` 값과 앱키/시크릿키가 서로 맞는지 확인하세요 — 모의투자용 키로
+실전투자 서버를(또는 반대로) 호출하면 인증이 거부됩니다.
+
+**Q. HTTP `429`가 계속 떠요.**
+기본 Rate Limiter(TR당 1 req/s, 버스트 2)가 있어도, 같은 TR을 여러 프로세스나
+스레드에서 동시에 호출하면 이를 넘길 수 있습니다. `rate_limit`을 낮추거나
+호출을 한 곳에서 조율하세요. 자세한 내용은 [요청 제한](#요청-제한-rate-limit) 참고.
+
+**Q. 모의투자와 실전투자 앱키가 같나요?**
+아닙니다. 키움 포털에서 모의투자용 앱키/시크릿키를 별도로 발급받아야 하며,
+`is_mock` 값과 짝이 맞지 않으면 인증에 실패합니다.
+
+**Q. 지정가 주문(`buy_order`/`sell_order`)이 거부돼요.**
+`ord_uv`가 KRX 호가단위의 배수가 아니면 거부되거나 의도와 다른 가격에 체결됩니다.
+[`round_to_tick()`](#호가단위-지정가-주문-전에)으로 보정한 값을 넘기세요.
+
+**Q. pandas 없이도 쓸 수 있나요?**
+네. `to_dataframe()`만 pandas가 필요하고, 기본 설치(`pip install kiwoom-client`)는
+dict/list 형태 그대로 응답을 돌려줍니다.
+
+**Q. 연속조회(페이지네이션)를 직접 관리하지 않고 한 번에 다 받고 싶어요.**
+`request_all()`을 쓰세요. `cont_yn`/`next_key`를 자동으로 순회합니다.
+자세한 내용은 [연속 조회](#연속-조회-페이지네이션) 참고.
+
+더 궁금한 점은 [Issues](https://github.com/younghwan91/kiwoom-client/issues)에 남겨주세요.
 
 ## 참고
 

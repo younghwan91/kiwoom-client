@@ -56,6 +56,12 @@ Or with [uv](https://docs.astral.sh/uv/):
 uv add kiwoom-client
 ```
 
+## Requirements
+
+- Python **3.10+** (Windows, macOS, Linux all supported)
+- A Kiwoom Securities REST API **app key / app secret** — see [Prerequisites](#prerequisites)
+- `pandas` only if you use `to_dataframe()`
+
 ## Prerequisites
 
 1. Sign up at the [Kiwoom REST API Portal](https://openapi.kiwoom.com).
@@ -241,6 +247,36 @@ try:
 except KiwoomAPIError as e:
     print(f"Code: {e.code}, Message: {e.message}")
 ```
+
+## FAQ
+
+**Sync (`KiwoomAPI`) or async (`AsyncKiwoomAPI`)?**
+Sync is fine for one-off scripts. Reach for async when you're fetching multiple
+symbols concurrently or combining REST calls with the real-time WebSocket.
+
+**I keep getting an "invalid token" error.**
+Expired tokens are refreshed and retried automatically. If it persists, check that
+`is_mock` matches the app key/secret you're using — a mock-trading key won't
+authenticate against the live server, and vice versa.
+
+**I keep hitting HTTP `429`.**
+The built-in rate limiter (1 req/s per TR, burst of 2) can still be exceeded if
+multiple processes or threads hit the same TR concurrently. Lower `rate_limit` or
+coordinate calls from one place — see [Rate Limiting](#error-handling) in the Korean README for measured limits.
+
+**Are mock and live trading app keys the same?**
+No. Kiwoom issues separate app key/secret pairs for mock trading; they must match
+your `is_mock` setting or authentication fails.
+
+**My limit order (`buy_order`/`sell_order`) gets rejected.**
+`ord_uv` must be a multiple of the KRX tick size, or it's rejected or fills at an
+unintended price. Use `round_to_tick()` from `kiwoom_client` to snap it.
+
+**Do I need pandas?**
+Only for `to_dataframe()`. The base install (`pip install kiwoom-client`) returns
+plain dicts/lists.
+
+More questions? Open an [issue](https://github.com/younghwan91/kiwoom-client/issues).
 
 ## Contributing
 
