@@ -5,7 +5,17 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-13
+
 ### Added
+
+- **MCP 서버.** `pip install 'kiwoom-client[mcp]'` 후 `kiwoom-client-mcp`로
+  실행하면 Claude Code/Cursor 등에서 182개 REST 엔드포인트 + condition_search
+  4종을 도구로 직접 호출할 수 있습니다. 주문/신용주문 도구는 실전투자 계좌에서
+  `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true`를 명시해야 노출됩니다.
+- **`tick_size`/`round_to_tick`/`ticks_in`.** KRX 호가단위(2023-01-25 통합
+  기준) 유틸. scalp-it·krx-signal-engine이 각자 구현해둔 같은 표를 여기로
+  모았다 — 주문가를 실제로 계산하는 이 레포가 정본이 되는 게 맞다.
 
 ### Fixed
 
@@ -16,14 +26,6 @@
   `request()`가 이제 응답 헤더를 바디에 옮겨 넣어 채워줍니다. (scalp-it을
   이 클라이언트로 옮기려다 발견 — 테마·차트처럼 페이지가 여러 장 나오는
   엔드포인트를 실제로 쓰는 코드가 아직 없어서 안 걸렸던 것으로 보입니다.)
-
-- **MCP 서버.** `pip install 'kiwoom-client[mcp]'` 후 `kiwoom-client-mcp`로
-  실행하면 Claude Code/Cursor 등에서 182개 REST 엔드포인트 + condition_search
-  4종을 도구로 직접 호출할 수 있습니다. 주문/신용주문 도구는 실전투자 계좌에서
-  `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true`를 명시해야 노출됩니다.
-- **`tick_size`/`round_to_tick`/`ticks_in`.** KRX 호가단위(2023-01-25 통합
-  기준) 유틸. scalp-it·krx-signal-engine이 각자 구현해둔 같은 표를 여기로
-  모았다 — 주문가를 실제로 계산하는 이 레포가 정본이 되는 게 맞다.
 
 ## [0.3.0] - 2026-09-05
 
