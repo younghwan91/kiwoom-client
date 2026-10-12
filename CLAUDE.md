@@ -10,10 +10,11 @@
   `api.credit_order.*`(kt10000~kt10009)를 부르면 그대로 실주문이 나간다. 라이브러리 쪽 가드
   (`KIWOOM_MCP_ALLOW_LIVE_ORDERS`)는 **MCP 서버 경로에만** 있고 파이썬 직접 호출은 막지 않는다.
 - `api.logout()`/`revoke_token` 은 공유 앱키의 토큰을 폐기해 돌고 있는 데몬을 죽일 수 있다. `examples/*.py` 는 전부
-  끝에 `api.logout()` 을 부른다 — 실키로 예제를 돌리지 않는다.
+  `is_mock=True` 에 끝에 `api.logout()` 을 부른다 — 실키로 예제를 돌리지 않고, `is_mock` 을 바꿔 돌리지도 않는다.
 - 결정론 장치: `.claude/hooks/live_order_guard.py`(PreToolUse) 가 키를 불러오면서 주문·토큰 폐기를 실행하는 Bash 명령과
   `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true` 를 막는다. 막히면 우회하지 말고 명령을 사용자에게 보여 `! <명령>` 으로 직접 돌리게 한다.
-- 실서버 조회 스모크(`tests/integration_api_smoke.py --prod`, `tests/integration_ws_smoke.py --prod --env-file ~/git/quant-airflow/.env`)는
+- 실서버 조회 스모크(`tests/integration_api_smoke.py --prod` — 키는 환경변수나 레포 루트 `.env` 에서만 읽고 `--env-file` 이 없다,
+  `tests/integration_ws_smoke.py --prod --env-file ~/git/quant-airflow/.env`)는
   주문을 빼고 조회만 하지만 실키로 토큰을 받는다 — 사용자가 시킬 때만, 장중 데몬이 도는 시간엔 특히 조심한다.
 - 실주문 경로에 가드를 더하는 쪽이 기본이다. 사용자는 "가드 없이 전부 노출" 지시 뒤에도 MCP opt-in 가드(5807b03)가 맞았다고 확인했다.
   가드를 없애거나 약하게 하는 변경은 하지 않는다.
