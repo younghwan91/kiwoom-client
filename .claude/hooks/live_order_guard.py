@@ -28,8 +28,10 @@ ORDER = re.compile(
     r"|\blogout\s*\(|\brevoke_token\b|/oauth2/revoke\b"
 )
 CREDS = re.compile(r"\.env\b|--env-file|KIWOOM_APP_KEY|KIWOOM_APP_SECRET")
-EXECS = re.compile(r"\b(?:python3?|ipython|uv\s+run|uvx|pytest|kiwoom-client-mcp)\b")
-MCP_LIVE = re.compile(r"KIWOOM_MCP_ALLOW_LIVE_ORDERS\s*=\s*['\"]?true", re.I)
+EXECS = re.compile(r"\b(?:python3?|ipython|uv\s+run|uvx|pytest|kiwoom-client-mcp|curl|wget|http|httpie)\b")
+# opt-in 을 '켜는' 위치만: 명령 앞 환경변수 대입이나 export. grep 패턴·커밋 메시지·문서 heredoc 은 아님.
+MCP_LIVE = re.compile(r"(?:^|[;&|\n(]\s*|\bexport\s+|\benv\s+)(?:[A-Za-z_]\w*=\S*\s+)*KIWOOM_MCP_ALLOW_LIVE_ORDERS=['\"]?true", re.I)
+HEREDOC = re.compile(r"<<-?\s*(['\"]?)(\w+)\1[^\n]*\n(.*?)\n\2(?:\n|$)", re.S)
 PYFILE = re.compile(r"(?:^|[\s'\"=])([\w./~-]+\.py)\b")
 
 HOW = (
@@ -47,18 +49,27 @@ def deny(reason: str) -> None:
     sys.exit(0)
 
 
+def strip_docs(cmd: str) -> str:
+    """따옴표 안 글자와 파일에 쓰는 heredoc 본문을 지운다 — 명령이 아니라 글이다."""
+    cmd = HEREDOC.sub(lambda m: "" if not re.search(r"\b(?:bash|sh|python3?|uv\s+run)\b[^\n]*$", cmd[: m.start()].split("\n")[-1]) else m.group(0), cmd)
+    return re.sub(r"'[^']*'|\"[^\"]*\"", "''", cmd)
+
+
 def script_text(cmd: str, cwd: str) -> str:
+    """명령이 가리키는 .py 파일 내용. 상대 경로는 cwd 와 명령 안의 `cd <dir>` 기준 둘 다로 푼다."""
+    bases = [cwd] + [os.path.join(cwd, os.path.expanduser(d)) for d in re.findall(r"\bcd\s+([^\s;&|]+)", cmd)]
     out = []
     for m in PYFILE.finditer(cmd):
-        p = os.path.expanduser(m.group(1))
-        if not os.path.isabs(p):
-            p = os.path.join(cwd, p)
-        try:
-            if os.path.isfile(p) and os.path.getsize(p) < 2_000_000:
-                with open(p, encoding="utf-8", errors="ignore") as f:
-                    out.append(f.read())
-        except OSError:
-            pass
+        rel = os.path.expanduser(m.group(1))
+        for base in ([""] if os.path.isabs(rel) else bases):
+            p = os.path.join(base, rel)
+            try:
+                if os.path.isfile(p) and os.path.getsize(p) < 2_000_000:
+                    with open(p, encoding="utf-8", errors="ignore") as f:
+                        out.append(f.read())
+                    break
+            except OSError:
+                pass
     return "\n".join(out)
 
 
@@ -67,7 +78,7 @@ def main() -> None:
     if data.get("tool_name") != "Bash":
         return
     cmd = (data.get("tool_input") or {}).get("command") or ""
-    if MCP_LIVE.search(cmd):
+    if MCP_LIVE.search(strip_docs(cmd)):
         deny("MCP 실주문 opt-in(KIWOOM_MCP_ALLOW_LIVE_ORDERS=true)을 켜는 명령.")
     if not EXECS.search(cmd):
         return
