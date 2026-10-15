@@ -8,8 +8,6 @@
 [![CI](https://github.com/younghwan91/kiwoom-client/actions/workflows/ci.yml/badge.svg)](https://github.com/younghwan91/kiwoom-client/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/github/license/younghwan91/kiwoom-client)](https://github.com/younghwan91/kiwoom-client/blob/main/LICENSE)
 [![Python](https://img.shields.io/pypi/pyversions/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
-[![GitHub stars](https://img.shields.io/github/stars/younghwan91/kiwoom-client?style=social)](https://github.com/younghwan91/kiwoom-client)
-[![GitHub forks](https://img.shields.io/github/forks/younghwan91/kiwoom-client?style=social)](https://github.com/younghwan91/kiwoom-client)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-younghwan--chae-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/younghwan-chae/)
 
 <picture>
@@ -552,15 +550,11 @@ MIT
 
 ---
 
-## ⭐ 도움이 되셨다면 (Star & 기여)
+## 기여 및 이슈 제보
 
-[![Star History Chart](https://api.star-history.com/svg?repos=younghwan91/kiwoom-client&type=Date)](https://star-history.com/#younghwan91/kiwoom-client&Date)
+- 🐛 버그 제보 및 기능 요청: [GitHub Issues](https://github.com/younghwan91/kiwoom-client/issues)
+- 💡 새로운 기능 제안 및 PR 환영: [CONTRIBUTING.md](CONTRIBUTING.md) 가이드라인을 확인해 주세요.
 
-`kiwoom-client`가 유용하셨다면 우측 상단의 **[⭐ Star](https://github.com/younghwan91/kiwoom-client)** 버튼을 눌러주세요!
-- 32bit Windows 종속 없이 Linux/macOS 및 클라우드 환경에서 키움증권 자동매매를 구축하는 많은 개발자들에게 큰 힘이 됩니다.
-- 🐛 버그 제보 & 질문: [GitHub Issues](https://github.com/younghwan91/kiwoom-client/issues)
-- 💡 새로운 기능 제안 및 PR 환영 ([CONTRIBUTING.md](CONTRIBUTING.md))
-- 📈 새 엔드포인트·기능 업데이트 소식을 받으려면 [팔로우](https://github.com/younghwan91)
 
 ## 관련 프로젝트 — 오픈소스 퀀트 스택
 
