@@ -8,6 +8,8 @@
 [![CI](https://github.com/younghwan91/kiwoom-client/actions/workflows/ci.yml/badge.svg)](https://github.com/younghwan91/kiwoom-client/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/github/license/younghwan91/kiwoom-client)](https://github.com/younghwan91/kiwoom-client/blob/main/LICENSE)
 [![Python](https://img.shields.io/pypi/pyversions/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
+[![GitHub stars](https://img.shields.io/github/stars/younghwan91/kiwoom-client?style=social)](https://github.com/younghwan91/kiwoom-client)
+[![GitHub forks](https://img.shields.io/github/forks/younghwan91/kiwoom-client?style=social)](https://github.com/younghwan91/kiwoom-client)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-younghwan--chae-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/younghwan-chae/)
 
 <picture>
@@ -288,12 +290,14 @@ MIT
 
 ---
 
-## ⭐ Found this useful?
+## ⭐ Star History & Contributing
 
-If this library helped you, please **[⭐ Star it](https://github.com/younghwan91/kiwoom-client)** — it boosts discoverability so more developers can find it.
+[![Star History Chart](https://api.star-history.com/svg?repos=younghwan91/kiwoom-client&type=Date)](https://star-history.com/#younghwan91/kiwoom-client&Date)
 
+If this library helped your algorithmic trading or quant workflow, please **[⭐ Star it on GitHub](https://github.com/younghwan91/kiwoom-client)**!
+- It helps more developers discover a clean, cross-platform way to trade Korean stocks without 32-bit Windows or OCX.
 - 🐛 Bugs & questions → [Issues](https://github.com/younghwan91/kiwoom-client/issues)
-- 🔧 Improvements → PRs welcome ([CONTRIBUTING](CONTRIBUTING.md))
+- 🔧 Improvements & features → PRs welcome ([CONTRIBUTING.md](CONTRIBUTING.md))
 - 📈 [Follow](https://github.com/younghwan91) for new endpoints & release updates
 
 ## Related projects — open-source quant stack
