@@ -141,6 +141,83 @@ price = to_number("+70000")   # 70000
 Stock codes (`"005930"`) and date fields stay strings. `to_dataframe()` needs pandas:
 `pip install 'kiwoom-client[pandas]'`.
 
+## Tick Sizes (Before Placing Limit Orders)
+
+Limit order prices (`ord_uv`) must be multiples of KRX tick sizes — otherwise the exchange rejects them or fills at an unintended price. Snap prices automatically:
+
+```python
+from kiwoom_client import round_to_tick, tick_size
+
+tick_size(70123)        # 100  (KRW 50k–200k bracket has 100 KRW tick size)
+round_to_tick(70123)    # 70100 (snaps down to previous valid tick)
+
+api.order.buy_order(
+    dmst_stex_tp="01", stk_cd="005930", ord_qty=10,
+    trde_tp="00", ord_uv=round_to_tick(target_price),
+)
+```
+
+## Pagination (`request_all`)
+
+Endpoints with large result sets return paginated data (`cont_yn="Y"`). Use `request_all()` to fetch all pages automatically:
+
+```python
+# Automatic pagination across all pages
+all_data = api._client.request_all(
+    "/api/dostk/acnt", "ka10076",
+    data_key="filled_list",  # key name of list items in response
+)
+```
+
+## Rate Limiting (Measured Specs)
+
+Kiwoom REST API enforces **independent per-TR (api_id)** rate limits:
+
+| Metric | Measured Specification |
+|---|---|
+| Sustained safe throughput | **~1 req/s per TR** (0 rejections at this rate) |
+| Burst allowance | **~2 requests per TR** |
+| Limit rejection response | HTTP `429` + `{"return_code": 5, "return_msg": "허용된 요청 개수를 초과하였습니다"}` |
+| Limit scope | **Per-TR independent** — calling different TRs does not throttle each other |
+
+The library provides a **built-in token-bucket rate limiter (1 req/s, burst 2)** per TR with **automatic exponential backoff and retry on 429**:
+
+```python
+# Default: 1 req/s per TR, burst 2, automatic retry on 429
+api = KiwoomAPI(app_key="...", app_secret="...")
+
+# Custom configuration (e.g., 2 req/s, burst 3, 5 retries)
+api = KiwoomAPI(app_key="...", app_secret="...",
+                rate_limit=2.0, rate_burst=3, max_retries=5)
+
+# Disable client-side throttling (when managing externally)
+api = KiwoomAPI(app_key="...", app_secret="...", rate_limit=None)
+```
+
+## Architecture
+
+`KiwoomAPI` (sync) and `AsyncKiwoomAPI` (async) share the same facade architecture:
+
+```mermaid
+flowchart LR
+    User["User Code"] --> API["KiwoomAPI / AsyncKiwoomAPI\n(ModuleRegistry Facade)"]
+
+    API --> Modules["15 Endpoint Modules\naccount · stock_info · market · chart\norder · credit_order · ranking · sector\nforeign_institution · short_selling · slb\ntheme · condition_search · elw · etf"]
+
+    Modules --> Client["BaseClient / AsyncBaseClient\n(request / request_all)"]
+
+    Client --> Auth["KiwoomAuth\n(Token issue · proactive refresh · 401 recovery)"]
+    Client --> RateLimiter["PerKeyRateLimiter\n(Per-TR token bucket, 429 auto retry)"]
+    Client --> Parsing["Parsing\n(to_number / to_dataframe)"]
+
+    Auth -->|"POST /oauth2/token"| REST["Kiwoom REST API\napi.kiwoom.com / mockapi.kiwoom.com"]
+    Client -->|"POST /api/dostk/..."| REST
+
+    API --> WS["KiwoomWebSocket"]
+    Auth -->|"Reuses access_token"| WS
+    WS <-->|"REG / REMOVE / REAL, condition search"| WSS["Kiwoom Real-time WebSocket\nwss://.../api/dostk/websocket"]
+```
+
 ## Real-time WebSocket
 
 ```python
@@ -278,20 +355,15 @@ plain dicts/lists.
 
 More questions? Open an [issue](https://github.com/younghwan91/kiwoom-client/issues).
 
-## Contributing
+## Contributing & Issues
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
+- 🐛 Bugs & feature requests → [Issues](https://github.com/younghwan91/kiwoom-client/issues)
+- 🔧 Pull requests welcome → See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines and dev setup.
 
 ## License
 
 MIT
 
----
-
-## Contributing & Issues
-
-- 🐛 Bugs & feature requests → [Issues](https://github.com/younghwan91/kiwoom-client/issues)
-- 🔧 Pull requests welcome → See [CONTRIBUTING.md](CONTRIBUTING.md)
 
 
 ## Related projects — open-source quant stack
