@@ -11,6 +11,11 @@
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-younghwan--chae-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/younghwan-chae/)
 
 <picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/hero-dark.png">
+  <img alt="kiwoom-client 가 감싼 키움 REST 엔드포인트 182개와 WebSocket 호출 23개를 도메인별 타일로 그린 모자이크" src="docs/images/hero-light.png" width="100%">
+</picture>
+
+<picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/pypi_downloads_dark.png">
   <img alt="kiwoom-client 누적 PyPI 다운로드 추이" src="docs/images/pypi_downloads_light.png" width="640">
 </picture>

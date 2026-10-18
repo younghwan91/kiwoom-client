@@ -11,6 +11,11 @@
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-younghwan--chae-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/younghwan-chae/)
 
 <picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/hero-dark.png">
+  <img alt="Mosaic of the 182 Kiwoom REST endpoints and 23 WebSocket calls wrapped by kiwoom-client, grouped by domain" src="docs/images/hero-light.png" width="100%">
+</picture>
+
+<picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/pypi_downloads_dark.png">
   <img alt="kiwoom-client cumulative PyPI downloads" src="docs/images/pypi_downloads_light.png" width="640">
 </picture>
