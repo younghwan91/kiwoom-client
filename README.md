@@ -1,6 +1,8 @@
 [한국어](README.md) | [English](README_EN.md)
 
-# kiwoom-client — 키움증권 REST API Python 라이브러리
+# kiwoom-client — 키움증권 REST API 파이썬 클라이언트
+
+키움 REST API 전체를 파이썬 클라이언트 하나로. 182개 엔드포인트, 실시간 WebSocket, 그리고 MCP 서버로 AI 에이전트까지 — COM/OCX 없이 Windows · macOS · Linux 어디서나 돌아갑니다.
 
 [![PyPI version](https://img.shields.io/pypi/v/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
 [![Downloads](https://img.shields.io/pypi/dm/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
@@ -10,65 +12,51 @@
 [![Python](https://img.shields.io/pypi/pyversions/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-younghwan--chae-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/younghwan-chae/)
 
+- **REST 182개 + 조건검색 4종 + 실시간 19종**을 모듈 15개로 감쌌습니다. 아래 그림은 코드에서 센 것이라 타일 하나가 엔드포인트 하나입니다.
+- **MCP 서버 내장** — Claude Code · Cursor 가 `stock_info_basic_stock_info` 같은 도구로 시세·계좌·주문을 직접 부릅니다. 실전 계좌에서는 `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true` 를 켜기 전까지 주문 도구가 **등록조차 되지 않습니다**.
+- **봇이 토큰 만료로 죽지 않습니다** — 만료 전 자동 갱신, 401 이면 재발급 후 재시도. TR별 Rate Limiter 가 429 를 막고, 그래도 나오면 백오프 후 다시 보냅니다.
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/hero-dark.png">
   <img alt="kiwoom-client 가 감싼 키움 REST 엔드포인트 182개와 WebSocket 호출 23개를 도메인별 타일로 그린 모자이크" src="docs/images/hero-light.png" width="100%">
 </picture>
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/pypi_downloads_dark.png">
-  <img alt="kiwoom-client 누적 PyPI 다운로드 추이" src="docs/images/pypi_downloads_light.png" width="640">
-</picture>
-
-> **키움증권 OpenAPI를 대체하는 Python REST API 래퍼.**
-> COM/OCX 없이 Windows · macOS · Linux 어디서나 **국내주식 자동매매 · 시세조회 · 실시간 WebSocket**을 사용할 수 있습니다.
-> **토큰 자동 갱신**으로 봇이 만료에 죽지 않고, **sync / async** 양쪽을 지원합니다.
-> **182개 REST 엔드포인트 · 조건검색 4종 · 19종 실시간 데이터** · 모의투자/실전투자 지원.
-> **MCP(Model Context Protocol) 서버**로도 제공되어, Claude Code · Cursor 등 AI 에이전트가 도구 호출로 직접 시세·계좌·주문 API를 씁니다.
+## 빠른 시작
 
 ```bash
 pip install kiwoom-client
 ```
 
-**실제로 돌아가는 곳** — [quant-airflow](https://github.com/younghwan91/quant-airflow)의 일일 수집 DAG 가
-이 라이브러리로 시세·수급·신용·공매도를 매일 TimescaleDB 에 적재합니다. 같은 스택의 나머지는
-[README 하단](#관련-프로젝트--오픈소스-퀀트-스택)에 있습니다.
+```python
+from kiwoom_client import KiwoomAPI
 
-## 목차
+api = KiwoomAPI(app_key="발급받은_앱키", app_secret="발급받은_시크릿키", is_mock=True)  # True=모의투자
 
-- [왜 이 라이브러리인가?](#왜-이-라이브러리인가)
-- [기존 키움 OpenAPI / pykiwoom 과 무엇이 다른가?](#기존-키움-openapi--pykiwoom-과-무엇이-다른가)
-- [설치](#설치)
-- [요구 사항](#요구-사항)
-- [사전 준비](#사전-준비)
-- [빠른 시작](#빠른-시작)
-- [asyncio 사용법](#asyncio-사용법)
-- [응답을 숫자·DataFrame으로 받기](#응답을-숫자dataframe으로-받기)
-- [실시간 WebSocket 데이터](#실시간-websocket-데이터)
-- [연속 조회 (페이지네이션)](#연속-조회-페이지네이션)
-- [에러 처리](#에러-처리)
-- [요청 제한 (Rate Limit)](#요청-제한-rate-limit)
-- [아키텍처](#아키텍처)
-- [환경 설정](#환경-설정)
-- [MCP 서버로 사용하기](#mcp-서버로-사용하기)
-- [지원 API 목록](#지원-api-목록)
-- [자주 묻는 질문 (FAQ)](#자주-묻는-질문-faq)
+info = api.stock_info.basic_stock_info(stk_cd="005930")                   # 삼성전자 기본 정보
+chart = api.chart.stock_daily_chart(stk_cd="005930", base_dt="20260326")  # 일봉
+print(info["stk_nm"])
+```
 
-## 왜 이 라이브러리인가?
+접근토큰은 첫 호출에서 자동 발급되고 만료 전에 갱신되므로 따로 할 일이 없습니다. 앱키·시크릿키는
+[키움 REST API 포털](https://openapi.kiwoom.com)에서 발급받고, 처음에는 모의투자(`is_mock=True`)로 시작하세요.
+AI 에이전트에서 쓰려면 [MCP 서버](#mcp-서버로-사용하기)로 바로 가면 됩니다.
 
-- **크로스 플랫폼**: REST API 기반이라 Windows, macOS, Linux 어디서나 동작합니다. COM/OCX 방식과 달리 서버 환경에서도 사용 가능합니다.
-- **자동 토큰 관리**: 토큰을 알아서 발급하고, 만료 전에 갱신하고, 401이 나면 재발급 후 재시도합니다. 장시간 도는 봇이 토큰 만료로 죽지 않습니다.
-- **sync / async 양쪽 지원**: `KiwoomAPI`와 `AsyncKiwoomAPI`가 같은 API를 제공합니다.
-- **자동 페이지네이션**: `request_all()`로 연속조회를 한 줄에 처리합니다.
-- **내장 Rate Limiter**: TR(api_id)별 토큰 버킷으로 호출 제한을 자동 관리합니다.
-- **바로 쓰는 응답**: `to_dataframe()`이 `"+70000"` 같은 문자열을 숫자로 바꿔 DataFrame으로 넘겨줍니다.
-- **완전한 커버리지**: 국내주식 182개 REST 엔드포인트 + 조건검색 4종 + 19종 실시간 WebSocket 데이터를 지원합니다.
-- **MCP 서버 내장**: Claude Code, Cursor 등 Model Context Protocol 클라이언트에서 별도 코드 없이 이 라이브러리의 도구를 바로 호출할 수 있습니다. ([자세히](#mcp-서버로-사용하기))
+## 무엇을 하나
 
-## 기존 키움 OpenAPI / pykiwoom 과 무엇이 다른가?
+- **크로스 플랫폼**: REST 기반이라 Windows · macOS · Linux, 헤드리스 서버에서도 돌아갑니다.
+- **sync / async 양쪽**: `KiwoomAPI` 와 `AsyncKiwoomAPI` 가 같은 엔드포인트를 제공합니다.
+- **자동 토큰 관리**: 발급·만료 전 갱신·401 재발급을 라이브러리가 맡습니다.
+- **내장 Rate Limiter**: TR(api_id)별 토큰 버킷(1 req/s, 버스트 2) + 429 자동 재시도.
+- **자동 페이지네이션**: `request_all()` 이 `cont-yn`/`next-key` 를 끝까지 따라갑니다.
+- **바로 쓰는 응답**: `to_dataframe()` 이 `"+70000"` 같은 문자열을 숫자로 바꿔 DataFrame 으로 넘깁니다.
+- **호가단위 보정**: `round_to_tick()` 으로 지정가를 KRX 호가단위에 맞춥니다.
+- **실시간 WebSocket**: 체결·호가·잔고 등 19종 구독, PING 응답·재연결·구독 복원 내장. 조건검색도 같은 소켓.
+- **MCP 서버**: 모듈 15개의 REST 엔드포인트 전부와 조건검색 4종이 MCP 도구로 노출됩니다.
 
-기존 키움 **OpenAPI+(OCX/COM)**나 이를 감싼 `pykiwoom`은 32bit Windows에 묶여 있어 서버 배포·자동화가 어렵습니다.
-이 라이브러리는 키움의 **신규 REST API**를 사용하므로 그 제약이 없습니다.
+### 기존 키움 OpenAPI / pykiwoom 과 무엇이 다른가?
+
+키움 **OpenAPI+(OCX/COM)** 와 이를 감싼 `pykiwoom` 은 32bit Windows 에 묶여 있어 서버 배포·자동화가 어렵습니다.
+이 라이브러리는 키움의 **신규 REST API** 를 쓰므로 그 제약이 없습니다.
 
 | 항목 | 키움 OpenAPI+ (OCX) | pykiwoom | **kiwoom-client** |
 |------|---------------------|----------|---------------------|
@@ -79,100 +67,35 @@ pip install kiwoom-client
 | 실시간 데이터 | 이벤트 콜백 | 이벤트 콜백 | **async WebSocket** |
 | 설치 | 별도 모듈 설치 | OCX + 모듈 | **`pip install` 한 줄** |
 
-> 이미 OCX 기반 코드를 쓰고 있다면, REST 방식으로 전환할 때 GUI 의존성과 32bit 제약을 한 번에 제거할 수 있습니다.
-
-## 설치
+## 설치와 사전 준비
 
 ```bash
-pip install kiwoom-client
+pip install kiwoom-client            # 기본
+pip install 'kiwoom-client[pandas]'  # to_dataframe() 까지
+pip install 'kiwoom-client[mcp]'     # MCP 서버까지
+uv add kiwoom-client                 # uv 를 쓴다면
 ```
 
-pandas 변환(`to_dataframe()`)까지 함께 쓰려면:
-```bash
-pip install 'kiwoom-client[pandas]'
-```
+- Python **3.10 이상**. 소스에서 쓰려면 `git clone` 뒤 `pip install -e .`
+- [키움 REST API 포털](https://openapi.kiwoom.com)에서 **API 사용신청**으로 앱키·시크릿키를 발급받습니다. 환경변수는 [`.env.example`](.env.example) 참고.
+- 모의투자용 키와 실전투자용 키는 다릅니다. `is_mock` 과 짝이 맞지 않으면 인증이 거부됩니다.
 
-또는 [uv](https://docs.astral.sh/uv/) 사용:
-```bash
-uv add kiwoom-client
-```
+| 구분 | 실전투자 | 모의투자 |
+|------|---------|---------|
+| `is_mock` | `False` (기본값) | `True` |
+| REST URL | `https://api.kiwoom.com` | `https://mockapi.kiwoom.com` |
+| WebSocket URL | `wss://api.kiwoom.com:10000` | `wss://mockapi.kiwoom.com:10000` |
 
-소스에서 설치:
-```bash
-git clone https://github.com/younghwan91/kiwoom-client.git
-cd kiwoom-client
-pip install -e .
-# 또는
-uv pip install -e .
-```
+## 사용법
 
-## 요구 사항
-
-- Python **3.10 이상** (Windows · macOS · Linux 모두 지원)
-- 키움증권 REST API **앱키(appkey) / 시크릿키(secretkey)** — [사전 준비](#사전-준비) 참고
-- DataFrame 변환(`to_dataframe()`)을 쓸 경우에만 `pandas` 추가 설치
-
-## 사전 준비
-
-1. [키움 REST API 포털](https://openapi.kiwoom.com)에 가입합니다.
-2. **API 사용신청**을 통해 `앱키(appkey)`와 `시크릿키(secretkey)`를 발급받습니다.
-3. 환경변수 설정은 [`.env.example`](.env.example)을 참고하세요.
-4. 처음에는 **모의투자**(`is_mock=True`)로 테스트한 뒤, 실전투자로 전환하세요.
-
-## 빠른 시작
-
-### 1단계: 연결
+### 계좌와 주문
 
 ```python
-from kiwoom_client import KiwoomAPI
+evaluation = api.account.account_evaluation()   # 계좌 평가 현황
+deposit = api.account.deposit_detail()          # 예수금 상세
+position = api.account.filled_position()        # 체결 잔고
+unfilled = api.account.unfilled_orders()        # 미체결 주문
 
-# 모의투자 서버로 연결
-api = KiwoomAPI(
-    app_key="발급받은_앱키",
-    app_secret="발급받은_시크릿키",
-    is_mock=True,  # True=모의투자, False=실전투자
-)
-```
-
-접근토큰은 첫 호출에서 자동 발급되고 만료 전에 갱신되므로 따로 할 일이 없습니다.
-키가 올바른지 즉시 확인하고 싶다면 `api.login()`을 호출하세요 (선택).
-
-### 2단계: 종목 조회
-
-```python
-# 삼성전자(005930) 기본 정보 조회
-info = api.stock_info.basic_stock_info(stk_cd="005930")
-print(info)
-
-# 삼성전자 일봉 차트 조회
-chart = api.chart.stock_daily_chart(stk_cd="005930", base_dt="20260326")
-
-# 당일 거래량 상위 종목 조회 (파라미터 6개가 모두 필수입니다)
-ranking = api.ranking.top_volume_today(
-    mrkt_tp="0", stk_cnd="0", trde_qty_tp="0",
-    prc_tp="0", trde_amt_tp="0", updn_tp="0",
-)
-```
-
-### 3단계: 계좌 조회
-
-```python
-# 내 계좌 평가 현황
-evaluation = api.account.account_evaluation()
-
-# 예수금 상세 조회
-deposit = api.account.deposit_detail()
-
-# 체결 잔고 조회
-position = api.account.filled_position()
-
-# 미체결 주문 조회
-unfilled = api.account.unfilled_orders()
-```
-
-### 4단계: 주문
-
-```python
 # 삼성전자 10주 지정가 매수
 result = api.order.buy_order(
     dmst_stex_tp="01",   # 거래소 구분 (01: KRX)
@@ -181,33 +104,21 @@ result = api.order.buy_order(
     trde_tp="00",        # 주문 유형 (00: 지정가)
     ord_uv=70000,        # 주문 단가
 )
+api.order.sell_order(dmst_stex_tp="01", stk_cd="005930", ord_qty=10, trde_tp="00", ord_uv=75000)
+api.order.modify_order(org_ord_no="원래주문번호", ord_qty=5, ord_uv=71000)   # 정정
+api.order.cancel_order(org_ord_no="원래주문번호", ord_qty=5)                 # 취소
 
-# 매도 주문
-api.order.sell_order(
-    dmst_stex_tp="01",
-    stk_cd="005930",
-    ord_qty=10,
-    trde_tp="00",
-    ord_uv=75000,
-)
-
-# 주문 정정
-api.order.modify_order(org_ord_no="원래주문번호", ord_qty=5, ord_uv=71000)
-
-# 주문 취소
-api.order.cancel_order(org_ord_no="원래주문번호", ord_qty=5)
+api.logout()  # 토큰 폐기 (선택)
+api.close()   # 연결 종료 — with 문을 쓰면 자동
 ```
 
-### 호가단위 (지정가 주문 전에)
-
-지정가(`ord_uv`)는 KRX 호가단위의 배수여야 합니다 — 아니면 거부되거나
-의도와 다른 가로 체결됩니다. 가격대별 경계값을 직접 외울 필요 없습니다:
+지정가(`ord_uv`)는 KRX 호가단위의 배수여야 합니다. 아니면 거부되거나 의도와 다른 가격에 체결됩니다.
 
 ```python
 from kiwoom_client import round_to_tick, tick_size
 
-tick_size(70123)        # 100  (5만~20만원대는 1틱 100원)
-round_to_tick(70123)    # 70100 (직전 유효 호가로 내림)
+tick_size(70123)        # Decimal('100')   (5만~20만원대는 1틱 100원)
+round_to_tick(70123)    # Decimal('70100') (직전 유효 호가로 내림)
 
 api.order.buy_order(
     dmst_stex_tp="01", stk_cd="005930", ord_qty=10,
@@ -215,20 +126,9 @@ api.order.buy_order(
 )
 ```
 
-### 5단계: 정리
+### asyncio
 
-```python
-api.logout()  # 토큰 폐기 (선택)
-api.close()   # 연결 종료
-
-# with 문을 쓰면 close()는 자동입니다
-with KiwoomAPI(app_key="앱키", app_secret="시크릿키", is_mock=True) as api:
-    info = api.stock_info.basic_stock_info(stk_cd="005930")
-```
-
-## asyncio 사용법
-
-`AsyncKiwoomAPI`는 `KiwoomAPI`와 같은 엔드포인트를 제공하며, 호출 앞에 `await`만 붙이면 됩니다.
+`AsyncKiwoomAPI` 는 `KiwoomAPI` 와 같은 엔드포인트를 제공하며, 호출 앞에 `await` 만 붙이면 됩니다.
 
 ```python
 import asyncio
@@ -250,45 +150,33 @@ async def main():
 asyncio.run(main())
 ```
 
-Rate Limiter는 TR(api_id)별로 걸립니다. 서로 다른 TR은 서로를 막지 않고 동시에 나가며,
-같은 TR을 반복 호출할 때만 초당 1건으로 조여집니다. 전체 예제는
-[`examples/async_usage.py`](examples/async_usage.py)를 참고하세요.
+Rate Limiter 는 TR(api_id)별로 걸립니다. 서로 다른 TR 은 서로를 막지 않고 동시에 나가며,
+같은 TR 을 반복 호출할 때만 초당 1건으로 조여집니다. 전체 예제는 [`examples/async_usage.py`](examples/async_usage.py).
 
-## 응답을 숫자·DataFrame으로 받기
+### 응답을 숫자·DataFrame으로 받기
 
-키움은 모든 값을 문자열로 돌려줍니다. 가격은 `"+70000"`, 등락률은 `"-1.23"`,
-거래량은 `"1,234,567"` 같은 식이라 그대로는 계산에 쓸 수 없습니다.
+키움은 모든 값을 문자열로 돌려줍니다. 가격은 `"+70000"`, 등락률은 `"-1.23"`, 거래량은 `"1,234,567"` 같은 식이라 그대로는 계산에 쓸 수 없습니다.
 
 ```python
 from kiwoom_client import to_dataframe, to_number, normalize
 
 result = api.ranking.top_volume_today(...)
 
-# 페이로드 키를 자동으로 찾아 DataFrame으로 변환 (문자열 → 숫자 포함)
-df = to_dataframe(result)
+df = to_dataframe(result)     # 페이로드 키를 자동으로 찾아 DataFrame 으로 (문자열 → 숫자 포함)
 print(df["cur_prc"].mean())   # 바로 계산 가능
 
-# dict 그대로 쓰고 싶다면
-data = normalize(result)
+data = normalize(result)      # dict 그대로 쓰고 싶다면
 price = to_number("+70000")   # 70000
 ```
 
-종목코드(`"005930"`)처럼 앞자리 0이 의미를 갖는 값과, `base_dt` 같은 날짜·식별자
-필드는 숫자로 바꾸지 않고 문자열로 남깁니다.
+종목코드(`"005930"`)처럼 앞자리 0 이 의미를 갖는 값과 `base_dt` 같은 날짜·식별자 필드는 문자열로 남깁니다.
+`to_dataframe()` 에는 pandas 가 필요합니다(`pip install 'kiwoom-client[pandas]'`).
 
 ![to_dataframe() 실행 결과 — 문자열 응답이 계산 가능한 DataFrame 이 된다](https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/to_dataframe.png)
 
 <sub>샘플 응답을 `to_dataframe()` 에 넣은 실제 출력입니다. 시세 값 자체는 예시입니다 — `stk_cd` 는 문자열로 남고 가격·거래량만 숫자가 되는 것을 보세요.</sub>
 
-`to_dataframe()`에는 pandas가 필요합니다:
-
-```bash
-pip install 'kiwoom-client[pandas]'
-```
-
-## 실시간 WebSocket 데이터
-
-실시간 체결가, 호가, 잔고 변동 등을 WebSocket으로 수신할 수 있습니다.
+### 실시간 WebSocket
 
 ```python
 import asyncio
@@ -320,12 +208,9 @@ async def main():
 asyncio.run(main())
 ```
 
-`values`의 키는 키움 FID 번호입니다(10=현재가, 13=누적거래량, 41=매도최우선호가).
+`values` 의 키는 키움 FID 번호입니다(10=현재가, 13=누적거래량, 41=매도최우선호가).
 
-### 조건검색
-
-조건검색도 같은 WebSocket을 씁니다. `api.condition_search`가 요청 페이로드를 만들고,
-`ws.send()`로 보낸 뒤 `ws.on_trnm()`으로 응답을 받습니다.
+조건검색도 같은 WebSocket 을 씁니다. `api.condition_search` 가 요청 페이로드를 만들고, `ws.send()` 로 보낸 뒤 `ws.on_trnm()` 으로 응답을 받습니다.
 
 ```python
 await ws.connect()
@@ -340,32 +225,43 @@ await ws.send(api.condition_search.condition_search_realtime(seq="1"))
 await ws.listen()
 ```
 
-> **검증 상태**: 실서버(api.kiwoom.com) 대상으로 LOGIN 핸드셰이크 · PING 프레임 ·
-> REG 등록 응답까지 확인했습니다. 다만 **REAL 프레임의 항목 필드명(`item`/`values`)은
-> 장 마감 중이라 아직 미확정**입니다. 장중 이상 동작을 만나면
-> [이슈](https://github.com/younghwan91/kiwoom-client/issues)로 알려주세요.
-> 직접 확인하려면 `python tests/integration_ws_smoke.py --prod` 를 돌리면 됩니다.
+> **검증 상태**: 실서버(api.kiwoom.com) 대상으로 LOGIN 핸드셰이크 · PING 프레임 · REG 등록 응답까지 확인했습니다.
+> 다만 **REAL 프레임의 항목 필드명(`item`/`values`)은 장 마감 중이라 아직 미확정**입니다. 장중 이상 동작을 만나면
+> [이슈](https://github.com/younghwan91/kiwoom-client/issues)로 알려주세요. 직접 확인하려면 `python tests/integration_ws_smoke.py --prod`.
 
-## 연속 조회 (페이지네이션)
+### 연속 조회 (페이지네이션)
 
-데이터가 많은 API는 한 번에 모든 데이터를 반환하지 않습니다.
-응답 헤더의 `cont_yn`이 `"Y"`이면 다음 페이지가 있다는 뜻입니다.
+응답 헤더의 `cont-yn` 이 `"Y"` 이면 다음 페이지가 있다는 뜻입니다. `request_all()` 이 끝까지 따라갑니다.
 
 ```python
-# 방법 1: 수동 연속 조회
-result = api.account.filled_orders()
-# result에 cont_yn="Y"와 next_key가 있으면 다음 페이지 조회
-next_result = api.account.filled_orders(cont_yn="Y", next_key=result["next_key"])
-
-# 방법 2: 자동 전체 조회 (모든 페이지를 한번에)
-from kiwoom_client.base import BaseClient
 all_data = api._client.request_all(
     "/api/dostk/acnt", "ka10076",
     data_key="filled_list",  # 응답에서 리스트 데이터의 키 이름
 )
 ```
 
-## 에러 처리
+### 요청 제한 (Rate Limit)
+
+키움 REST API 는 **TR(api_id)별로 독립적인** 호출 제한을 둡니다. 실측 결과:
+
+| 항목 | 측정값 |
+|---|---|
+| 지속(sustained) 안전 속도 | **TR당 약 1 req/s** (이 속도에선 거부 0) |
+| 순간 버스트(burst) 허용량 | **TR당 약 2건** |
+| 초과 시 응답 | HTTP `429` + `{"return_code": 5, "return_msg": "허용된 요청 개수를 초과하였습니다"}` |
+| 제한 단위 | **TR(api_id)별 독립** — 서로 다른 TR은 영향 없음 |
+
+라이브러리는 기본으로 **TR별 토큰 버킷(1 req/s, 버스트 2)** 을 걸고, 그래도 `429` 가 나면 **백오프 후 재시도**합니다.
+
+```python
+api = KiwoomAPI(app_key="...", app_secret="...")                                  # 기본값
+api = KiwoomAPI(app_key="...", app_secret="...", rate_limit=2.0, rate_burst=3, max_retries=5)  # 직접 조정
+api = KiwoomAPI(app_key="...", app_secret="...", rate_limit=None)                 # 클라이언트 측 스로틀 끄기
+```
+
+> 서로 다른 TR 을 섞어 호출하면 합산 처리량은 더 높습니다. 같은 TR 을 반복(연속조회 루프 등)할 때는 1 req/s 에 수렴합니다 — 이 경우 `request_all()` 을 쓰세요.
+
+### 에러 처리
 
 ```python
 from kiwoom_client.base import KiwoomAPIError
@@ -378,71 +274,9 @@ except KiwoomAPIError as e:
     print(f"전체 응답: {e.response}")
 ```
 
-## 요청 제한 (Rate Limit)
-
-키움 REST API는 **TR(api_id)별로 독립적인** 호출 제한을 둡니다. 실측 결과는 다음과 같습니다.
-
-| 항목 | 측정값 |
-|---|---|
-| 지속(sustained) 안전 속도 | **TR당 약 1 req/s** (이 속도에선 거부 0) |
-| 순간 버스트(burst) 허용량 | **TR당 약 2건** |
-| 초과 시 응답 | HTTP `429` + `{"return_code": 5, "return_msg": "허용된 요청 개수를 초과하였습니다"}` |
-| 제한 단위 | **TR(api_id)별 독립** — 서로 다른 TR은 영향 없음 |
-
-이에 맞춰 라이브러리는 **기본적으로 TR별 토큰 버킷 Rate Limiter(1 req/s, 버스트 2)** 를 적용하고, 그래도 `429`가 발생하면 **자동으로 백오프 후 재시도**합니다. 별도 설정 없이도 안전하게 동작합니다.
-
-```python
-# 기본값: TR당 1 req/s, 버스트 2, 429 자동 재시도
-api = KiwoomAPI(app_key="...", app_secret="...")
-
-# 직접 조정 (예: TR당 2 req/s, 버스트 3, 재시도 5회)
-api = KiwoomAPI(app_key="...", app_secret="...",
-                rate_limit=2.0, rate_burst=3, max_retries=5)
-
-# 클라이언트 측 스로틀 비활성화 (직접 제어할 때)
-api = KiwoomAPI(app_key="...", app_secret="...", rate_limit=None)
-```
-
-> 제한이 TR별이라, **서로 다른 TR을 섞어** 호출하면 합산 처리량은 더 높습니다. 반대로 **같은 TR을 반복**(연속조회 루프 등)할 때는 1 req/s에 수렴합니다 — 이 경우 [`request_all()`](#연속-조회-페이지네이션)을 쓰면 페이지네이션을 안전하게 자동 처리합니다.
-
-## 아키텍처
-
-`KiwoomAPI`(sync) / `AsyncKiwoomAPI`(async)는 같은 구조를 공유하는 파사드입니다.
-15개 엔드포인트 모듈은 `ModuleRegistry`가 지연 생성하고, 실제 HTTP 호출·인증·재시도는
-`BaseClient`/`AsyncBaseClient` 한 곳에 모여 있습니다. 실시간 데이터는 REST와 별도로
-`KiwoomWebSocket`이 같은 토큰을 재사용해 처리합니다.
-
-```mermaid
-flowchart LR
-    User["사용자 코드"] --> API["KiwoomAPI / AsyncKiwoomAPI\n(ModuleRegistry 파사드)"]
-
-    API --> Modules["15개 엔드포인트 모듈\naccount · stock_info · market · chart\norder · credit_order · ranking · sector\nforeign_institution · short_selling · slb\ntheme · condition_search · elw · etf"]
-
-    Modules --> Client["BaseClient / AsyncBaseClient\n(request / request_all)"]
-
-    Client --> Auth["KiwoomAuth\n(토큰 발급 · 만료전 갱신 · 401 재발급)"]
-    Client --> RateLimiter["PerKeyRateLimiter\n(TR별 토큰 버킷, 429 자동 재시도)"]
-    Client --> Parsing["parsing\n(to_number / to_dataframe)"]
-
-    Auth -->|"POST /oauth2/token"| REST["키움 REST API\napi.kiwoom.com / mockapi.kiwoom.com"]
-    Client -->|"POST /api/dostk/..."| REST
-
-    API --> WS["KiwoomWebSocket"]
-    Auth -->|"access_token 재사용"| WS
-    WS <-->|"REG/REMOVE/REAL, 조건검색"| WSS["키움 실시간 WebSocket\nwss://.../api/dostk/websocket"]
-```
-
-## 환경 설정
-
-| 구분 | 실전투자 | 모의투자 |
-|------|---------|---------|
-| `is_mock` | `False` (기본값) | `True` |
-| REST URL | `https://api.kiwoom.com` | `https://mockapi.kiwoom.com` |
-| WebSocket URL | `wss://api.kiwoom.com:10000` | `wss://mockapi.kiwoom.com:10000` |
-
 ## MCP 서버로 사용하기
 
-Claude Code, Cursor 등 MCP(Model Context Protocol)를 지원하는 도구에서 이 라이브러리를 직접 호출할 수 있습니다. 15개 도메인 모듈의 REST 엔드포인트 전부와 조건검색(condition_search) 4종이 MCP 도구로 노출됩니다.
+Claude Code, Cursor 등 MCP(Model Context Protocol) 클라이언트에서 이 라이브러리를 직접 부릅니다. 모듈 15개의 REST 엔드포인트 전부와 조건검색 4종이 MCP 도구로 노출됩니다.
 
 ```bash
 pip install 'kiwoom-client[mcp]'
@@ -472,20 +306,40 @@ MCP 클라이언트 설정(예: Claude Code `.mcp.json`)에 추가:
 | `KIWOOM_IS_MOCK` | 모의투자 서버 사용 여부 | `false` |
 | `KIWOOM_MCP_ALLOW_LIVE_ORDERS` | 실전투자 계좌에서 주문 도구(매수/매도/정정/취소·신용주문)를 노출할지 여부 | `false` |
 
-**실주문 가드**: `KIWOOM_IS_MOCK=false`(실전투자)이고 `KIWOOM_MCP_ALLOW_LIVE_ORDERS`가 `true`가 아니면, 주문 관련 도구는 서버 시작 시점에 아예 등록되지 않습니다 — MCP 클라이언트(AI 에이전트)가 그 도구의 존재 자체를 모릅니다. 모의투자(`KIWOOM_IS_MOCK=true`)는 이 가드 없이 항상 사용 가능합니다. 이 가드는 MCP 서버 경로에만 적용되며, 파이썬 코드에서 `KiwoomAPI`/`AsyncKiwoomAPI`를 직접 쓰는 기존 방식에는 영향이 없습니다.
+**실주문 가드**: `KIWOOM_IS_MOCK=false`(실전투자)이고 `KIWOOM_MCP_ALLOW_LIVE_ORDERS` 가 `true` 가 아니면, 주문 관련 도구는 서버 시작 시점에 아예 등록되지 않습니다 — AI 에이전트가 그 도구의 존재 자체를 모릅니다. 모의투자(`KIWOOM_IS_MOCK=true`)는 이 가드 없이 항상 사용 가능합니다. 가드는 MCP 서버 경로에만 적용되며, 파이썬 코드에서 `KiwoomAPI`/`AsyncKiwoomAPI` 를 직접 쓰는 방식에는 영향이 없습니다.
 
-조회성 도구는 `{"params": {...}}` 형태로 TR 요청 필드를 그대로 전달합니다(필드 목록은 [키움 REST API 가이드](https://openapi.kiwoom.com) 참고). 예: `stock_info_basic_stock_info` 도구에 `{"params": {"stk_cd": "005930"}}`.
+조회성 도구는 `{"params": {...}}` 형태로 TR 요청 필드를 그대로 전달합니다(필드 목록은 [키움 REST API 가이드](https://openapi.kiwoom.com)). 예: `stock_info_basic_stock_info` 도구에 `{"params": {"stk_cd": "005930"}}`.
+
+## 아키텍처
+
+`KiwoomAPI`(sync) / `AsyncKiwoomAPI`(async) 는 같은 구조를 공유하는 파사드입니다. 15개 엔드포인트 모듈은 `ModuleRegistry` 가 지연 생성하고, HTTP 호출·인증·재시도는 `BaseClient`/`AsyncBaseClient` 한 곳에 모여 있습니다. 실시간 데이터는 `KiwoomWebSocket` 이 같은 토큰을 재사용해 처리합니다.
+
+```mermaid
+flowchart LR
+    User["사용자 코드"] --> API["KiwoomAPI / AsyncKiwoomAPI\n(ModuleRegistry 파사드)"]
+
+    API --> Modules["15개 엔드포인트 모듈\naccount · stock_info · market · chart\norder · credit_order · ranking · sector\nforeign_institution · short_selling · slb\ntheme · condition_search · elw · etf"]
+
+    Modules --> Client["BaseClient / AsyncBaseClient\n(request / request_all)"]
+
+    Client --> Auth["KiwoomAuth\n(토큰 발급 · 만료전 갱신 · 401 재발급)"]
+    Client --> RateLimiter["PerKeyRateLimiter\n(TR별 토큰 버킷, 429 자동 재시도)"]
+    Client --> Parsing["parsing\n(to_number / to_dataframe)"]
+
+    Auth -->|"POST /oauth2/token"| REST["키움 REST API\napi.kiwoom.com / mockapi.kiwoom.com"]
+    Client -->|"POST /api/dostk/..."| REST
+
+    API --> WS["KiwoomWebSocket"]
+    Auth -->|"access_token 재사용"| WS
+    WS <-->|"REG/REMOVE/REAL, 조건검색"| WSS["키움 실시간 WebSocket\nwss://.../api/dostk/websocket"]
+```
 
 ## 지원 API 목록
-
-### 인증
 
 ```python
 api.login()      # 접근토큰 발급 (선택 — 첫 호출에서 자동 발급됩니다)
 api.logout()     # 접근토큰 폐기
 ```
-
-### 모듈별 커버리지 (182개 REST 엔드포인트)
 
 | 모듈 | 개수 | 설명 |
 |---|---|---|
@@ -506,60 +360,53 @@ api.logout()     # 접근토큰 폐기
 | `api.short_selling` | 1 | 공매도 추이 |
 | `api.create_websocket()` | 19종 | 실시간 시세 — 체결·호가·잔고·VI 등 |
 
-메서드 이름과 파라미터 전체 목록은 [`src/kiwoom_client/domestic/`](src/kiwoom_client/domestic/) 소스나
-IDE 자동완성으로 확인할 수 있습니다. API ID(`ka10001` 등)는 키움 공식 가이드의 TR 코드와 동일합니다.
+메서드 이름과 파라미터 전체 목록은 [`src/kiwoom_client/domestic/`](src/kiwoom_client/domestic/) 소스나 IDE 자동완성으로 확인할 수 있습니다. API ID(`ka10001` 등)는 키움 공식 가이드의 TR 코드와 같습니다.
 
 ## 자주 묻는 질문 (FAQ)
 
 **Q. sync(`KiwoomAPI`)와 async(`AsyncKiwoomAPI`) 중 뭘 써야 하나요?**
-단발성 조회·간단한 스크립트라면 sync로 충분합니다. 여러 종목을 동시에 조회하거나
-실시간 WebSocket과 함께 쓴다면 async가 유리합니다.
+단발성 조회·간단한 스크립트라면 sync 로 충분합니다. 여러 종목을 동시에 조회하거나 실시간 WebSocket 과 함께 쓴다면 async 가 유리합니다.
 
 **Q. 인증 에러(`유효하지 않은 토큰` 등)가 나요.**
-토큰 만료라면 라이브러리가 자동으로 재발급 후 재시도합니다. 계속 실패한다면
-`is_mock` 값과 앱키/시크릿키가 서로 맞는지 확인하세요 — 모의투자용 키로
-실전투자 서버를(또는 반대로) 호출하면 인증이 거부됩니다.
+토큰 만료라면 라이브러리가 자동으로 재발급 후 재시도합니다. 계속 실패한다면 `is_mock` 값과 앱키/시크릿키가 서로 맞는지 확인하세요 — 모의투자용 키로 실전투자 서버를(또는 반대로) 호출하면 인증이 거부됩니다.
 
-**Q. HTTP `429`가 계속 떠요.**
-기본 Rate Limiter(TR당 1 req/s, 버스트 2)가 있어도, 같은 TR을 여러 프로세스나
-스레드에서 동시에 호출하면 이를 넘길 수 있습니다. `rate_limit`을 낮추거나
-호출을 한 곳에서 조율하세요. 자세한 내용은 [요청 제한](#요청-제한-rate-limit) 참고.
-
-**Q. 모의투자와 실전투자 앱키가 같나요?**
-아닙니다. 키움 포털에서 모의투자용 앱키/시크릿키를 별도로 발급받아야 하며,
-`is_mock` 값과 짝이 맞지 않으면 인증에 실패합니다.
+**Q. HTTP `429` 가 계속 떠요.**
+기본 Rate Limiter(TR당 1 req/s, 버스트 2)가 있어도, 같은 TR 을 여러 프로세스나 스레드에서 동시에 호출하면 넘길 수 있습니다. `rate_limit` 을 낮추거나 호출을 한 곳에서 조율하세요. [요청 제한](#요청-제한-rate-limit) 참고.
 
 **Q. 지정가 주문(`buy_order`/`sell_order`)이 거부돼요.**
-`ord_uv`가 KRX 호가단위의 배수가 아니면 거부되거나 의도와 다른 가격에 체결됩니다.
-[`round_to_tick()`](#호가단위-지정가-주문-전에)으로 보정한 값을 넘기세요.
+`ord_uv` 가 KRX 호가단위의 배수가 아니면 거부되거나 의도와 다른 가격에 체결됩니다. [`round_to_tick()`](#계좌와-주문)으로 보정한 값을 넘기세요.
 
 **Q. pandas 없이도 쓸 수 있나요?**
-네. `to_dataframe()`만 pandas가 필요하고, 기본 설치(`pip install kiwoom-client`)는
-dict/list 형태 그대로 응답을 돌려줍니다.
+네. `to_dataframe()` 만 pandas 가 필요하고, 기본 설치는 dict/list 형태 그대로 응답을 돌려줍니다.
 
-**Q. 연속조회(페이지네이션)를 직접 관리하지 않고 한 번에 다 받고 싶어요.**
-`request_all()`을 쓰세요. `cont_yn`/`next_key`를 자동으로 순회합니다.
-자세한 내용은 [연속 조회](#연속-조회-페이지네이션) 참고.
+**Q. 연속조회를 직접 관리하지 않고 한 번에 다 받고 싶어요.**
+`request_all()` 을 쓰세요. `cont-yn`/`next-key` 를 자동으로 순회합니다. [연속 조회](#연속-조회-페이지네이션) 참고.
 
 더 궁금한 점은 [Issues](https://github.com/younghwan91/kiwoom-client/issues)에 남겨주세요.
+
+## 어디서 쓰이나
+
+[quant-airflow](https://github.com/younghwan91/quant-airflow)의 일일 수집 DAG 가 이 라이브러리로 시세·수급·신용·공매도를 매일 TimescaleDB 에 적재합니다. 같은 스택의 나머지는 [아래](#관련-프로젝트--오픈소스-퀀트-스택)에 있습니다.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/pypi_downloads_dark.png">
+  <img alt="kiwoom-client 누적 PyPI 다운로드 추이" src="docs/images/pypi_downloads_light.png" width="640">
+</picture>
 
 ## 참고
 
 - 공식 API 가이드: https://openapi.kiwoom.com/guide/apiguide
-- 모의투자는 KRX만 지원됩니다.
+- 모의투자는 KRX 만 지원됩니다.
 - 모든 API 이름은 키움증권 공식 가이드 기준입니다.
 
 ## 라이선스
 
 MIT
 
----
-
 ## 기여 및 이슈 제보
 
 - 🐛 버그 제보 및 기능 요청: [GitHub Issues](https://github.com/younghwan91/kiwoom-client/issues)
 - 💡 새로운 기능 제안 및 PR 환영: [CONTRIBUTING.md](CONTRIBUTING.md) 가이드라인을 확인해 주세요.
-
 
 ## 관련 프로젝트 — 오픈소스 퀀트 스택
 
