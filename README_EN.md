@@ -85,16 +85,20 @@ position = api.account.filled_position()        # holdings
 unfilled = api.account.unfilled_orders()        # open orders
 
 # Buy 10 shares of Samsung Electronics at limit
-result = api.order.buy_order(
-    dmst_stex_tp="01",   # exchange (01: KRX)
+result = api.order.buy_order(   # values per Kiwoom's official spec (strings)
+    dmst_stex_tp="KRX",  # exchange: KRX / NXT / SOR
     stk_cd="005930",
-    ord_qty=10,
-    trde_tp="00",        # order type (00: limit)
-    ord_uv=70000,        # price
+    ord_qty="10",
+    ord_uv="70000",      # price
+    trde_tp="0",         # 0 regular (limit), 3 market, 28 stop-limit ...
 )
-api.order.sell_order(dmst_stex_tp="01", stk_cd="005930", ord_qty=10, trde_tp="00", ord_uv=75000)
-api.order.modify_order(org_ord_no="ORIGINAL_ORDER_NO", ord_qty=5, ord_uv=71000)
-api.order.cancel_order(org_ord_no="ORIGINAL_ORDER_NO", ord_qty=5)
+api.order.sell_order(dmst_stex_tp="KRX", stk_cd="005930", ord_qty="10", ord_uv="75000", trde_tp="0")
+api.order.modify_order(   # modify (kt10002)
+    dmst_stex_tp="KRX", orig_ord_no="ORIGINAL_ORDER_NO", stk_cd="005930", mdfy_qty="5", mdfy_uv="71000",
+)
+api.order.cancel_order(   # cancel (kt10003) -- cncl_qty="0" cancels the whole remainder
+    dmst_stex_tp="KRX", orig_ord_no="ORIGINAL_ORDER_NO", stk_cd="005930", cncl_qty="5",
+)
 
 api.logout()  # revoke the token (optional)
 api.close()   # automatic inside a `with` block
@@ -109,8 +113,8 @@ tick_size(70123)        # Decimal('100')   (KRW 50k–200k bracket has 100 KRW t
 round_to_tick(70123)    # Decimal('70100') (snaps down to previous valid tick)
 
 api.order.buy_order(
-    dmst_stex_tp="01", stk_cd="005930", ord_qty=10,
-    trde_tp="00", ord_uv=round_to_tick(target_price),
+    dmst_stex_tp="KRX", stk_cd="005930", ord_qty="10",
+    ord_uv=str(round_to_tick(target_price)), trde_tp="0",
 )
 ```
 
