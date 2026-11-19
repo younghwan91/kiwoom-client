@@ -96,17 +96,21 @@ deposit = api.account.deposit_detail()          # 예수금 상세
 position = api.account.filled_position()        # 체결 잔고
 unfilled = api.account.unfilled_orders()        # 미체결 주문
 
-# 삼성전자 10주 지정가 매수
+# 삼성전자 10주 지정가 매수 — 값은 키움 공식 스펙 기준 (문자열)
 result = api.order.buy_order(
-    dmst_stex_tp="01",   # 거래소 구분 (01: KRX)
+    dmst_stex_tp="KRX",  # 거래소 구분: KRX / NXT / SOR
     stk_cd="005930",     # 종목코드
-    ord_qty=10,          # 주문 수량
-    trde_tp="00",        # 주문 유형 (00: 지정가)
-    ord_uv=70000,        # 주문 단가
+    ord_qty="10",        # 주문 수량
+    ord_uv="70000",      # 주문 단가
+    trde_tp="0",         # 매매구분: 0 보통(지정가), 3 시장가, 28 스톱지정가 ...
 )
-api.order.sell_order(dmst_stex_tp="01", stk_cd="005930", ord_qty=10, trde_tp="00", ord_uv=75000)
-api.order.modify_order(org_ord_no="원래주문번호", ord_qty=5, ord_uv=71000)   # 정정
-api.order.cancel_order(org_ord_no="원래주문번호", ord_qty=5)                 # 취소
+api.order.sell_order(dmst_stex_tp="KRX", stk_cd="005930", ord_qty="10", ord_uv="75000", trde_tp="0")
+api.order.modify_order(   # 정정 (kt10002)
+    dmst_stex_tp="KRX", orig_ord_no="원주문번호", stk_cd="005930", mdfy_qty="5", mdfy_uv="71000",
+)
+api.order.cancel_order(   # 취소 (kt10003) — cncl_qty="0" 이면 잔량 전부
+    dmst_stex_tp="KRX", orig_ord_no="원주문번호", stk_cd="005930", cncl_qty="5",
+)
 
 api.logout()  # 토큰 폐기 (선택)
 api.close()   # 연결 종료 — with 문을 쓰면 자동
@@ -121,8 +125,8 @@ tick_size(70123)        # Decimal('100')   (5만~20만원대는 1틱 100원)
 round_to_tick(70123)    # Decimal('70100') (직전 유효 호가로 내림)
 
 api.order.buy_order(
-    dmst_stex_tp="01", stk_cd="005930", ord_qty=10,
-    trde_tp="00", ord_uv=round_to_tick(target_price),
+    dmst_stex_tp="KRX", stk_cd="005930", ord_qty="10",
+    ord_uv=str(round_to_tick(target_price)), trde_tp="0",
 )
 ```
 
