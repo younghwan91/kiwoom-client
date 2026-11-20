@@ -228,7 +228,9 @@ api = KiwoomAPI(app_key="...", app_secret="...", rate_limit=None)               
 from kiwoom_client.base import KiwoomAPIError
 
 try:
-    result = api.order.buy_order(stk_cd="005930", ord_qty=10, ord_uv=70000)
+    result = api.order.buy_order(
+        dmst_stex_tp="KRX", stk_cd="005930", ord_qty="10", ord_uv="70000", trde_tp="0",
+    )
 except KiwoomAPIError as e:
     print(f"Code: {e.code}, Message: {e.message}")
 ```
