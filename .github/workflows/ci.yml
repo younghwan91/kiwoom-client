@@ -89,6 +89,31 @@ jobs:
             uv run --extra dev --extra mcp coverage report --format=markdown
           } >> "${GITHUB_STEP_SUMMARY:-/dev/stdout}"
 
+  # [mcp] extra 의 하한(pyproject `mcp>=2.0`)에서도 MCP 서버가 도는지 본다. 위 test 잡은 최신 mcp 만 깐다.
+  # 하한을 올리면 이 핀도 같이 올린다 — tests/test_ci_mcp_floor.py 가 둘이 맞는지 본다.
+  test-mcp-min:
+    runs-on: ubuntu-latest
+    env:
+      MCP_MIN: "2.0.0"
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d  # v10.4.0
+        with:
+          python-version: "3.10"
+          enable-cache: true
+          cache-dependency-glob: pyproject.toml
+
+      - name: mcp 버전 확인
+        run: |
+          v=$(uv run --extra dev --extra mcp --with "mcp==$MCP_MIN" python -c "import importlib.metadata as m; print(m.version('mcp'))")
+          echo "mcp $v"
+          test "$v" = "$MCP_MIN"
+
+      - name: Run tests (mcp==${{ env.MCP_MIN }})
+        run: uv run --extra dev --extra mcp --with "mcp==$MCP_MIN" pytest tests/ -q
+
   # 배포물(sdist·wheel)이 실제로 쓸 만한지 본다 — 레포 체크아웃이 아니라 설치한 wheel 로.
   # 키·네트워크(키움 서버) 없이 끝난다. 무엇을 보는지는 scripts/check_dist.sh 주석에.
   build:
