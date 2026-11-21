@@ -78,7 +78,7 @@ Further reading: [Why kiwoom-client — compared with OpenAPI+, pykiwoom and oth
 - **MCP server**: every REST endpoint in the 15 modules plus the 4 condition-search calls, exposed as MCP tools.
 
 Unlike the legacy Kiwoom OpenAPI+ (OCX/COM) or `pykiwoom`, there is no 32-bit/Windows-only constraint, no GUI dependency, and installation is one `pip install`.
-For a comparison that includes Kiwoom's official repository and other REST wrappers, see [Why kiwoom-client](https://younghwan91.github.io/kiwoom-client/en/why/); to port OpenAPI+ code, see the [migration table](https://younghwan91.github.io/kiwoom-client/en/migration-from-openapi-plus/) (Korean).
+For a comparison that includes Kiwoom's official repository and other REST wrappers, see [Why kiwoom-client](https://younghwan91.github.io/kiwoom-client/en/why/); to port OpenAPI+ code, see the [migration table](https://younghwan91.github.io/kiwoom-client/en/migration-from-openapi-plus/).
 
 ## Installation and prerequisites
 

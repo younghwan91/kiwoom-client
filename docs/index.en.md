@@ -78,7 +78,7 @@ Get an app key and secret at the [Kiwoom REST API portal](https://openapi.kiwoom
 | Install and make a first call on macOS, Linux or a server | [macOS and Linux](macos-linux.md) |
 | Look up an api_id or TR name among the 182 methods | [Endpoint reference](endpoints.md) |
 | Connect it to Claude Code or Cursor | [MCP server](mcp.md) |
-| Port OpenAPI+ / pykiwoom code to REST | [Migration table](migration-from-openapi-plus.md) (Korean) |
+| Port OpenAPI+ / pykiwoom code to REST | [Migration table](migration-from-openapi-plus.md) |
 | Compare with OpenAPI+, pykiwoom and other REST wrappers | [Why kiwoom-client](why.md) |
 | Public projects built on it | [Showcase](showcase.md) |
 | Kiwoom portal, MCP and public-data links | [Resources](resources.md) |
