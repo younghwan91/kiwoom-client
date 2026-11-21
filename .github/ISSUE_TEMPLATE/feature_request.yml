@@ -1,0 +1,43 @@
+name: 기능 제안 (Feature request)
+description: 새 기능이나 사용성 개선을 제안합니다
+title: "[Feature] "
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        키움 API 엔드포인트(api_id)를 새로 감싸 달라는 요청은 **엔드포인트 요청** 템플릿을 써 주세요.
+        사용법 질문은 이슈보다 README·docs 를 먼저 봐 주세요.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 어떤 문제를 풀고 싶나요
+      description: 지금 무엇이 불편한지, 어떤 상황에서 필요한지.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 제안하는 방식
+      description: 원하는 API 모양(코드 예시)이 있으면 적어 주세요.
+      render: python
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 고려한 대안
+      description: 지금은 어떻게 우회하고 있나요?
+
+  - type: dropdown
+    id: compat
+    attributes:
+      label: 기존 동작에 영향
+      description: 이 패키지는 실매매 코드가 `>=` 로 받아 씁니다. 기존 동작을 바꾸지 않고 추가만 하는 방식이 우선입니다.
+      options:
+        - 추가만 (기존 동작 그대로)
+        - 기존 동작이 바뀜
+        - 잘 모르겠음
+    validations:
+      required: true
