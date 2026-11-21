@@ -333,6 +333,10 @@ LLMS_LINKS: list[tuple[str, str, str, str]] = [
      "install, quick start, accounts and orders, asyncio, DataFrame parsing, WebSocket, "
      "pagination, rate limits, MCP server"),
     ("Docs", "README.md", "README (한국어)", "the same, in Korean"),
+    ("Docs", "AGENTS.md", "AGENTS.md",
+     "rules for AI agents using or working on this library: safety, lookups, tests"),
+    ("Docs", "docs/migration-from-openapi-plus.md", "Migrating from OpenAPI+ (OCX) / pykiwoom",
+     "OpenAPI+ functions, SendOrder codes, real-time types and TR codes mapped to REST"),
     ("Optional", LLMS_FULL_PATH, "llms-full.txt",
      "public API signatures and docstrings plus the full endpoint list in one file"),
     ("Optional", "CHANGELOG.md", "Changelog", "release history"),
@@ -357,12 +361,31 @@ def template(name: str, **values: object) -> str:
     return Template(text).substitute(values).rstrip("\n")
 
 
+def _counts() -> dict[str, int]:
+    return {"n_rest": len(rest_endpoints()), "n_cs": len(ws_calls()), "n_rt": len(REALTIME_TYPES)}
+
+
+def usage_rules() -> str:
+    """이 라이브러리로 코드를 쓸 때의 규칙 — llms.txt·AGENTS.md·편집기 규칙이 같이 쓰는 원본."""
+    return template("usage-rules.md")
+
+
 def _llms_summary() -> list[str]:
-    text = template(
-        "llms-summary.md",
-        n_rest=len(rest_endpoints()), n_cs=len(ws_calls()), n_rt=len(REALTIME_TYPES),
+    return template("llms-summary.md", usage_rules=usage_rules(), **_counts()).splitlines()
+
+
+# --------------------------------------------------------------------------- AGENTS.md
+
+AGENTS_PATH = "AGENTS.md"
+
+
+def render_agents() -> str:
+    note = (
+        "<!-- 자동 생성 파일 — scripts/templates/AGENTS.md (와 usage-rules.md) 를 고치고 "
+        "`python scripts/gen_docs.py` 로 다시 만듭니다. -->"
     )
-    return text.splitlines()
+    body = template("AGENTS.md", usage_rules=usage_rules(), **_counts())
+    return f"{note}\n\n{body}\n"
 
 
 def render_llms_txt() -> str:
@@ -577,6 +600,7 @@ TARGETS: dict[str, Callable[[], str]] = {
     ENDPOINTS_PATH: render_endpoints,
     LLMS_PATH: render_llms_txt,
     LLMS_FULL_PATH: render_llms_full,
+    AGENTS_PATH: render_agents,
 }
 
 
