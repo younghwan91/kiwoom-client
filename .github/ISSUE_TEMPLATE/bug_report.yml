@@ -17,7 +17,7 @@ body:
     attributes:
       label: kiwoom-client 버전
       description: "`python -c \"import kiwoom_client; print(kiwoom_client.__version__)\"`"
-      placeholder: "0.4.0"
+      placeholder: "0.5.0"
     validations:
       required: true
 
