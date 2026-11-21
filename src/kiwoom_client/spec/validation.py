@@ -37,6 +37,10 @@ class KiwoomParamError(KiwoomError, ValueError):
         lines = "\n".join(f"  - {p}" for p in problems)
         super().__init__(f"{api_id} 요청 필드 문제 {len(problems)}개:\n{lines}")
 
+    def __reduce__(self) -> tuple[Any, ...]:
+        # 기본 pickle 은 cls(*self.args) 로 되살려 (api_id, problems) 가 빠진다.
+        return (type(self), (self.api_id, self.problems), dict(self.__dict__))
+
 
 class KiwoomParamWarning(UserWarning):
     """``validate_params="warn"`` 에서 요청 바디가 카탈로그와 맞지 않을 때."""
