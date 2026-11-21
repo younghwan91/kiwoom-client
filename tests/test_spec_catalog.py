@@ -160,3 +160,33 @@ class TestDescribe:
             "kt10000"
         )
         assert httpx_mock.get_requests() == []
+class TestFieldNames:
+    def test_realtime_fids(self):
+        names = spec.field_names("0B")
+        assert names["10"] == "현재가"
+        assert names["20"] == "체결시간"
+
+    def test_rest_response_fields(self):
+        names = spec.field_names("ka10081")
+        assert names["cur_prc"] == "현재가"
+        assert names["stk_cd"] == "종목코드"
+
+    def test_label_renames_and_keeps_unknown_keys(self):
+        assert spec.label("0B", {"10": "-20800", "20": "165208", "zz": "1"}) == {
+            "현재가": "-20800",
+            "체결시간": "165208",
+            "zz": "1",
+        }
+
+    def test_label_keeps_both_values_when_names_collide(self):
+        # 0D(주식호가잔량)는 FID 23 과 291 이 둘 다 "예상체결가" 다 (공식 명세 기준).
+        names = spec.field_names("0D")
+        assert names["23"] == names["291"] == "예상체결가"
+        assert spec.label("0D", {"23": "1", "291": "2"}) == {
+            "예상체결가": "1",
+            "예상체결가(291)": "2",
+        }
+
+    def test_unknown_api_id(self):
+        with pytest.raises(KeyError):
+            spec.field_names("zz99999")
