@@ -1,0 +1,18 @@
+# kiwoom-client
+
+> Python client for the Kiwoom Securities (키움증권) REST API and real-time WebSocket: $n_rest REST endpoints, $n_cs condition-search calls and $n_rt real-time types, sync (`KiwoomAPI`) and asyncio (`AsyncKiwoomAPI`) facades, automatic token refresh, per-TR rate limiting, response parsing to numbers/DataFrames, KRX tick sizes, and a built-in MCP server. REST, not OCX/COM — runs on Windows, macOS and Linux.
+
+Install `pip install kiwoom-client` (extras `[pandas]`, `[mcp]`), Python 3.10+, import name `kiwoom_client`. Keys come from the Kiwoom REST API portal (https://openapi.kiwoom.com).
+
+Rules for writing code against this library:
+
+- `KiwoomAPI(app_key, app_secret, is_mock=False)` — **`is_mock` defaults to `False`, the live server.** Pass `is_mock=True` for paper trading (모의투자, mockapi.kiwoom.com). Live and paper keys are different; a key used against the wrong server is rejected (Kiwoom error 8030).
+- `KiwoomAPI.from_env(is_mock=True)` reads `KIWOOM_APP_KEY` / `KIWOOM_APP_SECRET` / `KIWOOM_IS_MOCK` (the same variables as the MCP server).
+- `api.order.*` and `api.credit_order.*` place **real, irreversible orders** when `is_mock=False`. Nothing in the Python API blocks them; only the MCP server has an opt-in guard (`KIWOOM_MCP_ALLOW_LIVE_ORDERS`).
+- `api.logout()` revokes the access token. Other processes sharing the same app key may lose their session — do not call it casually.
+- Every REST method has the same signature `(cont_yn="N", next_key="", **fields)`. Pass Kiwoom's own request field names as keyword arguments with **string** values (`stk_cd="005930"`, `ord_qty="10"`). Find the method for an api_id (`ka10081`) in the endpoint reference; field definitions are in Kiwoom's guide.
+- Responses are plain dicts whose values are strings (`"+70000"`, `"1,234"`). `to_dataframe()` / `normalize()` / `to_number()` convert them; codes and dates stay strings. A non-zero `return_code` raises `KiwoomAPIError(code, message, response)`.
+- Continuation: a response carries `"cont-yn"` and `"next-key"`; call again with `cont_yn="Y", next_key=...`, or use `api._client.request_all(url, api_id, body)`.
+- Rate limits are per api_id (about 1 req/s, burst 2) and handled by the client; different api_ids run concurrently under `AsyncKiwoomAPI`.
+- Limit prices must be on the KRX tick grid: `round_to_tick(price)`.
+- Real-time: `ws = api.create_websocket()`, `await ws.connect()`, `ws.on("0B", cb)`, `await ws.subscribe("0B", "005930")`, `await ws.listen()`. `values` keys are Kiwoom FID numbers (`"10"` = current price).

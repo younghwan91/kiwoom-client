@@ -24,9 +24,11 @@ import sys
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
+from string import Template
 from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
+TEMPLATES = Path(__file__).resolve().parent / "templates"
 sys.path.insert(0, str(ROOT / "src"))
 
 from kiwoom_client._registry import MODULE_NAMES, ModuleRegistry  # noqa: E402
@@ -314,11 +316,195 @@ def render_endpoints() -> str:
     return "\n".join(lines)
 
 
+# --------------------------------------------------------------------------- llms.txt
+
+LLMS_PATH = "llms.txt"
+LLMS_FULL_PATH = "llms-full.txt"
+RAW_URL = "https://raw.githubusercontent.com/younghwan91/kiwoom-client/main"
+
+#: llms.txt 의 링크 목록: (섹션, 레포 안 경로 또는 URL, 제목, 설명).
+#: 레포 안 경로는 raw URL 로 바뀌고, 테스트가 파일이 실제로 있는지 본다.
+LLMS_LINKS: list[tuple[str, str, str, str]] = [
+    ("Docs", "docs/endpoints.md", "Endpoint reference",
+     "every REST method with api_id, URL and Korean/English TR name; condition search; "
+     "real-time types"),
+    ("Docs", "README_EN.md", "README (English)",
+     "install, quick start, accounts and orders, asyncio, DataFrame parsing, WebSocket, "
+     "pagination, rate limits, MCP server"),
+    ("Docs", "README.md", "README (한국어)", "the same, in Korean"),
+    ("Optional", LLMS_FULL_PATH, "llms-full.txt",
+     "public API signatures and docstrings plus the full endpoint list in one file"),
+    ("Optional", "CHANGELOG.md", "Changelog", "release history"),
+    ("Optional", OFFICIAL_GUIDE, "Kiwoom REST API guide (official)",
+     "request/response field definitions for each api_id"),
+    ("Optional", "https://github.com/Kiwoom-Securities/Kiwoom-REST-API",
+     "Kiwoom REST API spec (official GitHub)", "machine-readable spec and error codes"),
+]
+
+
+def link_url(target: str) -> str:
+    return target if "://" in target else f"{RAW_URL}/{target}"
+
+
+def template(name: str, **values: object) -> str:
+    """``scripts/templates/<name>`` 을 읽어 ``$이름`` 자리를 채운다.
+
+    사람이 쓰는 문장은 코드가 아니라 마크다운 원본에 둔다 — 고치기 쉽고, AGENTS.md·
+    Cursor·Copilot 규칙처럼 여러 생성물이 같은 원본을 쓸 수 있다.
+    """
+    text = (TEMPLATES / name).read_text(encoding="utf-8")
+    return Template(text).substitute(values).rstrip("\n")
+
+
+def _llms_summary() -> list[str]:
+    text = template(
+        "llms-summary.md",
+        n_rest=len(rest_endpoints()), n_cs=len(ws_calls()), n_rt=len(REALTIME_TYPES),
+    )
+    return text.splitlines()
+
+
+def render_llms_txt() -> str:
+    lines = [*_llms_summary()]
+    section = None
+    for sec, target, title, desc in LLMS_LINKS:
+        if sec != section:
+            lines += ["", f"## {sec}", ""]
+            section = sec
+        lines.append(f"- [{title}]({link_url(target)}): {desc}")
+    lines.append("")
+    return "\n".join(lines)
+
+
+def _format_annotation(ann: Any) -> str:
+    if ann is inspect.Parameter.empty:
+        return ""
+    if isinstance(ann, str):
+        return ann
+    return inspect.formatannotation(ann)
+
+
+def format_signature(name: str, fn: Callable[..., Any]) -> str:
+    """``str(inspect.signature)`` 는 파이썬 버전마다 다르게 찍힐 수 있어 직접 만든다."""
+    sig = inspect.signature(fn)
+    parts: list[str] = []
+    star_done = False
+    for i, p in enumerate(sig.parameters.values()):
+        if i == 0 and p.name in {"self", "cls"}:
+            continue
+        if p.kind is p.KEYWORD_ONLY and not star_done:
+            parts.append("*")
+            star_done = True
+        text = p.name
+        if p.kind is p.VAR_POSITIONAL:
+            text, star_done = "*" + p.name, True
+        elif p.kind is p.VAR_KEYWORD:
+            text = "**" + p.name
+        ann = _format_annotation(p.annotation)
+        if ann:
+            text += f": {ann}"
+        if p.default is not inspect.Parameter.empty:
+            text += f" = {p.default!r}" if ann else f"={p.default!r}"
+        parts.append(text)
+    ret = _format_annotation(sig.return_annotation)
+    prefix = "async def" if inspect.iscoroutinefunction(fn) else "def"
+    return f"{prefix} {name}({', '.join(parts)})" + (f" -> {ret}" if ret else "")
+
+
+def _api_sections() -> list[tuple[str, list[tuple[str, str, str]]]]:
+    """llms-full.txt 에 적을 공개 API: (제목, [(표시 이름, 시그니처, docstring)])."""
+    import kiwoom_client as kc
+    from kiwoom_client.base import BaseClient
+    from kiwoom_client.websocket import KiwoomWebSocket
+
+    def entry(label: str, fn: Callable[..., Any]) -> tuple[str, str, str]:
+        return label, format_signature(label.split(".")[-1], fn), inspect.getdoc(fn) or ""
+
+    def facade(cls: type) -> list[tuple[str, str, str]]:
+        name = cls.__name__
+        init = format_signature("__init__", cls.__init__)  # type: ignore[misc]
+        sig = init.replace("def __init__(", f"class {name}(", 1).split(" -> ")[0]
+        out = [(name, sig, inspect.getdoc(cls) or "")]
+        for meth in ["from_env", "login", "logout", "close", "create_websocket"]:
+            if hasattr(cls, meth):
+                label, sig, doc = entry(f"{name}.{meth}", getattr(cls, meth))
+                # from_env 의 반환형은 TypeVar(_SyncT 등) — 읽는 쪽엔 클래스 이름이 맞다.
+                out.append((label, re.sub(r"-> _\w+T$", f"-> {name}", sig), doc))
+        return out
+
+    ws_methods = ["connect", "disconnect", "on", "on_trnm", "on_message", "subscribe",
+                  "unsubscribe", "send", "listen"]
+    return [
+        ("KiwoomAPI (sync facade)", facade(kc.KiwoomAPI)),
+        ("AsyncKiwoomAPI (asyncio facade: same endpoints, every call awaited)",
+         facade(kc.AsyncKiwoomAPI)),
+        ("Low-level client (`api._client`)",
+         [entry(f"api._client.{m}", getattr(BaseClient, m)) for m in ["request", "request_all"]]),
+        ("KiwoomWebSocket (`ws = api.create_websocket()`)",
+         [entry(f"ws.{m}", getattr(KiwoomWebSocket, m)) for m in ws_methods]),
+        ("Response parsing",
+         [entry(n, getattr(kc, n)) for n in
+          ["to_number", "normalize", "extract_records", "to_dataframe"]]),
+        ("KRX tick size", [entry(n, getattr(kc, n)) for n in
+                           ["tick_size", "round_to_tick", "ticks_in"]]),
+    ]
+
+
+def render_llms_full() -> str:
+    from kiwoom_client import KiwoomAPIError, KiwoomAuthError
+    from kiwoom_client.websocket import KiwoomWebSocketError
+
+    lines = [
+        *_llms_summary(),
+        "",
+        "This file is generated from the code by `scripts/gen_docs.py`; the signatures and "
+        "docstrings below are the library's own.",
+        "",
+    ]
+    for title, entries in _api_sections():
+        lines += [f"## {title}", ""]
+        for label, sig, doc in entries:
+            lines += [f"### `{label}`", "", "```", sig, "```", ""]
+            if doc:
+                lines += [doc, ""]
+    lines += ["## Errors", ""]
+    for exc in (KiwoomAPIError, KiwoomAuthError, KiwoomWebSocketError):
+        lines.append(f"- `{exc.__module__}.{exc.__name__}`: {inspect.getdoc(exc) or ''}")
+
+    eps = rest_endpoints()
+    lines += [
+        "",
+        f"## REST endpoints ({len(eps)})",
+        "",
+        "Format: `api_id` `api.<module>.<method>()` — 한글 TR 이름 (English) [POST url]. "
+        "⚠️ = places a real order when `is_mock=False`.",
+    ]
+    current = None
+    for ep in eps:
+        if ep.module != current:
+            lines += ["", f"### api.{ep.module} — {module_title(ep.module)}", ""]
+            current = ep.module
+        mark = "⚠️ " if ep.is_order else ""
+        lines.append(
+            f"- {mark}`{ep.api_id}` `{ep.call}()` — {ep.name_ko} ({ep.name_en}) [POST {ep.url}]"
+        )
+    lines += ["", "## Condition search (WebSocket payload builders)", ""]
+    for c in ws_calls():
+        lines.append(f"- `{c.trnm}` `{c.call}()` — {c.name_ko} ({c.name_en})")
+    lines += ["", "## Real-time types (`await ws.subscribe(type, item)`)", ""]
+    for code, name in REALTIME_TYPES.items():
+        lines.append(f"- `{code}` {name}")
+    lines.append("")
+    return "\n".join(lines)
+
+
 # --------------------------------------------------------------------------- 진입점
 
 #: 생성 파일 경로(레포 루트 기준) → 렌더 함수.
 TARGETS: dict[str, Callable[[], str]] = {
     ENDPOINTS_PATH: render_endpoints,
+    LLMS_PATH: render_llms_txt,
+    LLMS_FULL_PATH: render_llms_full,
 }
 
 
