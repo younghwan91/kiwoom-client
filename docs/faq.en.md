@@ -95,7 +95,7 @@ add your own quantity/price checks before going live.
 
 **Q. My limit order is rejected.**
 A price that is not a multiple of the tick size is rejected or repriced. Use `round_to_tick()` —
-[limit-order recipe (Korean)](cookbook/limit-order.md).
+[limit-order recipe](cookbook/limit-order.md).
 
 ## AI agents and MCP
 

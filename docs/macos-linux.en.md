@@ -111,7 +111,7 @@ docker run --rm --env-file .env python:3.12-slim \
 - Rate limits are per TR. The default rate limiter keeps you under them and retries on 429
   — [rate-limit recipe](cookbook/rate-limits.md) (Korean).
 - With a live key, `api.order.*` and `api.credit_order.*` place real orders. Run automated trading on a mock account
-  first — [tick-aligned limit orders](cookbook/limit-order.md) (Korean).
+  first — [tick-aligned limit orders](cookbook/limit-order.md).
 
 ## Next
 
