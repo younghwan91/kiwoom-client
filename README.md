@@ -319,39 +319,23 @@ except KiwoomAPIError as e:
 
 <!-- mcp-name: io.github.younghwan91/kiwoom-client (MCP 레지스트리 PyPI 소유 확인용, server.json 참고) -->
 
-Claude Code, Cursor 등 MCP(Model Context Protocol) 클라이언트에서 이 라이브러리를 직접 부릅니다. 모듈 15개의 REST 엔드포인트 전부와 조건검색 4종이 MCP 도구로 노출됩니다.
+Claude Code·Claude Desktop·Cursor·Codex 같은 MCP 클라이언트가 이 라이브러리를 도구로 부릅니다. 모듈 15개의 REST 엔드포인트 전부와 조건검색 4종, 그리고 편의 도구(`stock_search` 종목명→코드, `stock_snapshot`, `account_summary`, 전송하지 않는 `order_preview`)가 노출됩니다.
 
 ```bash
-pip install 'kiwoom-client[mcp]'
-```
-
-MCP 클라이언트 설정(예: Claude Code `.mcp.json`)에 추가:
-
-```json
-{
-  "mcpServers": {
-    "kiwoom-client": {
-      "command": "kiwoom-client-mcp",
-      "env": {
-        "KIWOOM_APP_KEY": "발급받은_앱키",
-        "KIWOOM_APP_SECRET": "발급받은_시크릿키",
-        "KIWOOM_IS_MOCK": "true"
-      }
-    }
-  }
-}
+uvx --from 'kiwoom-client[mcp]' kiwoom-client-mcp config claude-code   # 붙여넣을 설정 출력 (claude-desktop·cursor·codex 도)
 ```
 
 | 환경변수 | 설명 | 기본값 |
 |---|---|---|
-| `KIWOOM_APP_KEY` | 앱키 (필수) | — |
-| `KIWOOM_APP_SECRET` | 시크릿키 (필수) | — |
-| `KIWOOM_IS_MOCK` | 모의투자 서버 사용 여부 | `false` |
-| `KIWOOM_MCP_ALLOW_LIVE_ORDERS` | 실전투자 계좌에서 주문 도구(매수/매도/정정/취소·신용주문)를 노출할지 여부 | `false` |
+| `KIWOOM_APP_KEY` / `KIWOOM_APP_SECRET` | 앱키·시크릿키 (필수) | — |
+| `KIWOOM_IS_MOCK` | 모의투자 서버 사용 여부 (true/false) | `false` |
+| `KIWOOM_MCP_TOOLSETS` | 노출할 모듈 (예: `market,chart,account`) | 전부 |
+| `KIWOOM_MCP_MODE` | `discovery` 면 메타 도구 3개만 노출해 컨텍스트 절약 | — |
+| `KIWOOM_MCP_ALLOW_LIVE_ORDERS` | 실전투자 계좌에서 주문 도구를 노출할지 여부 | `false` |
 
-**실주문 가드**: `KIWOOM_IS_MOCK=false`(실전투자)이고 `KIWOOM_MCP_ALLOW_LIVE_ORDERS` 가 `true` 가 아니면, 주문 관련 도구는 서버 시작 시점에 아예 등록되지 않습니다 — AI 에이전트가 그 도구의 존재 자체를 모릅니다. 모의투자(`KIWOOM_IS_MOCK=true`)는 이 가드 없이 항상 사용 가능합니다. 가드는 MCP 서버 경로에만 적용되며, 파이썬 코드에서 `KiwoomAPI`/`AsyncKiwoomAPI` 를 직접 쓰는 방식에는 영향이 없습니다.
+**실주문 가드**: `KIWOOM_IS_MOCK=false`(실전투자)이고 `KIWOOM_MCP_ALLOW_LIVE_ORDERS` 가 `true` 가 아니면 주문 관련 도구는 서버 시작 시점에 아예 등록되지 않습니다. 도구 목록·toolset 필터·discovery 모드 어디로도 AI 에이전트가 그 도구에 닿지 못합니다. 모의투자(`KIWOOM_IS_MOCK=true`)는 이 가드 없이 항상 사용 가능합니다. 가드는 MCP 서버 경로에만 적용되며, 파이썬 코드에서 `KiwoomAPI`/`AsyncKiwoomAPI` 를 직접 쓰는 방식에는 영향이 없습니다.
 
-조회성 도구는 `{"params": {...}}` 형태로 TR 요청 필드를 그대로 전달합니다(필드 목록은 [키움 REST API 가이드](https://openapi.kiwoom.com)). 예: `stock_info_basic_stock_info` 도구에 `{"params": {"stk_cd": "005930"}}`.
+클라이언트별 설정, 옵션 전체(`--toolsets`·`--discovery`·`--max-rows`), 도구·resources·prompts, 문제 해결은 [MCP 서버 문서](https://github.com/younghwan91/kiwoom-client/blob/main/docs/mcp.md)에 있습니다.
 
 ## 아키텍처
 
