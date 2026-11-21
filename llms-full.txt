@@ -524,6 +524,43 @@ Args:
 Returns:
     int, float, None for blanks, or the original value untouched.
 
+### `to_ohlcv`
+
+```
+def to_ohlcv(response: Any, key: str | None = None, keep: Iterable[str] = ()) -> Any
+```
+
+Turn a chart response into an OHLCV DataFrame indexed by time.
+
+Works for the stock, sector and gold-spot chart TRs (tick, minute, daily,
+weekly, monthly, yearly), single page or the list from ``request_all()``.
+
+The result has columns ``open``, ``high``, ``low``, ``close``, ``volume``
+and a ``DatetimeIndex`` named ``date`` (daily and longer) or ``datetime``
+(intraday), sorted oldest first — Kiwoom sends newest first.
+
+Notes:
+    - Prices lose their direction sign (``"-70000"`` -> ``70000``).
+    - Sector (업종) index values come as Kiwoom sends them, i.e. with the
+      decimal point removed (``"265012"`` for 2650.12).
+    - :func:`to_dataframe` is unchanged and still returns every raw field.
+
+Args:
+    response: A chart response dict, or the list from ``request_all()``.
+    key: Payload key (e.g. ``"stk_dt_pole_chart_qry"``). Auto-detected
+        when omitted.
+    keep: Extra fields to carry over as columns, numeric-converted with
+        :func:`to_number` (e.g. ``["trde_prica"]`` for 거래대금 — its unit
+        differs per TR: 백만원 for daily, 원 for weekly/monthly).
+
+Returns:
+    A pandas DataFrame; empty (with the OHLCV columns) for no records.
+
+Raises:
+    ImportError: If pandas is not installed.
+    KeyError: If the records have no time or price fields, i.e. the
+        response is not a chart.
+
 ## Named codes (`kiwoom_client.codes`)
 
 Named constants for Kiwoom's coded request/response fields.
