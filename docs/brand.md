@@ -67,7 +67,7 @@ README 두 벌, 문서 사이트 푸터, PyPI 설명에 같은 뜻으로 들어�
 
 ## 색 토큰
 
-`scripts/hero_style.py` 의 팔레트를 그대로 브랜드 토큰으로 씁니다. 그림과 로고와 사이트가 한 팔레트에서 나옵니다.
+`scripts/brand_tokens.py` 가 정본입니다(히어로 그림의 `hero_style.py` 도 여기서 가져갑니다). 그림과 로고와 사이트가 한 팔레트에서 나옵니다.
 키움증권 CI 의 마젠타·보라 계열은 브랜드 색으로 쓰지 않습니다.
 
 | 토큰 | 라이트 | 다크 | 쓰임 |
@@ -107,6 +107,16 @@ README 두 벌, 문서 사이트 푸터, PyPI 설명에 같은 뜻으로 들어�
 - 워드마크: 마크 + `kiwoom-client`(소문자). 항상 `-client` 를 붙여 써서 "키움" 단독 표기처럼 보이지 않게 합니다.
 - 하지 않는 것: 키움증권 로고 모양·마젠타·심볼 흉내, 증권사 공식 앱 아이콘처럼 보이는 구성, "키움증권" 한글 로고타입.
 - 생성: 로고는 코드로 그립니다(SVG 원본 + PNG 렌더). 손으로 그린 파일은 두지 않습니다.
+
+| 파일 (`docs/images/brand/`) | 쓰임 |
+|---|---|
+| `wordmark-light.svg` / `wordmark-dark.svg` | README 상단 `<picture>`, 문서 |
+| `mark.svg` | 파비콘(SVG), 아바타 |
+| `mark-white.svg` | 색 배경 위(문서 사이트 헤더) |
+| `favicon-32.png` / `mark-512.png` | PNG 파비콘, 레지스트리·커뮤니티 아이콘 |
+
+다시 만들기: `uv run --no-project --with fonttools --with cairosvg python scripts/make_logo.py`.
+워드마크 글자는 글꼴 윤곽선을 path 로 박아 넣으므로 보는 쪽 글꼴과 상관없이 같게 보입니다.
 
 ## 시각물 원칙
 
