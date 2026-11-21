@@ -17,12 +17,22 @@ The right pick depends on what you are building, so read "When to pick something
 Moving to REST lets you run on a Linux server or a Mac without anyone clicking a login window. Some OpenAPI+ features may
 not exist in REST yet, so look up the TRs you rely on in the
 [Kiwoom REST API guide](https://openapi.kiwoom.com/guide/apiguide) first. What kiwoom-client wraps is listed in the
-[endpoint reference](endpoints.md).
+[endpoint reference](endpoints.md); the OpenAPI+ TR and function mapping is in
+[Moving from OpenAPI+ (OCX) and pykiwoom](migration-from-openapi-plus.md) (Korean).
 
 ## Python libraries at a glance
 
 As of 2026-11-21, from PyPI metadata and each project's README. Versions and features change; check each project before
 you choose.
+
+### Official, from Kiwoom Securities
+
+| Repository / package | Latest (uploaded) | Python | License | Stated in its README |
+|---|---|---|---|---|
+| [Kiwoom-Securities/Kiwoom-REST-API](https://github.com/Kiwoom-Securities/Kiwoom-REST-API) · PyPI `kwcli` | `kwcli` 1.0.3 (2026-09) | ≥ 3.13 | Kiwoom's own license (use limited to Kiwoom OpenAPI) | Specs for 337 APIs (Korean **and US** stocks), 362 per-function examples, Postman collection, `kiwoomcli` CLI, two MCP servers (spec search and execution; orders only when explicitly allowed) |
+
+Published by Kiwoom itself, so it is the closest thing to the source of truth for the API, and it covers US stocks. Read
+the comparison below knowing that it overlaps with these official tools.
 
 ### OpenAPI+ (OCX) wrappers
 
@@ -65,8 +75,12 @@ Only things you can check in the code and tests.
   plus an MCP server only.
 - You want **attribute-style response models**: look at kiwoompy. kiwoom-client returns Kiwoom's JSON as dicts and
   converts on request with `to_dataframe()`.
+- You want **tools maintained by Kiwoom itself**, or the **US-stock APIs**: use the [official repository](https://github.com/Kiwoom-Securities/Kiwoom-REST-API) and `kwcli`. kiwoom-client wraps the domestic (Korean) REST API only.
 - You depend on something **only OpenAPI+ has**: you may still need an OCX wrapper such as pykiwoom.
 - You are on **Python 3.8 or 3.9**: kiwoom-client needs 3.10+.
+
+If you want an MIT-licensed `pip install` library for the domestic REST API with the same sync and async surface, and an
+MCP server from the same package, kiwoom-client fits.
 
 If something here is wrong or a project is missing, [open an issue](https://github.com/younghwan91/kiwoom-client/issues)
 and it will be fixed.

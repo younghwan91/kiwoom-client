@@ -89,6 +89,8 @@ claude mcp add --transport stdio \
 | 실시간 데이터 | 이벤트 콜백 | 이벤트 콜백 | **async WebSocket** |
 | 설치 | 별도 모듈 설치 | OCX + 모듈 | **`pip install` 한 줄** |
 
+키움 공식 저장소·다른 REST 래퍼까지 넣은 비교는 [왜 kiwoom-client 인가](https://github.com/younghwan91/kiwoom-client/blob/main/docs/why.md), OpenAPI+ TR·함수를 REST 로 옮기는 대응표는 [옮겨 오기](https://github.com/younghwan91/kiwoom-client/blob/main/docs/migration-from-openapi-plus.md).
+
 ## 설치와 사전 준비
 
 ```bash

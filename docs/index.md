@@ -74,6 +74,7 @@ print(info["stk_nm"])
 | 설치·사용법 전체 (sync/async, WebSocket, 에러 처리) | [README](https://github.com/younghwan91/kiwoom-client#readme) |
 | 182개 메서드의 api_id·TR 이름 찾기 | [엔드포인트 전체 목록](endpoints.md) |
 | Claude Code·Cursor 에 붙이기 | [README — MCP 서버로 사용하기](https://github.com/younghwan91/kiwoom-client#mcp-서버로-사용하기) |
+| OpenAPI+·pykiwoom 코드를 REST 로 옮기기 | [옮겨 오기 대응표](migration-from-openapi-plus.md) |
 | OpenAPI+·pykiwoom·다른 REST 래퍼와 비교 | [왜 kiwoom-client 인가](why.md) |
 | 이 라이브러리로 돌아가는 공개 프로젝트 | [쓰이는 곳](showcase.md) |
 | 키움 공식 포털·MCP·공공 데이터 링크 | [자료 모음](resources.md) |

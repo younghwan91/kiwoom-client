@@ -17,11 +17,20 @@
 
 REST API 로 옮기면 Linux 서버나 맥에서, 사람이 로그인 창을 누르지 않고 돌릴 수 있습니다. 대신 OpenAPI+ 에만 있던 기능이
 REST 에 아직 없을 수 있으니, 꼭 필요한 TR 은 [키움 REST API 가이드](https://openapi.kiwoom.com/guide/apiguide)에서
-먼저 찾아보세요. kiwoom-client 가 감싼 목록은 [엔드포인트 전체 목록](endpoints.md)에 있습니다.
+먼저 찾아보세요. kiwoom-client 가 감싼 목록은 [엔드포인트 전체 목록](endpoints.md)에, OpenAPI+ TR·함수와의 대응은
+[OpenAPI+(OCX) · pykiwoom 에서 옮겨 오기](migration-from-openapi-plus.md)에 있습니다.
 
 ## 파이썬 라이브러리 한눈에
 
 2026-11-21 PyPI 메타데이터와 각 프로젝트 README 에 적힌 내용 기준입니다. 버전과 기능은 바뀌므로 고르기 전에 각 프로젝트 페이지를 확인하세요.
+
+### 키움증권 공식
+
+| 저장소 / 패키지 | 최신 (올린 날) | 파이썬 | 라이선스 | README 에 적힌 내용 |
+|---|---|---|---|---|
+| [Kiwoom-Securities/Kiwoom-REST-API](https://github.com/Kiwoom-Securities/Kiwoom-REST-API) · PyPI `kwcli` | `kwcli` 1.0.3 (2026-09) | ≥ 3.13 | 키움증권 자체 라이선스(키움 OpenAPI 이용 목적으로 사용 허락) | API 337종 스펙(국내주식·**미국주식**), 함수별 예제 362개, Postman 컬렉션, CLI `kiwoomcli`, MCP 서버 2종(스펙 검색용·실행용 — 주문은 명시 허용 시에만) |
+
+키움증권이 직접 내는 저장소라 API 스펙의 정본에 가장 가깝고, 미국주식까지 다룹니다. 아래 비교는 이 공식 도구와 겹치는 부분이 있다는 것을 전제로 읽어 주세요.
 
 ### OpenAPI+(OCX) 래퍼
 
@@ -61,8 +70,11 @@ REST 에 아직 없을 수 있으니, 꼭 필요한 TR 은 [키움 REST API 가�
 
 - **터미널에서 바로 조회·주문하는 CLI** 가 주목적이면 kiwoom-cli 나 pykiwoom-rest 의 CLI 가 더 맞습니다. kiwoom-client 는 라이브러리와 MCP 서버만 제공합니다.
 - **응답을 속성 접근 모델로** 받고 싶다면 kiwoompy 를 보세요. kiwoom-client 는 키움 응답 JSON(dict) 을 그대로 돌려주고, 필요하면 `to_dataframe()` 으로 바꿉니다.
+- **키움증권이 직접 관리하는 도구**, 또는 **미국주식 API** 가 필요하다면 [키움 공식 저장소](https://github.com/Kiwoom-Securities/Kiwoom-REST-API)와 `kwcli` 를 쓰세요. kiwoom-client 는 국내주식 REST 만 감쌉니다.
 - **OpenAPI+ 에만 있는 기능**에 의존한다면 아직은 pykiwoom 같은 OCX 래퍼가 필요할 수 있습니다.
 - **파이썬 3.8·3.9** 를 써야 한다면 kiwoom-client(≥ 3.10)는 맞지 않습니다.
+
+반대로 MIT 라이선스의 `pip install` 라이브러리로 국내주식 REST 를 sync·async 양쪽에서 쓰고, 같은 패키지로 MCP 서버까지 띄우고 싶다면 kiwoom-client 가 맞습니다.
 
 비교에 틀린 내용이 있거나 빠진 프로젝트가 있으면 [이슈](https://github.com/younghwan91/kiwoom-client/issues)로 알려 주세요. 바로 고치겠습니다.
 
