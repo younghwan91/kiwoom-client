@@ -5,6 +5,84 @@
 
 ## [Unreleased]
 
+기존 코드는 그대로 돕니다 — `request()`·토큰 갱신·Rate Limiter·`tick_size`/`round_to_tick` 결과·
+`is_mock=False` 기본값은 바뀌지 않았습니다. MCP 서버를 쓴다면 아래 **Changed** 의 두 항목을 확인하세요.
+
+### Added
+
+**시작·조회 편의**
+
+- `KiwoomAPI.from_env()` / `AsyncKiwoomAPI.from_env()` — `KIWOOM_APP_KEY`·`KIWOOM_APP_SECRET`·`KIWOOM_IS_MOCK`
+  환경변수나 `.env` 파일로 클라이언트를 만든다. `is_mock` 이 어디에도 없으면 실전 + 경고 (#14)
+- `api.find_stock()`·`api.stock_code("삼성전자")`·`api.stock_list()` — 종목명↔종목코드 (ka10099 캐시) (#48)
+- `to_ohlcv()` — 차트 응답을 시간 인덱스 `open/high/low/close/volume` DataFrame 으로 (#41)
+- 호가 산술 `add_ticks()`·`ticks_between()`·`round_up_to_tick()`·`is_on_tick()` (#30)
+- `kiwoom_client.codes` — `OrderType`·`Exchange`·`Market` 등 공식 코드값 `str` Enum, `exchange_stock_code()` (#18)
+- `timeout=` 옵션(기본 30초 그대로)과 DEBUG 요청 추적 로그 — 헤더·본문은 남기지 않는다 (#57)
+- 조회 전용 CLI `kiwoom` — `quote`·`chart`·`balance`·`find`·`endpoints` (주문 기능 없음) (#64)
+
+**TR 명세·검증**
+
+- `kiwoom_client.spec` — 키움 공식 명세에서 만든 TR 요청·응답 필드 카탈로그 (#21)
+- `api.describe("ka10001")` — 호출 예·필수 필드·코드값·응답 필드를 네트워크 없이 (#65)
+- `spec.label()` / `spec.field_names()` — 응답 필드·실시간 FID 를 한글명으로 (#66)
+- `kiwoom_client.spec.responses` — 자주 쓰는 TR 10개의 응답 TypedDict (#71)
+- `validate_params="warn"|"error"` — 보내기 전에 필드 오타·빠진 필수 필드를 알린다 (기본 꺼짐) (#45)
+- 엔드포인트 메서드 `.pyi` 스텁 — 요청 필드가 IDE 자동완성·mypy 에 키워드 인자로 보인다 (#27)
+
+**오류·디버깅**
+
+- 예외 계층 `KiwoomError` 와 `KiwoomTokenError`·`KiwoomServerMismatchError`·`KiwoomRateLimitError`·
+  `KiwoomRequestError`·`KiwoomStockNotFoundError`·`KiwoomUnsupportedError` — 모두 `KiwoomAPIError` 하위라
+  기존 `except` 는 그대로 잡는다. `KiwoomAPIError.error_code` (#24)
+- `exc.hint` — 다음 할 일 한 줄 (예: 모의/실전 불일치면 맞는 `is_mock`) (#37)
+- 클라이언트·인증·WebSocket 객체의 `repr()` 이 시크릿·토큰을 가린다 (#51)
+
+**MCP 서버**
+
+- `order_preview` — 주문을 보내지 않고 호가단위 보정·필드 검증·예상 금액 (#25)
+- 편의 도구 `stock_search`·`stock_snapshot`·`account_summary` (조회 전용) (#53)
+- discovery 모드(`KIWOOM_MCP_MODE=discovery` / `--discovery`) — 메타 도구 3개로 도구 정의 컨텍스트를 크게 줄인다 (#32)
+- `KIWOOM_MCP_TOOLSETS` / `--toolsets` 로 노출할 모듈 선택, `max_rows` 로 큰 리스트 응답 자르기 (#11, #43)
+- resources(가이드·도구 목록·코드표·`kiwoom://tr/{api_id}`)와 prompts(`analyze_stock`·`review_account`·`order_checklist`) (#61)
+- 도구 `title`·annotations(조회 `readOnlyHint`, 주문 `destructiveHint`), `serverInfo` 의 version·instructions (#9, #67)
+- `kiwoom-client-mcp --help`·`--version`·`--mock`, `config claude-code|claude-desktop|cursor|codex` 설정 스니펫 (#19)
+- MCP 레지스트리용 `server.json` (#67)
+
+**AI 코딩 도구**
+
+- `llms.txt`·`llms-full.txt`, `AGENTS.md`, Cursor 규칙·Copilot 지침 — 같은 규칙에서 생성 (#29, #56, #69)
+- Claude Code 스킬과 플러그인 마켓플레이스 — `/plugin marketplace add younghwan91/kiwoom-client` (#63)
+
+**문서**
+
+- 문서 사이트(MkDocs, 한·영) — 엔드포인트 전체 표, TR별 필드 레퍼런스, MCP 서버, 편의 기능, 쿡북(모의투자 레시피 8개),
+  문제 해결(오류코드별), FAQ, OpenAPI+·pykiwoom 옮겨 오기, 비교, 자료 모음, 쓰이는 곳
+  (#13, #23, #33, #49, #50, #58, #60, #62, #68, #75, #76, #77, #78)
+- `SECURITY.md`·`CODE_OF_CONDUCT.md`, 이슈 폼·PR 템플릿, CONTRIBUTING 보강 (#20, #22, #38)
+
+### Changed
+
+- **MCP 서버가 `KIWOOM_IS_MOCK=1`/`yes`/`on` 을 이제 모의투자로 읽는다** — 전에는 `true` 만 모의로 보고 나머지는
+  실전으로 붙었다. `from_env()` 와 같은 규칙이며, 모르는 값(`ture` 등)은 서버를 띄우지 않고 시작 오류로 끝난다.
+  미설정은 지금처럼 실전. `KIWOOM_MCP_ALLOW_LIVE_ORDERS` 는 여전히 `true` 만 인정한다 (#73)
+- **`[mcp]` extra 가 `mcp>=2.0,<3`** — 서버는 mcp 2.x API 를 쓰는데 `mcp>=1.0` 을 허용해, 1.x 가 깔린 환경에서는
+  import 부터 실패했다. CI 가 하한(mcp 2.0.0)에서도 테스트한다 (#67, #83)
+- 힌트가 있는 오류는 `str(exc)` 둘째 줄에 `힌트: …` 가 붙는다. 첫 줄·`code`·`message`·예외 타입은 그대로 (#37)
+- 토큰 발급이 HTTP 오류로 끝나면 메시지에 응답의 `return_msg` 를 덧붙인다 (#37)
+- MCP REST 도구의 입력 스키마·설명에 공식 TR 이름·api_id·필드별 설명·필수 여부가 실린다.
+  `params={...}` 호출은 그대로이고, 필드를 평평하게 넘겨도 받는다 (#42, #55)
+- README 첫 화면과 빠른 시작을 `from_env()`·MCP 30초 시작 위주로 다시 썼다 (#46, #68)
+
+### Fixed
+
+- 문서·예제의 TR 요청이 공식 명세와 달랐다 — 순위 예제의 없는 필드명, 일봉의 `upd_stkpc_tp`(수정주가구분)와
+  계좌 조회·거래량 상위의 빠진 필수 필드. 문서 테스트가 이제 없는 필드와 빠진 필수 필드를 모두 잡는다 (#72, #79)
+- `KiwoomAPIError`(와 하위 예외)·`KiwoomParamError` 를 pickle 할 수 있다 — multiprocessing 워커에서 던진 예외가
+  부모 프로세스로 넘어온다 (#80)
+- PyPI 프로젝트 페이지에서 README 그림·링크가 깨지던 문제 (#40)
+- MCP `initialize` 응답의 `serverInfo.version` 이 빈 문자열이던 문제 (#67)
+
 ## [0.4.0] - 2026-09-13
 
 ### Added
@@ -197,8 +275,7 @@ REAL 프레임의 항목 필드명(`item`/`values`)은 장 마감 중이라 아�
 
 ### 변경
 
-- 수급 앱 코드를 [kiwoom-quant](https://github.com/younghwan91/kiwoom-quant)
-  레포로 분리해 라이브러리를 가볍게 유지합니다.
+- 수급 앱 코드를 별도 레포로 분리해 라이브러리를 가볍게 유지합니다.
 
 ## [0.1.13]
 
