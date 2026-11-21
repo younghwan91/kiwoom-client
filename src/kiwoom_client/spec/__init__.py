@@ -31,8 +31,10 @@ __all__ = [
     "catalog_source",
     "describe",
     "endpoint_index",
+    "field_names",
     "for_method",
     "get",
+    "label",
     "method_for",
     "resolve",
     "search",
@@ -273,3 +275,34 @@ def describe(target: Any) -> str:
         suffix = " (list)" if f.type == "list" else ""
         lines.append(f"  {label:<24} {f.name}{suffix}")
     return "\n".join(lines)
+def field_names(api_id: str) -> dict[str, str]:
+    """응답 필드 id → 한글명. 실시간 타입(``"0B"``)이면 FID(``"10"``) → ``"현재가"``.
+
+    list 안팎을 가리지 않고 모두 담는다 (같은 id 가 여러 번 나오면 처음 것).
+    DataFrame 열 이름을 바꿀 때 ``df.rename(columns=spec.field_names("ka10081"))``.
+    """
+    names: dict[str, str] = {}
+    for f in get(api_id).response:
+        if f.name:
+            names.setdefault(f.id, f.name)
+    return names
+
+
+def label(api_id: str, record: Mapping[str, Any]) -> dict[str, Any]:
+    """``record`` 의 키를 한글 필드명으로 바꾼 새 dict. 모르는 키는 그대로 둔다.
+
+    실시간 콜백의 ``values`` 처럼 키가 FID 인 dict 에 쓴다::
+
+        ws.on("0B", lambda d: print(spec.label("0B", d["values"])))
+        # {'체결시간': '165208', '현재가': '-20800', ...}
+
+    한글명이 겹치면 뒤에 오는 키를 ``"한글명(id)"`` 로 남겨 값을 잃지 않는다.
+    """
+    names = field_names(api_id)
+    out: dict[str, Any] = {}
+    for key, value in record.items():
+        new = names.get(key, key)
+        if new in out:
+            new = f"{new}({key})"
+        out[new] = value
+    return out
