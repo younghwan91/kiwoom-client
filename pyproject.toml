@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "kiwoom-client"
 version = "0.4.0"
-description = "키움증권 REST API Python 래퍼 (국내주식 186개 엔드포인트 + async + 토큰 자동 갱신)"
+description = "키움증권 REST API 파이썬 클라이언트 — 엔드포인트 182개·실시간 WebSocket·sync/async·AI 에이전트용 MCP 서버 (비공식) | Unofficial Python client for the Kiwoom Securities REST API with a built-in MCP server"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
@@ -15,6 +15,7 @@ keywords = [
     "rest-api", "websocket", "kospi", "kosdaq", "korea-finance", "investment",
     "asyncio", "async", "pandas", "주식", "증권", "자동주문",
     "mcp", "model-context-protocol", "ai-agents", "claude-code", "cursor",
+    "mcp-server", "llm", "kiwoom-rest-api", "kiwoom-api", "키움 REST API", "krx", "trading-bot",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -66,7 +67,7 @@ dev = [
 kiwoom-client-mcp = "kiwoom_client.mcp.cli:main"
 
 [project.urls]
-Homepage = "https://pypi.org/project/kiwoom-client/"
+Homepage = "https://github.com/younghwan91/kiwoom-client"
 Repository = "https://github.com/younghwan91/kiwoom-client"
 Documentation = "https://github.com/younghwan91/kiwoom-client#readme"
 Issues = "https://github.com/younghwan91/kiwoom-client/issues"

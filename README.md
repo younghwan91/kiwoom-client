@@ -1,4 +1,4 @@
-[한국어](README.md) | [English](README_EN.md)
+[한국어](https://github.com/younghwan91/kiwoom-client/blob/main/README.md) | [English](https://github.com/younghwan91/kiwoom-client/blob/main/README_EN.md)
 
 # kiwoom-client — 키움증권 REST API 파이썬 클라이언트
 
@@ -17,8 +17,8 @@
 - **봇이 토큰 만료로 죽지 않습니다** — 만료 전 자동 갱신, 401 이면 재발급 후 재시도. TR별 Rate Limiter 가 429 를 막고, 그래도 나오면 백오프 후 다시 보냅니다.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/hero-dark.png">
-  <img alt="kiwoom-client 가 감싼 키움 REST 엔드포인트 182개와 WebSocket 호출 23개를 도메인별 타일로 그린 모자이크" src="docs/images/hero-light.png" width="100%">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/hero-dark.png">
+  <img alt="kiwoom-client 가 감싼 키움 REST 엔드포인트 182개와 WebSocket 호출 23개를 도메인별 타일로 그린 모자이크" src="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/hero-light.png" width="100%">
 </picture>
 
 ## 빠른 시작
@@ -77,7 +77,7 @@ uv add kiwoom-client                 # uv 를 쓴다면
 ```
 
 - Python **3.10 이상**. 소스에서 쓰려면 `git clone` 뒤 `pip install -e .`
-- [키움 REST API 포털](https://openapi.kiwoom.com)에서 **API 사용신청**으로 앱키·시크릿키를 발급받습니다. 환경변수는 [`.env.example`](.env.example) 참고.
+- [키움 REST API 포털](https://openapi.kiwoom.com)에서 **API 사용신청**으로 앱키·시크릿키를 발급받습니다. 환경변수는 [`.env.example`](https://github.com/younghwan91/kiwoom-client/blob/main/.env.example) 참고.
 - 모의투자용 키와 실전투자용 키는 다릅니다. `is_mock` 과 짝이 맞지 않으면 인증이 거부됩니다.
 
 | 구분 | 실전투자 | 모의투자 |
@@ -155,7 +155,7 @@ asyncio.run(main())
 ```
 
 Rate Limiter 는 TR(api_id)별로 걸립니다. 서로 다른 TR 은 서로를 막지 않고 동시에 나가며,
-같은 TR 을 반복 호출할 때만 초당 1건으로 조여집니다. 전체 예제는 [`examples/async_usage.py`](examples/async_usage.py).
+같은 TR 을 반복 호출할 때만 초당 1건으로 조여집니다. 전체 예제는 [`examples/async_usage.py`](https://github.com/younghwan91/kiwoom-client/blob/main/examples/async_usage.py).
 
 ### 응답을 숫자·DataFrame으로 받기
 
@@ -392,11 +392,11 @@ api.logout()     # 접근토큰 폐기
 
 ## 어디서 쓰이나
 
-[quant-airflow](https://github.com/younghwan91/quant-airflow)의 일일 수집 DAG 가 이 라이브러리로 시세·수급·신용·공매도를 매일 TimescaleDB 에 적재합니다. 같은 스택의 나머지는 [아래](#관련-프로젝트--오픈소스-퀀트-스택)에 있습니다.
+[quant-airflow](https://github.com/younghwan91/quant-airflow)의 일일 수집 DAG 가 이 라이브러리로 시세·수급·신용·공매도를 매일 TimescaleDB 에 적재합니다.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/pypi_downloads_dark.png">
-  <img alt="kiwoom-client 누적 PyPI 다운로드 추이" src="docs/images/pypi_downloads_light.png" width="640">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/pypi_downloads_dark.png">
+  <img alt="kiwoom-client 누적 PyPI 다운로드 추이" src="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/pypi_downloads_light.png" width="640">
 </picture>
 
 ## 참고
@@ -412,7 +412,7 @@ MIT
 ## 기여 및 이슈 제보
 
 - 🐛 버그 제보 및 기능 요청: [GitHub Issues](https://github.com/younghwan91/kiwoom-client/issues)
-- 💡 새로운 기능 제안 및 PR 환영: [CONTRIBUTING.md](CONTRIBUTING.md) 가이드라인을 확인해 주세요.
+- 💡 새로운 기능 제안 및 PR 환영: [CONTRIBUTING.md](https://github.com/younghwan91/kiwoom-client/blob/main/CONTRIBUTING.md) 가이드라인을 확인해 주세요.
 
 ## 만든 사람
 
