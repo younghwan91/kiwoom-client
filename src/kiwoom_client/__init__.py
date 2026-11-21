@@ -7,6 +7,8 @@ Usage:
     from kiwoom_client import KiwoomAPI
 
     api = KiwoomAPI(app_key="YOUR_KEY", app_secret="YOUR_SECRET")
+    # or read KIWOOM_APP_KEY / KIWOOM_APP_SECRET / KIWOOM_IS_MOCK:
+    # api = KiwoomAPI.from_env(".env")
 
     # Get stock info — the token is issued and refreshed for you
     info = api.stock_info.basic_stock_info(stk_cd="005930")
@@ -23,11 +25,13 @@ Asyncio:
 
 from __future__ import annotations
 
+import os
 from collections.abc import Awaitable
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _package_version
-from typing import Any
+from typing import Any, TypeVar
 
+from kiwoom_client._env import resolve_credentials
 from kiwoom_client._registry import ModuleRegistry
 from kiwoom_client.auth import AsyncKiwoomAuth, KiwoomAuth, KiwoomAuthError
 from kiwoom_client.base import AsyncBaseClient, BaseClient, KiwoomAPIError
@@ -56,6 +60,9 @@ __all__ = [
     "to_dataframe",
     "to_number",
 ]
+
+_SyncT = TypeVar("_SyncT", bound="KiwoomAPI")
+_AsyncT = TypeVar("_AsyncT", bound="AsyncKiwoomAPI")
 
 
 class KiwoomAPI(ModuleRegistry[dict[str, Any]]):
@@ -105,6 +112,42 @@ class KiwoomAPI(ModuleRegistry[dict[str, Any]]):
         self._base_client.token_provider = self._auth
         self._is_mock = is_mock
         self._init_modules()
+
+    @classmethod
+    def from_env(
+        cls: type[_SyncT],
+        env_file: str | os.PathLike[str] | None = None,
+        *,
+        is_mock: bool | None = None,
+        **kwargs: Any,
+    ) -> _SyncT:
+        """Build a client from ``KIWOOM_APP_KEY`` / ``KIWOOM_APP_SECRET`` / ``KIWOOM_IS_MOCK``.
+
+        The names match the MCP server, so one ``.env`` serves both. Process
+        environment variables win over ``env_file``; an explicit ``is_mock``
+        argument wins over both. ``KIWOOM_IS_MOCK`` accepts true/false, 1/0,
+        yes/no, on/off — anything else raises rather than guessing.
+
+        If ``KIWOOM_IS_MOCK`` is set nowhere and ``is_mock`` is not passed, the
+        client connects to the **live** server (``is_mock=False``, the same
+        default as the constructor and the MCP server) and logs a warning on
+        the ``kiwoom_client`` logger. Set ``KIWOOM_IS_MOCK=true`` to practise
+        on the mock server.
+
+        Args:
+            env_file: Optional path to a ``.env`` file, parsed without extra
+                dependencies. Nothing is read from disk unless it is given.
+            is_mock: Override the mock flag regardless of the environment.
+            **kwargs: Passed through to the constructor (``rate_limit``,
+                ``max_retries``, ...).
+
+        Raises:
+            ValueError: If the key or secret is missing, or ``KIWOOM_IS_MOCK``
+                is not a boolean.
+            FileNotFoundError: If ``env_file`` is given but does not exist.
+        """
+        creds = resolve_credentials(env_file, is_mock=is_mock)
+        return cls(creds.app_key, creds.app_secret, is_mock=creds.is_mock, **kwargs)
 
     def login(self) -> dict[str, Any]:
         """Authenticate and obtain an access token.
@@ -191,6 +234,22 @@ class AsyncKiwoomAPI(ModuleRegistry[Awaitable[dict[str, Any]]]):
         self._base_client.token_provider = self._auth
         self._is_mock = is_mock
         self._init_modules()
+
+    @classmethod
+    def from_env(
+        cls: type[_AsyncT],
+        env_file: str | os.PathLike[str] | None = None,
+        *,
+        is_mock: bool | None = None,
+        **kwargs: Any,
+    ) -> _AsyncT:
+        """Build a client from the environment — see :meth:`KiwoomAPI.from_env`.
+
+        Same variables, precedence and live-server default (with a warning)
+        as the sync facade.
+        """
+        creds = resolve_credentials(env_file, is_mock=is_mock)
+        return cls(creds.app_key, creds.app_secret, is_mock=creds.is_mock, **kwargs)
 
     async def login(self) -> dict[str, Any]:
         """Authenticate and obtain an access token (optional — see KiwoomAPI)."""
