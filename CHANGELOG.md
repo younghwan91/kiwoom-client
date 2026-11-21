@@ -11,6 +11,8 @@
   CI 가 빌드한 사이트를 `scripts/check_site_seo.py` 로 검사한다
 - 문서 사이트: 한/영 `hreflang` 을 절대 URL + `x-default` 로. 영어판이 없어 한국어 본문으로 대체된 `/en/` 사본은
   canonical 을 한국어판으로 돌리고 hreflang·sitemap 에서 뺀다(중복 문서 정리)
+- 문서 사이트: 주요 페이지(홈·why·migration·MCP·FAQ·문제 해결·쿡북 등, 한/영)에 검색 결과용 제목(`seo_title`)과
+  설명(`description`) — 내비게이션 이름은 그대로
 
 ## [0.5.0] - 2026-11-21
 

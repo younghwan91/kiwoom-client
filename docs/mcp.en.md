@@ -1,3 +1,8 @@
+---
+seo_title: "Kiwoom MCP server — quotes and account lookups from Claude and Cursor"
+description: "kiwoom-client-mcp gives Claude Code, Claude Desktop, Cursor and Codex Kiwoom REST API tools: quotes, charts, rankings, your account. Live order tools stay off until you opt in."
+---
+
 # MCP server
 
 `kiwoom-client-mcp` exposes the Kiwoom REST API as MCP (Model Context Protocol) tools. Agents such as Claude Code, Claude Desktop, Cursor and Codex can look up quotes, charts, rankings and your account directly. On a live account the order tools are **not even registered** until you turn them on yourself.

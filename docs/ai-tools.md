@@ -1,3 +1,8 @@
+---
+seo_title: "AI 코딩 도구에서 키움 API 쓰기 — llms.txt·Cursor 규칙·Claude Skill"
+description: "Claude Code·Cursor·Copilot·Codex 가 kiwoom-client 를 틀리지 않게 쓰도록 주는 llms.txt·AGENTS.md·Agent Skill·에디터 규칙. 전부 코드에서 생성해 메서드 이름이 실제와 어긋나지 않습니다."
+---
+
 # AI 코딩 도구에서 쓰기
 
 Claude Code · Cursor · Copilot · Codex 같은 AI 코딩 도구가 kiwoom-client 를 **틀리지 않게** 쓰도록 이 레포가 주는 것들입니다.

@@ -1,4 +1,6 @@
 ---
+seo_title: "kiwoom-client — 키움증권 REST API 파이썬 클라이언트·MCP 서버"
+description: "키움증권 REST API 182개·조건검색·실시간 WebSocket 을 파이썬(sync/async)으로 부르는 비공식 오픈소스 클라이언트. OCX 없이 맥·리눅스에서도 돌고, Claude·Cursor 용 MCP 서버를 내장했습니다."
 hide:
   - navigation
   - toc

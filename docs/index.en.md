@@ -1,4 +1,6 @@
 ---
+seo_title: "kiwoom-client — Kiwoom REST API Python client and MCP server"
+description: "Unofficial open-source Python client for the Kiwoom Securities REST API: 182 endpoints, real-time WebSocket, sync/async. No OCX — runs on macOS and Linux. MCP server built in."
 hide:
   - navigation
   - toc

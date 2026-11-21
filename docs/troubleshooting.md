@@ -1,3 +1,8 @@
+---
+seo_title: "키움 REST API 오류 코드와 해결 — 토큰·429·연속조회"
+description: "키움증권 REST API 를 파이썬으로 쓸 때 자주 만나는 에러와 고치는 법. 키움 공식 오류코드(8005 토큰, 1700 호출 제한 등)의 뜻과 kiwoom-client 에서 확인할 값을 정리했습니다."
+---
+
 # 문제 해결 (Troubleshooting)
 
 자주 만나는 에러와 고치는 법입니다. 에러 코드의 뜻은 키움 공식 [REST API 가이드](https://openapi.kiwoom.com/guide/apiguide)

@@ -1,3 +1,8 @@
+---
+seo_title: "Kiwoom REST API Python FAQ"
+description: "Common questions about the Kiwoom Securities REST API and kiwoom-client: is it official, app keys, mock trading, macOS and Linux, order safety, MCP and AI agents."
+---
+
 # FAQ
 
 ## Getting started

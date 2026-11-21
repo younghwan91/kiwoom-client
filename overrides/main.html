@@ -2,9 +2,23 @@
   Material 테마 확장 (mkdocs.yml 의 theme.custom_dir). 검색엔진·SNS 미리보기용 메타만 더한다.
   - Open Graph · Twitter Card: 모든 페이지. 설명은 front matter `description` → 없으면 site_description(언어별).
   - JSON-LD(SoftwareSourceCode + SoftwareApplication): 홈(한/영)에만.
-  사실만 적는다 — 라이선스·저장소·언어는 pyproject.toml 과 같아야 한다(tests/test_site_meta.py 가 검사).
+  - front matter `seo_title`: 검색 결과·미리보기 제목(<title>·og:title). 내비게이션·본문 H1 은 그대로 둔다
+    (mkdocs 의 `title` 은 내비게이션 이름까지 바꾸므로 따로 둔다). 홈이 아니면 <title> 뒤에 " - kiwoom-client".
+  사실만 적는다 — 라이선스·저장소·언어는 pyproject.toml 과 같아야 한다(tests/test_site_seo.py 가 검사).
 -#}
 {% extends "base.html" %}
+
+{% block htmltitle %}
+  {% if page and page.meta and page.meta.seo_title %}
+    {% if page.file and page.file.src_uri in ["index.md", "index.en.md"] %}
+      <title>{{ page.meta.seo_title | e }}</title>
+    {% else %}
+      <title>{{ page.meta.seo_title | e }} - {{ config.site_name }}</title>
+    {% endif %}
+  {% else %}
+    {{ super() }}
+  {% endif %}
+{% endblock %}
 
 {% block extrahead %}
   {% if page %}
@@ -12,7 +26,9 @@
     {# 본문 언어: 영어판이 없어 한국어 본문으로 대체된 /en/ 페이지는 ko #}
     {% set kc_lang = i18n_file_locale | default(lang.t("language"), true) %}
     {% set kc_is_home = page.file and page.file.src_uri in ["index.md", "index.en.md"] %}
-    {% if page.meta and page.meta.title %}
+    {% if page.meta and page.meta.seo_title %}
+      {% set kc_title = page.meta.seo_title %}
+    {% elif page.meta and page.meta.title %}
       {% set kc_title = page.meta.title %}
     {% elif page.title and not kc_is_home %}
       {% set kc_title = (page.title | striptags) ~ " - " ~ config.site_name %}

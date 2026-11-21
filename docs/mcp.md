@@ -1,3 +1,8 @@
+---
+seo_title: "키움증권 MCP 서버 — Claude·Cursor 에서 시세·계좌 조회"
+description: "kiwoom-client-mcp 로 Claude Code·Claude Desktop·Cursor·Codex 가 키움 REST API 를 MCP 도구로 불러 시세·차트·순위·계좌를 조회합니다. 실계좌 주문 도구는 직접 켜기 전엔 등록되지 않습니다."
+---
+
 # MCP 서버
 
 `kiwoom-client-mcp` 는 키움 REST API 를 MCP(Model Context Protocol) 도구로 노출합니다. Claude Code·Claude Desktop·Cursor·Codex 같은 에이전트가 시세·차트·순위·계좌를 직접 조회합니다. 실전 계좌의 주문 도구는 직접 켜기 전에는 **등록조차 되지 않습니다**.
