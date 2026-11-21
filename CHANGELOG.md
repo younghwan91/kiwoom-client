@@ -5,6 +5,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- 문서 사이트: 모든 페이지에 Open Graph·Twitter Card 메타, 홈에 JSON-LD(SoftwareApplication·SoftwareSourceCode).
+  CI 가 빌드한 사이트를 `scripts/check_site_seo.py` 로 검사한다
+
 ## [0.5.0] - 2026-11-21
 
 기존 코드는 그대로 돕니다 — `request()`·토큰 갱신·Rate Limiter·`tick_size`/`round_to_tick` 결과·
