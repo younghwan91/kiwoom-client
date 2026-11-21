@@ -30,6 +30,7 @@ from kiwoom_client.mcp.discovery import CatalogEntry, discovery_tools
 from kiwoom_client.mcp.guard import live_orders_allowed
 from kiwoom_client.mcp.local_tools import LocalTool
 from kiwoom_client.mcp.order_preview import order_preview_tool
+from kiwoom_client.mcp.schema import rest_input_schema, split_arguments
 from kiwoom_client.mcp.tools import RestToolSpec, discover_rest_tools
 
 logger = logging.getLogger(__name__)
@@ -220,21 +221,8 @@ async def dispatch_tool(
 
     module_obj = getattr(api, spec.module_name)
     method = getattr(module_obj, spec.method_name)
-    params = arguments.get("params") or {}
-    cont_yn = arguments.get("cont_yn", "N")
-    next_key = arguments.get("next_key", "")
+    params, cont_yn, next_key = split_arguments(arguments)
     return await method(cont_yn=cont_yn, next_key=next_key, **params)
-
-
-def _rest_input_schema() -> dict[str, Any]:
-    return {
-        "type": "object",
-        "properties": {
-            "cont_yn": {"type": "string", "default": "N", "description": "연속조회 여부"},
-            "next_key": {"type": "string", "default": "", "description": "연속조회 키"},
-            "params": {"type": "object", "description": "TR 요청 필드 (키움 API 가이드 참고)"},
-        },
-    }
 
 
 def _condition_search_input_schema(method_name: str) -> dict[str, Any]:
@@ -262,7 +250,7 @@ def _condition_search_input_schema(method_name: str) -> dict[str, Any]:
 def _input_schema(spec: RestToolSpec) -> dict[str, Any]:
     if spec.module_name == "condition_search":
         return _condition_search_input_schema(spec.method_name)
-    return _rest_input_schema()
+    return rest_input_schema(spec.module_name, spec.method_name)
 
 
 def run_server(
