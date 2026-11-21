@@ -72,7 +72,7 @@ Check the network (firewall, DNS) and the key.
 
 `KiwoomRateLimitError`, or `httpx.HTTPStatusError` if HTTP 429 survives the retries. The client already paces each TR and
 retries, so this usually means **several processes call the same TR with the same app key**. See the
-[rate-limit recipe (Korean)](cookbook/rate-limits.md).
+[rate-limit recipe](cookbook/rate-limits.md).
 
 ## Request fields and stock codes
 

@@ -109,7 +109,7 @@ docker run --rm --env-file .env python:3.12-slim \
 - **A token only works from the IP that received it.** Reusing a token on another server, or an outgoing IP that
   changes behind NAT, gives error 8010 — let each process get its own token ([Troubleshooting](troubleshooting.md)).
 - Rate limits are per TR. The default rate limiter keeps you under them and retries on 429
-  — [rate-limit recipe](cookbook/rate-limits.md) (Korean).
+  — [rate-limit recipe](cookbook/rate-limits.md).
 - With a live key, `api.order.*` and `api.credit_order.*` place real orders. Run automated trading on a mock account
   first — [tick-aligned limit orders](cookbook/limit-order.md).
 

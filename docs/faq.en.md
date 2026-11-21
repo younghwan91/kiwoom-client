@@ -59,7 +59,7 @@ stock codes and dates stay strings.
 
 **Q. Sync (`KiwoomAPI`) or async (`AsyncKiwoomAPI`)?**
 Sync for simple scripts. Async when calling different TRs concurrently or alongside the WebSocket —
-[asyncio recipe (Korean)](cookbook/async-concurrency.md).
+[asyncio recipe](cookbook/async-concurrency.md).
 
 **Q. What about continuation (next page)?**
 If the response's `"cont-yn"` is `"Y"`, call again with `cont_yn="Y", next_key=resp["next-key"]`, or use
@@ -75,7 +75,7 @@ connections, use `api.close()` or a `with` block.
 
 **Q. Rate limits?**
 Kiwoom limits each TR (api_id) separately. The client paces each TR at 1 request/s with a burst of 2 and retries on 429 —
-[rate-limit recipe (Korean)](cookbook/rate-limits.md).
+[rate-limit recipe](cookbook/rate-limits.md).
 
 **Q. NXT / SOR?**
 Put `KRX`, `NXT` or `SOR` in the order field `dmst_stex_tp`. Quote and chart TRs take stock codes like `005930_NX` /
