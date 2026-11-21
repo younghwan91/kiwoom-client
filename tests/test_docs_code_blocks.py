@@ -8,8 +8,10 @@ skills/**/*.md. (docs/superpowers/ 는 작업 기록이라 뺀다.)
 3. ``api.<모듈>.<메서드>(`` / ``api.<메서드>(`` / ``ws.<메서드>(`` 는 실제로 있는 이름이어야 한다
    — AI 가 문서를 보고 없는 메서드를 부르는 일을 막는다.
 4. ``from kiwoom_client... import X`` 의 X 는 실제로 있어야 한다.
-5. docs/·skills/·AGENTS.md 안의 ``KiwoomAPI(...)``/``AsyncKiwoomAPI(...)`` 는 ``is_mock=True`` 를
-   넘겨야 한다 — 기본값이 실서버라 복사해 돌리면 실계좌에 닿는다.
+5. docs/·skills/·AGENTS.md 안의 ``KiwoomAPI(...)``/``AsyncKiwoomAPI(...)``/``*.from_env(...)`` 는
+   ``is_mock=True`` 를 넘겨야 한다 — 기본값이 실서버라 복사해 돌리면 실계좌에 닿는다.
+6. 코드 블록 밖 본문(표·인라인 코드)의 ``api.<모듈>.<메서드>(`` 도 실제 이름이어야 하고,
+   api_id(``ka10001`` 꼴)는 이 라이브러리나 공식 카탈로그(``kiwoom_client.spec``)에 있어야 한다.
 
 블록 하나를 일부러 빼려면 바로 위 줄에 ``<!-- docs-test: skip -->`` 를 둔다.
 """
@@ -220,9 +222,62 @@ def test_examples_construct_clients_in_mock_mode(block):
             and isinstance(node.func, ast.Name)
             and node.func.id in {"KiwoomAPI", "AsyncKiwoomAPI"}
             and not _is_mock_true(node)
+        ) or (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "from_env"
+            and isinstance(node.func.value, ast.Name)
+            and node.func.value.id in {"KiwoomAPI", "AsyncKiwoomAPI"}
+            and not _is_mock_true(node)
         ):
             live.append(f"line {block.line + node.lineno - 1}")
     assert not live, (
         f"{block}: KiwoomAPI/AsyncKiwoomAPI 는 is_mock=True 로 만들어야 합니다 "
         f"(기본값은 실서버) — {live}"
     )
+
+
+_INLINE_CALL = re.compile(r"\bapi\.([a-z_]+)\.([a-z_0-9]+)\(")
+_API_ID = re.compile(r"\bk[at]\d{5}\b")
+
+
+def _known_api_ids() -> set[str]:
+    from kiwoom_client import spec
+
+    ids = set(spec.api_ids())
+    registry: ModuleRegistry = ModuleRegistry()
+
+    class _Recorder:
+        def request(self, url, api_id, *args, **kwargs):
+            return api_id
+
+    registry._client = _Recorder()  # type: ignore[assignment]
+    registry._init_modules()
+    for name in MODULE_NAMES:
+        if name == "condition_search":
+            continue
+        obj = getattr(registry, name)
+        methods = [getattr(obj, m) for m in dir(obj) if not m.startswith("_")]
+        ids |= {fn() for fn in methods if callable(fn)}
+    return ids
+
+
+_KNOWN_IDS = _known_api_ids()
+DOC_PATHS = [f.relative_to(ROOT).as_posix() for f in doc_files()]
+
+
+@pytest.mark.parametrize("rel", DOC_PATHS)
+def test_inline_method_references_exist(rel):
+    text = (ROOT / rel).read_text(encoding="utf-8")
+    unknown = sorted({
+        f"api.{m}.{f}" for m, f in _INLINE_CALL.findall(text)
+        if m not in _METHODS or f not in _METHODS[m]
+    })
+    assert not unknown, f"{rel}: 없는 메서드를 가리킵니다 — {unknown}"
+
+
+@pytest.mark.parametrize("rel", DOC_PATHS)
+def test_api_ids_in_docs_exist(rel):
+    text = (ROOT / rel).read_text(encoding="utf-8")
+    unknown = sorted(set(_API_ID.findall(text)) - _KNOWN_IDS)
+    assert not unknown, f"{rel}: 라이브러리·공식 카탈로그에 없는 api_id — {unknown}"
