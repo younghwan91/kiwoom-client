@@ -35,10 +35,12 @@ from kiwoom_client._env import resolve_credentials
 from kiwoom_client._redact import mask_secret, server_label, token_state
 from kiwoom_client._registry import ModuleRegistry
 from kiwoom_client.auth import AsyncKiwoomAuth, KiwoomAuth, KiwoomAuthError
-from kiwoom_client.base import AsyncBaseClient, BaseClient, KiwoomAPIError
+from kiwoom_client.base import AsyncBaseClient, BaseClient, ClientProtocol, KiwoomAPIError
 from kiwoom_client.codes import Exchange, OrderType, StockListMarket
 from kiwoom_client.errors import (
     KiwoomError,
+    KiwoomParamError,
+    KiwoomParamWarning,
     KiwoomRateLimitError,
     KiwoomRequestError,
     KiwoomServerMismatchError,
@@ -53,6 +55,7 @@ from kiwoom_client.parsing import (
     to_number,
     to_ohlcv,
 )
+from kiwoom_client.spec.validation import ValidatingClient, resolve_mode
 from kiwoom_client.stocks import (
     DEFAULT_MARKETS,
     STOCK_LIST_API_ID,
@@ -86,6 +89,8 @@ __all__ = [
     "KiwoomAPIError",
     "KiwoomAuthError",
     "KiwoomError",
+    "KiwoomParamError",
+    "KiwoomParamWarning",
     "KiwoomRateLimitError",
     "KiwoomRequestError",
     "KiwoomServerMismatchError",
@@ -112,6 +117,13 @@ __all__ = [
 
 _SyncT = TypeVar("_SyncT", bound="KiwoomAPI")
 _AsyncT = TypeVar("_AsyncT", bound="AsyncKiwoomAPI")
+_R = TypeVar("_R")
+
+
+def _with_validation(client: ClientProtocol[_R], validate_params: bool | str) -> ClientProtocol[_R]:
+    """``validate_params`` 가 켜져 있으면 모듈과 클라이언트 사이에 검증 층을 끼운다."""
+    mode = resolve_mode(validate_params)
+    return client if mode is None else ValidatingClient(client, mode)
 
 
 class KiwoomAPI(ModuleRegistry[dict[str, Any]]):
@@ -134,6 +146,11 @@ class KiwoomAPI(ModuleRegistry[dict[str, Any]]):
         max_retries: Automatic retries on HTTP 429 / return_code 5.
         retry_backoff: Base seconds to wait before a retry (grows per attempt).
         expiry_margin: Reissue the token this many seconds before it expires.
+        validate_params: Check request fields against the TR catalog
+            (:mod:`kiwoom_client.spec`) before sending. ``False`` (default) sends
+            as-is; ``"warn"`` emits :class:`~kiwoom_client.spec.validation.KiwoomParamWarning`;
+            ``"error"``/``True`` raises
+            :class:`~kiwoom_client.spec.validation.KiwoomParamError` and sends nothing.
     """
 
     def __init__(
@@ -147,13 +164,14 @@ class KiwoomAPI(ModuleRegistry[dict[str, Any]]):
         max_retries: int = 3,
         retry_backoff: float = 1.1,
         expiry_margin: float = KiwoomAuth.DEFAULT_EXPIRY_MARGIN,
+        validate_params: bool | str = False,
     ):
         self._base_client = BaseClient(
             app_key, app_secret, base_url, is_mock,
             rate_limit=rate_limit, rate_burst=rate_burst, max_retries=max_retries,
             retry_backoff=retry_backoff,
         )
-        self._client = self._base_client
+        self._client = _with_validation(self._base_client, validate_params)
         self._auth = KiwoomAuth(
             app_key, app_secret, self._base_client.base_url, expiry_margin=expiry_margin
         )
@@ -325,6 +343,11 @@ class AsyncKiwoomAPI(ModuleRegistry[Awaitable[dict[str, Any]]]):
         max_retries: Automatic retries on HTTP 429 / return_code 5.
         retry_backoff: Base seconds to wait before a retry (grows per attempt).
         expiry_margin: Reissue the token this many seconds before it expires.
+        validate_params: Check request fields against the TR catalog
+            (:mod:`kiwoom_client.spec`) before sending. ``False`` (default) sends
+            as-is; ``"warn"`` emits :class:`~kiwoom_client.spec.validation.KiwoomParamWarning`;
+            ``"error"``/``True`` raises
+            :class:`~kiwoom_client.spec.validation.KiwoomParamError` and sends nothing.
     """
 
     def __init__(
@@ -338,13 +361,14 @@ class AsyncKiwoomAPI(ModuleRegistry[Awaitable[dict[str, Any]]]):
         max_retries: int = 3,
         retry_backoff: float = 1.1,
         expiry_margin: float = AsyncKiwoomAuth.DEFAULT_EXPIRY_MARGIN,
+        validate_params: bool | str = False,
     ):
         self._base_client = AsyncBaseClient(
             app_key, app_secret, base_url, is_mock,
             rate_limit=rate_limit, rate_burst=rate_burst, max_retries=max_retries,
             retry_backoff=retry_backoff,
         )
-        self._client = self._base_client
+        self._client = _with_validation(self._base_client, validate_params)
         self._auth = AsyncKiwoomAuth(
             app_key, app_secret, self._base_client.base_url, expiry_margin=expiry_margin
         )

@@ -24,7 +24,7 @@ This file is generated from the code by `scripts/gen_docs.py`; the signatures an
 ### `KiwoomAPI`
 
 ```
-class KiwoomAPI(app_key: str, app_secret: str, base_url: str | None = None, is_mock: bool = False, rate_limit: float | None = 1.0, rate_burst: int = 2, max_retries: int = 3, retry_backoff: float = 1.1, expiry_margin: float = 60.0)
+class KiwoomAPI(app_key: str, app_secret: str, base_url: str | None = None, is_mock: bool = False, rate_limit: float | None = 1.0, rate_burst: int = 2, max_retries: int = 3, retry_backoff: float = 1.1, expiry_margin: float = 60.0, validate_params: bool | str = False)
 ```
 
 Unified facade for all Kiwoom REST API endpoints.
@@ -46,6 +46,11 @@ Args:
     max_retries: Automatic retries on HTTP 429 / return_code 5.
     retry_backoff: Base seconds to wait before a retry (grows per attempt).
     expiry_margin: Reissue the token this many seconds before it expires.
+    validate_params: Check request fields against the TR catalog
+        (:mod:`kiwoom_client.spec`) before sending. ``False`` (default) sends
+        as-is; ``"warn"`` emits :class:`~kiwoom_client.spec.validation.KiwoomParamWarning`;
+        ``"error"``/``True`` raises
+        :class:`~kiwoom_client.spec.validation.KiwoomParamError` and sends nothing.
 
 ### `KiwoomAPI.close`
 
@@ -163,7 +168,7 @@ Same endpoints as `KiwoomAPI`; every call is awaited.
 ### `AsyncKiwoomAPI`
 
 ```
-class AsyncKiwoomAPI(app_key: str, app_secret: str, base_url: str | None = None, is_mock: bool = False, rate_limit: float | None = 1.0, rate_burst: int = 2, max_retries: int = 3, retry_backoff: float = 1.1, expiry_margin: float = 60.0)
+class AsyncKiwoomAPI(app_key: str, app_secret: str, base_url: str | None = None, is_mock: bool = False, rate_limit: float | None = 1.0, rate_burst: int = 2, max_retries: int = 3, retry_backoff: float = 1.1, expiry_margin: float = 60.0, validate_params: bool | str = False)
 ```
 
 Asyncio facade for all Kiwoom REST API endpoints.
@@ -182,6 +187,11 @@ Args:
     max_retries: Automatic retries on HTTP 429 / return_code 5.
     retry_backoff: Base seconds to wait before a retry (grows per attempt).
     expiry_margin: Reissue the token this many seconds before it expires.
+    validate_params: Check request fields against the TR catalog
+        (:mod:`kiwoom_client.spec`) before sending. ``False`` (default) sends
+        as-is; ``"warn"`` emits :class:`~kiwoom_client.spec.validation.KiwoomParamWarning`;
+        ``"error"``/``True`` raises
+        :class:`~kiwoom_client.spec.validation.KiwoomParamError` and sends nothing.
 
 ### `AsyncKiwoomAPI.close`
 
@@ -802,6 +812,7 @@ Every exception kiwoom-client raises, in one place.
     KiwoomError
     ├── KiwoomAuthError              토큰 발급·폐기 실패 (/oauth2/*)
     ├── KiwoomWebSocketError         WebSocket 로그인·프로토콜 실패
+    ├── KiwoomParamError             요청 필드 불일치 (validate_params="error", 보내기 전)
     └── KiwoomAPIError               return_code != 0
         ├── KiwoomTokenError         토큰 거부 (return_code 3; 8003/8005/8010/8103)
         │   └── KiwoomServerMismatchError  모의/실전 키·토큰 불일치 (8030/8031)
@@ -866,6 +877,22 @@ Base class of every error kiwoom-client raises on purpose.
 ``except KiwoomError`` catches API errors, token errors and WebSocket
 errors alike. Subclassing it changes nothing for code that already
 catches ``KiwoomAPIError``, ``KiwoomAuthError`` or ``Exception``.
+
+### `KiwoomParamError`
+
+```
+class KiwoomParamError(KiwoomError, ValueError)
+```
+
+``validate_params="error"`` 에서 요청 바디가 카탈로그와 다를 때. 요청은 나가지 않았다.
+
+### `KiwoomParamWarning`
+
+```
+class KiwoomParamWarning(UserWarning)
+```
+
+``validate_params="warn"`` 에서 요청 바디가 카탈로그와 맞지 않을 때.
 
 ### `KiwoomRateLimitError`
 
