@@ -1,0 +1,61 @@
+name: Publish to MCP Registry
+
+# 공식 MCP 레지스트리(registry.modelcontextprotocol.io)에 server.json 을 올린다.
+# 레지스트리는 PyPI 에 해당 버전이 이미 있어야 받아 주므로, PyPI 배포(publish.yml)가 성공한 뒤에 돈다.
+# 인증은 GitHub OIDC(io.github.younghwan91/* 네임스페이스) — 저장할 비밀값이 없다.
+# PyPI 소유 확인은 README 의 `mcp-name: io.github.younghwan91/kiwoom-client` 줄로 한다.
+
+on:
+  workflow_run:
+    workflows: ["Publish to PyPI"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mcp-registry
+  cancel-in-progress: false
+
+env:
+  MCP_PUBLISHER_VERSION: v1.8.1
+
+jobs:
+  publish:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # workflow_run 이면 PyPI 에 올린 바로 그 태그 커밋의 server.json 을 쓴다.
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - uses: sigstore/cosign-installer@v4
+
+      - name: Install mcp-publisher (서명 검증)
+        run: |
+          os=$(uname -s | tr '[:upper:]' '[:lower:]')
+          arch=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/')
+          archive="mcp-publisher_${os}_${arch}.tar.gz"
+          base="https://github.com/modelcontextprotocol/registry/releases/download/${MCP_PUBLISHER_VERSION}"
+          curl -fsSL -o "$archive" "$base/$archive"
+          curl -fsSL -o "$archive.sigstore.json" "$base/$archive.sigstore.json"
+          cosign verify-blob "$archive" \
+            --bundle "$archive.sigstore.json" \
+            --certificate-identity "https://github.com/modelcontextprotocol/registry/.github/workflows/release.yml@refs/tags/${MCP_PUBLISHER_VERSION}" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com"
+          tar xzf "$archive" mcp-publisher
+          rm -f "$archive" "$archive.sigstore.json"
+
+      - name: Validate server.json
+        run: ./mcp-publisher validate
+
+      - name: Login (GitHub OIDC)
+        run: ./mcp-publisher login github-oidc
+
+      - name: Publish
+        run: ./mcp-publisher publish
