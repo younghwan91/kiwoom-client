@@ -21,6 +21,7 @@ from mcp.server.stdio import stdio_server
 from kiwoom_client import AsyncKiwoomAPI
 from kiwoom_client.base import KiwoomAPIError
 from kiwoom_client.domestic.condition_search import ConditionSearch
+from kiwoom_client.mcp import resources as mcp_resources
 from kiwoom_client.mcp.annotations import tool_annotations, tool_title
 from kiwoom_client.mcp.condition_search_session import (
     ConditionSearchSession,
@@ -179,6 +180,7 @@ def build_server(
             content=[types.TextContent(type="text", text=json.dumps(result, ensure_ascii=False))]
         )
 
+    mcp_resources.register(app, catalog)
     app.add_request_handler("tools/list", types.PaginatedRequestParams, on_list_tools)
     app.add_request_handler("tools/call", types.CallToolRequestParams, on_call_tool)
 
