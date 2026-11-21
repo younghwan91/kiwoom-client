@@ -34,7 +34,7 @@ jobs:
           # workflow_run 이면 PyPI 에 올린 바로 그 태그 커밋의 server.json 을 쓴다.
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
-      - uses: sigstore/cosign-installer@v4
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6  # v4.1.2 (메이저 태그 v4 가 없다)
 
       - name: Install mcp-publisher (서명 검증)
         run: |
