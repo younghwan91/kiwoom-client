@@ -33,10 +33,11 @@ pip install kiwoom-client
 ```python
 from kiwoom_client import KiwoomAPI
 
-api = KiwoomAPI(app_key="YOUR_APP_KEY", app_secret="YOUR_APP_SECRET", is_mock=True)  # True = mock trading
+api = KiwoomAPI.from_env(is_mock=True)  # KIWOOM_APP_KEY / KIWOOM_APP_SECRET env vars (or from_env(".env"))
+# or explicitly: KiwoomAPI(app_key="YOUR_APP_KEY", app_secret="YOUR_APP_SECRET", is_mock=True)
 
-info = api.stock_info.basic_stock_info(stk_cd="005930")                   # Samsung Electronics
-chart = api.chart.stock_daily_chart(stk_cd="005930", base_dt="20260326")  # daily chart
+info = api.stock_info.basic_stock_info(stk_cd=api.stock_code("삼성전자"))  # name -> 005930
+chart = api.chart.stock_daily_chart(stk_cd="005930", base_dt="20260326")   # daily chart
 print(info["stk_nm"])
 ```
 
@@ -130,10 +131,11 @@ api.close()   # automatic inside a `with` block
 Limit prices (`ord_uv`) must be multiples of the KRX tick size, or the exchange rejects them or fills at an unintended price:
 
 ```python
-from kiwoom_client import round_to_tick, tick_size
+from kiwoom_client import add_ticks, round_to_tick, tick_size
 
 tick_size(70123)        # Decimal('100')   (KRW 50k–200k bracket has 100 KRW tick size)
 round_to_tick(70123)    # Decimal('70100') (snaps down to previous valid tick)
+add_ticks(49950, 2)     # Decimal('50100') (N ticks across a band edge)
 
 api.order.buy_order(
     dmst_stex_tp="KRX", stk_cd="005930", ord_qty="10",
@@ -177,6 +179,7 @@ price = to_number("+70000")   # 70000
 ```
 
 Stock codes (`"005930"`) and date fields stay strings. `to_dataframe()` needs pandas (`pip install 'kiwoom-client[pandas]'`).
+For chart responses, `to_ohlcv(resp)` gives an `open/high/low/close/volume` DataFrame indexed by date.
 
 ### Real-time WebSocket
 
@@ -257,6 +260,15 @@ try:
 except KiwoomAPIError as e:
     print(f"Code: {e.code}, Message: {e.message}")
 ```
+
+Narrower subclasses — `KiwoomTokenError`, `KiwoomServerMismatchError` (mock/live key mismatch), `KiwoomRateLimitError`, … —
+are all `KiwoomAPIError`, so the block above still catches them. Known causes carry a next step in `e.hint`.
+
+### Conveniences
+
+Stock search by name (`api.find_stock`), named codes (`OrderType.LIMIT`, `Exchange.KRX`), a read-only CLI
+(`kiwoom quote 005930 --mock`), masked `repr`, DEBUG request tracing and `timeout=` are covered in
+[docs/convenience.md](https://github.com/younghwan91/kiwoom-client/blob/main/docs/convenience.md) (Korean).
 
 ## Using as an MCP server
 

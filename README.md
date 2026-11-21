@@ -33,10 +33,11 @@ pip install kiwoom-client
 ```python
 from kiwoom_client import KiwoomAPI
 
-api = KiwoomAPI(app_key="발급받은_앱키", app_secret="발급받은_시크릿키", is_mock=True)  # True=모의투자
+api = KiwoomAPI.from_env(is_mock=True)  # KIWOOM_APP_KEY·KIWOOM_APP_SECRET 환경변수 (.env 는 from_env(".env"))
+# 또는 직접: KiwoomAPI(app_key="발급받은_앱키", app_secret="발급받은_시크릿키", is_mock=True)
 
-info = api.stock_info.basic_stock_info(stk_cd="005930")                   # 삼성전자 기본 정보
-chart = api.chart.stock_daily_chart(stk_cd="005930", base_dt="20260326")  # 일봉
+info = api.stock_info.basic_stock_info(stk_cd=api.stock_code("삼성전자"))  # 종목명 → 005930
+chart = api.chart.stock_daily_chart(stk_cd="005930", base_dt="20260326")   # 일봉
 print(info["stk_nm"])
 ```
 
@@ -143,10 +144,11 @@ api.close()   # 연결 종료 — with 문을 쓰면 자동
 지정가(`ord_uv`)는 KRX 호가단위의 배수여야 합니다. 아니면 거부되거나 의도와 다른 가격에 체결됩니다.
 
 ```python
-from kiwoom_client import round_to_tick, tick_size
+from kiwoom_client import add_ticks, round_to_tick, tick_size
 
 tick_size(70123)        # Decimal('100')   (5만~20만원대는 1틱 100원)
 round_to_tick(70123)    # Decimal('70100') (직전 유효 호가로 내림)
+add_ticks(49950, 2)     # Decimal('50100') (구간 경계를 넘는 N틱 이동)
 
 api.order.buy_order(
     dmst_stex_tp="KRX", stk_cd="005930", ord_qty="10",
@@ -199,6 +201,7 @@ price = to_number("+70000")   # 70000
 
 종목코드(`"005930"`)처럼 앞자리 0 이 의미를 갖는 값과 `base_dt` 같은 날짜·식별자 필드는 문자열로 남깁니다.
 `to_dataframe()` 에는 pandas 가 필요합니다(`pip install 'kiwoom-client[pandas]'`).
+차트 응답은 `to_ohlcv(resp)` 가 `open/high/low/close/volume` + 날짜 인덱스 DataFrame 으로 바꿉니다.
 
 ![to_dataframe() 실행 결과 — 문자열 응답이 계산 가능한 DataFrame 이 된다](https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/to_dataframe.png)
 
@@ -303,6 +306,14 @@ except KiwoomAPIError as e:
     print(f"에러 메시지: {e.message}")
     print(f"전체 응답: {e.response}")
 ```
+
+`KiwoomTokenError`·`KiwoomServerMismatchError`(모의/실전 키 불일치)·`KiwoomRateLimitError` 같은 세분 예외도 있고,
+모두 `KiwoomAPIError` 하위라 위 코드가 그대로 잡습니다. 원인을 아는 오류는 `e.hint` 에 다음 할 일이 담깁니다.
+
+### 편의 기능
+
+종목명 검색(`api.find_stock`), 코드값 상수(`OrderType.LIMIT`, `Exchange.KRX`), 조회 전용 CLI(`kiwoom quote 005930 --mock`),
+마스킹된 `repr`·DEBUG 로그·`timeout=` 은 [편의 기능 문서](https://github.com/younghwan91/kiwoom-client/blob/main/docs/convenience.md)에 모아 두었습니다.
 
 ## MCP 서버로 사용하기
 
