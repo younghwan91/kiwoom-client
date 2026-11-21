@@ -34,6 +34,7 @@ from kiwoom_client.mcp.response_size import ARGUMENT as MAX_ROWS_ARGUMENT
 from kiwoom_client.mcp.response_size import limit_rows, parse_max_rows, with_max_rows_argument
 from kiwoom_client.mcp.schema import rest_input_schema, split_arguments
 from kiwoom_client.mcp.tools import RestToolSpec, discover_rest_tools
+from kiwoom_client.websocket import KiwoomWebSocket
 
 logger = logging.getLogger(__name__)
 
@@ -318,7 +319,7 @@ def main() -> None:
     cli_main()
 
 
-async def _connect_condition_search(api: AsyncKiwoomAPI):
+async def _connect_condition_search(api: AsyncKiwoomAPI) -> KiwoomWebSocket:
     ws = await api.create_websocket()
     await ws.connect()
     return ws
