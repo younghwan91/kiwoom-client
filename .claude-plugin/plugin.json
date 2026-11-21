@@ -1,0 +1,19 @@
+{
+  "name": "kiwoom-client",
+  "description": "Write and debug kiwoom-client code safely: paper-trading first, real-order warnings, endpoint and field lookup, examples",
+  "icon": "docs/images/brand/mark-512.png",
+  "author": {
+    "name": "younghwan91"
+  },
+  "homepage": "https://github.com/younghwan91/kiwoom-client",
+  "repository": "https://github.com/younghwan91/kiwoom-client",
+  "license": "MIT",
+  "keywords": [
+    "kiwoom",
+    "키움증권",
+    "trading",
+    "korea",
+    "rest-api",
+    "skill"
+  ]
+}

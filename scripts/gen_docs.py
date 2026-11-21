@@ -346,6 +346,10 @@ LLMS_LINKS: list[tuple[str, str, str, str]] = [
      "rules for AI agents using or working on this library: safety, lookups, tests"),
     ("Docs", "docs/migration-from-openapi-plus.md", "Migrating from OpenAPI+ (OCX) / pykiwoom",
      "OpenAPI+ functions, SendOrder codes, real-time types and TR codes mapped to REST"),
+    ("Docs", "docs/ai-tools.en.md", "Using it from AI coding tools",
+     "llms.txt, AGENTS.md, the Claude Code skill/plugin and how to install them"),
+    ("Optional", "skills/kiwoom-client/SKILL.md", "Agent Skill",
+     "the same rules as a Claude Code / Agent Skills skill, with examples"),
     ("Optional", LLMS_FULL_PATH, "llms-full.txt",
      "public API signatures and docstrings plus the full endpoint list in one file"),
     ("Optional", "CHANGELOG.md", "Changelog", "release history"),
@@ -574,11 +578,16 @@ def render_llms_full() -> str:
                 lines += [doc, ""]
     while lines and lines[-1] == "":
         lines.pop()
+    lines += ["", *endpoint_list_lines(level=2)]
+    return "\n".join(lines)
 
+
+def endpoint_list_lines(level: int) -> list[str]:
+    """한 줄에 하나씩 쓴 엔드포인트·조건검색·실시간 목록 (llms-full.txt·스킬이 같이 쓴다)."""
+    h, hh = "#" * level, "#" * (level + 1)
     eps = rest_endpoints()
-    lines += [
-        "",
-        f"## REST endpoints ({len(eps)})",
+    lines = [
+        f"{h} REST endpoints ({len(eps)})",
         "",
         "Format: `api_id` `api.<module>.<method>()` — 한글 TR 이름 (English) [POST url]. "
         "⚠️ = places a real order when `is_mock=False`.",
@@ -586,20 +595,51 @@ def render_llms_full() -> str:
     current = None
     for ep in eps:
         if ep.module != current:
-            lines += ["", f"### api.{ep.module} — {module_title(ep.module)}", ""]
+            lines += ["", f"{hh} api.{ep.module} — {module_title(ep.module)}", ""]
             current = ep.module
         mark = "⚠️ " if ep.is_order else ""
         lines.append(
             f"- {mark}`{ep.api_id}` `{ep.call}()` — {ep.name_ko} ({ep.name_en}) [POST {ep.url}]"
         )
-    lines += ["", "## Condition search (WebSocket payload builders)", ""]
+    lines += ["", f"{h} Condition search (WebSocket payload builders)", ""]
     for c in ws_calls():
         lines.append(f"- `{c.trnm}` `{c.call}()` — {c.name_ko} ({c.name_en})")
-    lines += ["", "## Real-time types (`await ws.subscribe(type, item)`)", ""]
+    lines += ["", f"{h} Real-time types (`await ws.subscribe(type, item)`)", ""]
     for code, name in REALTIME_TYPES.items():
         lines.append(f"- `{code}` {name}")
     lines.append("")
-    return "\n".join(lines)
+    return lines
+
+
+# --------------------------------------------------------------------------- Agent Skill
+
+SKILL_PATH = "skills/kiwoom-client/SKILL.md"
+SKILL_ENDPOINTS_PATH = "skills/kiwoom-client/endpoints.md"
+_SKILL_NOTE = (
+    "<!-- 자동 생성 파일 — scripts/templates/SKILL.md (와 usage-rules.md) 를 고치고 "
+    "`python scripts/gen_docs.py` 로 다시 만듭니다. -->"
+)
+
+
+def render_skill() -> str:
+    """Agent Skill 본문. 프론트매터가 파일 첫 줄이어야 해서 생성 표시는 그 뒤에 둔다."""
+    text = template("SKILL.md", usage_rules=usage_rules(), **_counts())
+    _, front, body = text.split("---\n", 2)
+    return f"---\n{front}---\n\n{_SKILL_NOTE}\n{body.rstrip()}\n"
+
+
+def render_skill_endpoints() -> str:
+    return "\n".join([
+        GENERATED_NOTE,
+        "",
+        "# kiwoom-client endpoints",
+        "",
+        "Search this file for an api_id (`ka10081`), a Korean TR name (`일봉`) or a method name. "
+        "Request fields: `kiwoom_client.spec.get(api_id)` or "
+        f"[Kiwoom's REST API guide]({OFFICIAL_GUIDE}).",
+        "",
+        *endpoint_list_lines(level=2),
+    ])
 
 
 # --------------------------------------------------------------------------- 진입점
@@ -610,6 +650,8 @@ TARGETS: dict[str, Callable[[], str]] = {
     LLMS_PATH: render_llms_txt,
     LLMS_FULL_PATH: render_llms_full,
     AGENTS_PATH: render_agents,
+    SKILL_PATH: render_skill,
+    SKILL_ENDPOINTS_PATH: render_skill_endpoints,
     **gen_reference.targets(),
 }
 
