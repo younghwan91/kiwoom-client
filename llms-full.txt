@@ -473,6 +473,12 @@ Attributes:
     error_code: Kiwoom's 4-digit error code embedded in ``return_msg``
         (``"...[8005:Token이 유효하지 않습니다]"`` -> ``8005``), or None.
 - `kiwoom_client.auth.KiwoomAuthError`: Token issuance or revocation failed.
+
+Attributes:
+    error_code: Kiwoom's 4-digit code from the message (``[8030:...]``),
+        or None.
+    hint: One-line next step (e.g. which ``is_mock`` to use), or None.
+        Also appended to ``str(exc)``.
 - `kiwoom_client.websocket.KiwoomWebSocketError`: WebSocket login or protocol failure.
 
 ## REST endpoints (182)
