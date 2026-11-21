@@ -1,4 +1,4 @@
-[한국어](README.md) | [English](README_EN.md)
+[한국어](https://github.com/younghwan91/kiwoom-client/blob/main/README.md) | [English](https://github.com/younghwan91/kiwoom-client/blob/main/README_EN.md)
 
 # kiwoom-client — Python client for the Kiwoom Securities REST API
 
@@ -17,8 +17,8 @@ The whole Kiwoom REST API in one Python client: 182 endpoints, real-time WebSock
 - **Bots don't die on an expired token**: refreshed before expiry, reissued on 401. A per-TR rate limiter keeps you under the 429 line and backs off and retries if one slips through.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/hero-dark.png">
-  <img alt="Mosaic of the 182 Kiwoom REST endpoints and 23 WebSocket calls wrapped by kiwoom-client, grouped by domain" src="docs/images/hero-light.png" width="100%">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/hero-dark.png">
+  <img alt="Mosaic of the 182 Kiwoom REST endpoints and 23 WebSocket calls wrapped by kiwoom-client, grouped by domain" src="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/hero-light.png" width="100%">
 </picture>
 
 ## Quick start
@@ -65,7 +65,7 @@ uv add kiwoom-client                 # if you use uv
 ```
 
 - Python **3.10+**.
-- Apply for API access at the [Kiwoom REST API portal](https://openapi.kiwoom.com) to get your `app_key` and `app_secret`. See [`.env.example`](.env.example) for environment variables.
+- Apply for API access at the [Kiwoom REST API portal](https://openapi.kiwoom.com) to get your `app_key` and `app_secret`. See [`.env.example`](https://github.com/younghwan91/kiwoom-client/blob/main/.env.example) for environment variables.
 - Mock and live keys are different pairs. Authentication fails if `is_mock` doesn't match the key.
 
 | | Live | Mock |
@@ -137,7 +137,7 @@ async def main():
 asyncio.run(main())
 ```
 
-Full example: [`examples/async_usage.py`](examples/async_usage.py).
+Full example: [`examples/async_usage.py`](https://github.com/younghwan91/kiwoom-client/blob/main/examples/async_usage.py).
 
 ### Working with responses
 
@@ -339,17 +339,17 @@ More questions? Open an [issue](https://github.com/younghwan91/kiwoom-client/iss
 
 ## Where it runs
 
-The daily collection DAGs in [quant-airflow](https://github.com/younghwan91/quant-airflow) use this library to load prices, supply/demand, margin and short-sale data into TimescaleDB every day. The rest of the stack is [below](#related-projects--open-source-quant-stack).
+The daily collection DAGs in [quant-airflow](https://github.com/younghwan91/quant-airflow) use this library to load prices, supply/demand, margin and short-sale data into TimescaleDB every day.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/pypi_downloads_dark.png">
-  <img alt="kiwoom-client cumulative PyPI downloads" src="docs/images/pypi_downloads_light.png" width="640">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/pypi_downloads_dark.png">
+  <img alt="kiwoom-client cumulative PyPI downloads" src="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/pypi_downloads_light.png" width="640">
 </picture>
 
 ## Contributing & issues
 
 - 🐛 Bugs & feature requests → [Issues](https://github.com/younghwan91/kiwoom-client/issues)
-- 🔧 Pull requests welcome → See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines and dev setup.
+- 🔧 Pull requests welcome → See [CONTRIBUTING.md](https://github.com/younghwan91/kiwoom-client/blob/main/CONTRIBUTING.md) for guidelines and dev setup.
 
 ## License
 
