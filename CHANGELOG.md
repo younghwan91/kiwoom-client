@@ -24,7 +24,7 @@
 **TR 명세·검증**
 
 - `kiwoom_client.spec` — 키움 공식 명세에서 만든 TR 요청·응답 필드 카탈로그 (#21)
-- `api.describe("ka10001")` — 호출 예·필수 필드·코드값·응답 필드를 네트워크 없이 (#65)
+- `api.describe("ka10001")` — 호출 예·필수 필드·응답 필드를 네트워크 없이 (#65)
 - `spec.label()` / `spec.field_names()` — 응답 필드·실시간 FID 를 한글명으로 (#66)
 - `kiwoom_client.spec.responses` — 자주 쓰는 TR 10개의 응답 TypedDict (#71)
 - `validate_params="warn"|"error"` — 보내기 전에 필드 오타·빠진 필수 필드를 알린다 (기본 꺼짐) (#45)
@@ -59,7 +59,10 @@
 - 문서 사이트(MkDocs, 한·영) — 엔드포인트 전체 표, TR별 필드 레퍼런스, MCP 서버, 편의 기능, 쿡북(모의투자 레시피 8개),
   문제 해결(오류코드별), FAQ, OpenAPI+·pykiwoom 옮겨 오기, 비교, 자료 모음, 쓰이는 곳
   (#13, #23, #33, #49, #50, #58, #60, #62, #68, #75, #76, #77, #78)
+- 문서 사이트를 GitHub Pages(https://younghwan91.github.io/kiwoom-client/)에 main 머지마다 자동 배포,
+  사이트 루트에 `llms.txt`·`llms-full.txt`. 패키지 `Documentation` URL·README 링크가 사이트를 가리킨다 (#86, #88)
 - `SECURITY.md`·`CODE_OF_CONDUCT.md`, 이슈 폼·PR 템플릿, CONTRIBUTING 보강 (#20, #22, #38)
+- 사용법 질문은 GitHub Discussions 로 — 이슈 선택 화면·CONTRIBUTING·FAQ 에 안내 (#87)
 
 ### Changed
 
@@ -70,8 +73,12 @@
   import 부터 실패했다. CI 가 하한(mcp 2.0.0)에서도 테스트한다 (#67, #83)
 - 힌트가 있는 오류는 `str(exc)` 둘째 줄에 `힌트: …` 가 붙는다. 첫 줄·`code`·`message`·예외 타입은 그대로 (#37)
 - 토큰 발급이 HTTP 오류로 끝나면 메시지에 응답의 `return_msg` 를 덧붙인다 (#37)
-- MCP REST 도구의 입력 스키마·설명에 공식 TR 이름·api_id·필드별 설명·필수 여부가 실린다.
+- MCP REST 도구의 입력 스키마·설명에 공식 TR 이름·api_id·필드 한글명·필수 여부가 실린다.
   `params={...}` 호출은 그대로이고, 필드를 평평하게 넘겨도 받는다 (#42, #55)
+- TR 카탈로그(`kiwoom_client.spec`)에서 키움 명세 원문의 필드 설명(`desc`)·코드값 목록(`codes`)을 뺐다 —
+  필드 ID·한글명·타입·길이·필수만 남는다. `Field.desc`/`Field.codes` 는 하위 호환으로 남아 늘 비어 있고,
+  `describe()`·MCP 스키마·필드 레퍼런스에서도 빠졌다. 자주 쓰는 코드값은 `kiwoom_client.codes`, 나머지는
+  키움 REST API 포털 문서를 본다 (#85)
 - README 첫 화면과 빠른 시작을 `from_env()`·MCP 30초 시작 위주로 다시 썼다 (#46, #68)
 
 ### Fixed
