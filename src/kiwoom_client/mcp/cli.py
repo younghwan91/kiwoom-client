@@ -24,6 +24,8 @@ from kiwoom_client.mcp.client_config import CLIENTS, LAUNCHERS, render
 from kiwoom_client.mcp.guard import ENV_VAR as LIVE_ORDERS_ENV_VAR
 from kiwoom_client.mcp.modes import ENV_VAR as MODE_ENV_VAR
 from kiwoom_client.mcp.modes import discovery_from_env
+from kiwoom_client.mcp.response_size import ENV_VAR as MAX_ROWS_ENV_VAR
+from kiwoom_client.mcp.response_size import max_rows_from_env, parse_max_rows
 from kiwoom_client.mcp.toolsets import ENV_VAR as TOOLSETS_ENV_VAR
 from kiwoom_client.mcp.toolsets import TOOLSET_NAMES, parse_toolsets, toolsets_from_env
 
@@ -33,6 +35,7 @@ _EPILOG = f"""\
   KIWOOM_IS_MOCK=true                  모의투자 서버 (--mock 과 같음, 기본 false = 실전)
   {TOOLSETS_ENV_VAR}=market,chart     노출할 모듈 (--toolsets 와 같음, 기본 전부)
   {MODE_ENV_VAR}=discovery            메타 도구 3개만 노출 (--discovery 와 같음)
+  {MAX_ROWS_ENV_VAR}=50                리스트 응답 기본 행 수 제한 (--max-rows 와 같음)
   {LIVE_ORDERS_ENV_VAR}=true  실전 계좌에서 주문 도구 노출 (기본 false)
 
 toolset 이름: {", ".join(TOOLSET_NAMES)}
@@ -50,6 +53,16 @@ def _toolsets_arg(value: str) -> frozenset[str]:
     except ValueError as exc:
         raise argparse.ArgumentTypeError(str(exc)) from exc
     return frozenset(TOOLSET_NAMES) if parsed is None else parsed
+
+
+def _max_rows_arg(value: str) -> int:
+    try:
+        parsed = parse_max_rows(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(str(exc)) from exc
+    if parsed is None:
+        raise argparse.ArgumentTypeError("max-rows 는 양의 정수여야 합니다")
+    return parsed
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -78,6 +91,15 @@ def build_parser() -> argparse.ArgumentParser:
         help=(
             "도구 ~180개 대신 search_tools/describe_tool/call_tool 3개만 노출 "
             f"({MODE_ENV_VAR}=discovery 와 같음). 컨텍스트 절약"
+        ),
+    )
+    parser.add_argument(
+        "--max-rows",
+        type=_max_rows_arg,
+        metavar="N",
+        help=(
+            f"리스트 응답을 기본 N행으로 자른다 ({MAX_ROWS_ENV_VAR} 와 같음, 기본 무제한). "
+            "도구 호출마다 max_rows 로 바꿀 수 있다"
         ),
     )
 
@@ -170,6 +192,14 @@ def main(argv: Sequence[str] | None = None) -> None:
             print(f"Error: {exc}", file=sys.stderr)
             sys.exit(1)
 
+    max_rows = args.max_rows
+    if max_rows is None:
+        try:
+            max_rows = max_rows_from_env()
+        except ValueError as exc:
+            print(f"Error: {MAX_ROWS_ENV_VAR}: {exc}", file=sys.stderr)
+            sys.exit(1)
+
     try:
         from kiwoom_client.mcp.server import run_server
     except ImportError as exc:
@@ -187,4 +217,5 @@ def main(argv: Sequence[str] | None = None) -> None:
         is_mock=is_mock,
         toolsets=toolsets,
         discovery=args.discovery or discovery_from_env(),
+        max_rows=max_rows,
     )

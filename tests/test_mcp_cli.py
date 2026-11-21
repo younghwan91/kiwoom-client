@@ -22,7 +22,7 @@ from kiwoom_client.mcp.guard import ENV_VAR as LIVE_ORDERS_ENV_VAR
 @pytest.fixture
 def no_keys(monkeypatch):
     for name in ("KIWOOM_APP_KEY", "KIWOOM_APP_SECRET", "KIWOOM_IS_MOCK", "KIWOOM_MCP_TOOLSETS",
-                 "KIWOOM_MCP_MODE"):
+                 "KIWOOM_MCP_MODE", "KIWOOM_MCP_MAX_ROWS"):
         monkeypatch.delenv(name, raising=False)
 
 
@@ -107,6 +107,7 @@ class TestServe:
                 "is_mock": False,
                 "toolsets": None,
                 "discovery": False,
+                "max_rows": None,
             }
         ]
 
