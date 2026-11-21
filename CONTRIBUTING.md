@@ -41,6 +41,19 @@ bash scripts/check_dist.sh                                        # (패키징�
 - `ruff format` 으로 **레포 전체를 재포매팅하지 마세요** — 고친 줄만 다듬어 주세요(리뷰·충돌이 커집니다).
 - 커버리지는 `--cov` 를 붙이면 봅니다: `uv run --extra dev --extra mcp pytest tests/ -q --cov`
 
+### pre-commit (선택)
+
+커밋할 때 바뀐 파일에만 ruff 린트와 기본 검사(YAML/TOML/JSON 문법, 끝 공백, 개인키, 큰 파일,
+`.env`·`uv.lock`·`.coverage` 커밋 금지)를 돌리고 싶다면:
+
+```bash
+uvx pre-commit install                    # 한 번만
+uvx pre-commit run --files <바꾼 파일...>  # 수동 실행
+```
+
+CI 는 pre-commit 을 강제하지 않습니다. `pre-commit run --all-files` 는 레포 전체를 고칠 수 있으니
+그 결과를 PR 에 섞지 마세요.
+
 ### 생성 파일
 
 아래 파일은 코드에서 생성하고, 테스트가 커밋된 내용과 같은지 확인합니다. 엔드포인트를 더하거나

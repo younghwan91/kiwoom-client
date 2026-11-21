@@ -1,0 +1,43 @@
+# 선택 사항 — CI 가 강제하지 않는다. 쓰려면:
+#   uvx pre-commit install          # git commit 때마다 바뀐 파일에만 돈다
+#   uvx pre-commit run --files <파일...>
+# `run --all-files` 는 레포 전체를 고칠 수 있으니 PR 에 섞지 말 것(CONTRIBUTING.md 참고).
+# ruff 버전은 CI(최신 ruff)와 가깝게 `uvx pre-commit autoupdate` 로 올린다.
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.6
+    hooks:
+      # 린트만. `ruff format` 은 레포가 아직 포매팅을 강제하지 않아 넣지 않는다.
+      - id: ruff-check
+        args: [--fix]
+        files: ^(src|tests|examples)/
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-yaml
+        exclude: ^mkdocs\.yml$
+      # mkdocs.yml 은 !!python/name 태그를 써서 문법만 본다.
+      - id: check-yaml
+        name: check yaml (mkdocs, syntax only)
+        args: [--unsafe]
+        files: ^mkdocs\.yml$
+      - id: check-toml
+      - id: check-json
+        exclude: ^\.vscode/
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+
+  - repo: local
+    hooks:
+      # .env(실키)·uv.lock·커버리지 데이터는 .gitignore 에 있지만, `git add -f` 로도 못 들어가게.
+      - id: forbid-local-artifacts
+        name: .env · uv.lock · .coverage 커밋 금지
+        language: fail
+        entry: 커밋하면 안 되는 파일이다 (.env 는 실키, uv.lock 은 라이브러리라 커밋하지 않음)
+        files: (^|/)(\.env|uv\.lock|\.coverage(\..*)?)$
