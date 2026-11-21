@@ -29,9 +29,12 @@ __all__ = [
     "TRSpec",
     "api_ids",
     "catalog_source",
+    "describe",
     "endpoint_index",
     "for_method",
     "get",
+    "method_for",
+    "resolve",
     "search",
 ]
 
@@ -194,6 +197,17 @@ def endpoint_index() -> Mapping[tuple[str, str], str]:
     return MappingProxyType(index)
 
 
+@lru_cache(maxsize=1)
+def _module_classes() -> Mapping[type, str]:
+    """엔드포인트 모듈 클래스 → 모듈 이름 (``Account`` → ``"account"``)."""
+    from kiwoom_client._registry import MODULE_NAMES, ModuleRegistry
+
+    registry: ModuleRegistry[Any] = ModuleRegistry()
+    registry._client = _Recorder()
+    registry._init_modules()
+    return MappingProxyType({type(getattr(registry, m)): m for m in MODULE_NAMES})
+
+
 def for_method(module_name: str, method_name: str) -> TRSpec:
     """``api.<module_name>.<method_name>`` 이 부르는 TR 의 명세."""
     try:
@@ -201,3 +215,61 @@ def for_method(module_name: str, method_name: str) -> TRSpec:
     except KeyError:
         raise KeyError(f"REST 엔드포인트 메서드가 아니다: {module_name}.{method_name}") from None
     return get(api_id)
+
+
+def method_for(api_id: str) -> tuple[str, str] | None:
+    """api_id 를 부르는 ``(모듈 이름, 메서드 이름)`` — 감싼 메서드가 없으면 ``None``."""
+    for key, value in endpoint_index().items():
+        if value == api_id:
+            return key
+    return None
+
+
+def resolve(target: Any) -> TRSpec:
+    """api_id(``"ka10001"``), ``"stock_info.basic_stock_info"``, 또는 바운드 메서드
+    (``api.stock_info.basic_stock_info``) → TR 명세."""
+    if isinstance(target, str):
+        if "." in target:
+            module, _, method = target.removeprefix("api.").partition(".")
+            return for_method(module, method.removesuffix("()"))
+        return get(target)
+    name = getattr(target, "__name__", None)
+    owner = getattr(target, "__self__", None)
+    owner_module = _module_classes().get(type(owner)) if owner is not None else None
+    if name and owner_module:
+        return for_method(owner_module, name)
+    raise KeyError(f"api_id·'모듈.메서드'·엔드포인트 메서드 중 하나여야 한다: {target!r}")
+
+
+def describe(target: Any) -> str:
+    """TR 하나의 사람이 읽을 도움말 — 호출 예, 요청 필드(필수·코드값), 응답 필드.
+
+    ``target`` 은 :func:`resolve` 가 받는 것 무엇이든. ``print(spec.describe("ka10001"))``.
+    """
+    tr = resolve(target)
+    where = method_for(tr.api_id)
+    lines = [f"{tr.api_id} {tr.name} — {tr.method} {tr.url}"]
+    if where is not None:
+        args = ", ".join(f'{fid}="..."' for fid in tr.required_fields)
+        lines.append(f"  api.{where[0]}.{where[1]}({args})")
+    if tr.source != "official":
+        lines.append(f"  (출처 {tr.source}: {tr.note})")
+    lines += ["", "요청 필드:"]
+    if not tr.request_fields:
+        lines.append("  (없음)")
+    for f in tr.request_fields:
+        mark = "*" if f.required else " "
+        lines.append(f" {mark}{f.id:<16} {f.name}")
+        if f.codes:
+            codes = ", ".join(f"{k}={v}" for k, v in f.codes.items())
+            lines.append(f"  {'':<16} 코드: {codes}")
+        elif f.desc:
+            lines.append(f"  {'':<16} {' '.join(f.desc.split())}")
+    lines += ["  (* 필수)", "", "응답 필드:"]
+    if not tr.response:
+        lines.append("  (미확인)")
+    for f in tr.response:
+        label = f"{f.parent}[].{f.id}" if f.parent else f.id
+        suffix = " (list)" if f.type == "list" else ""
+        lines.append(f"  {label:<24} {f.name}{suffix}")
+    return "\n".join(lines)
