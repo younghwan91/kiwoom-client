@@ -17,9 +17,10 @@ from __future__ import annotations
 import argparse
 import os
 import sys
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 from kiwoom_client import __version__
+from kiwoom_client._env import ENV_IS_MOCK, parse_bool
 from kiwoom_client.mcp.client_config import CLIENTS, LAUNCHERS, render
 from kiwoom_client.mcp.guard import ENV_VAR as LIVE_ORDERS_ENV_VAR
 from kiwoom_client.mcp.modes import ENV_VAR as MODE_ENV_VAR
@@ -32,7 +33,8 @@ from kiwoom_client.mcp.toolsets import TOOLSET_NAMES, parse_toolsets, toolsets_f
 _EPILOG = f"""\
 환경변수:
   KIWOOM_APP_KEY / KIWOOM_APP_SECRET   앱키·시크릿 (서버 실행 시 필수)
-  KIWOOM_IS_MOCK=true                  모의투자 서버 (--mock 과 같음, 기본 false = 실전)
+  KIWOOM_IS_MOCK=true                  모의투자 서버 (--mock 과 같음, 기본 false = 실전;
+                                       true/false·1/0·yes/no 외의 값은 시작 시 에러)
   {TOOLSETS_ENV_VAR}=market,chart     노출할 모듈 (--toolsets 와 같음, 기본 전부)
   {MODE_ENV_VAR}=discovery            메타 도구 3개만 노출 (--discovery 와 같음)
   {MAX_ROWS_ENV_VAR}=50                리스트 응답 기본 행 수 제한 (--max-rows 와 같음)
@@ -63,6 +65,20 @@ def _max_rows_arg(value: str) -> int:
     if parsed is None:
         raise argparse.ArgumentTypeError("max-rows 는 양의 정수여야 합니다")
     return parsed
+
+
+def resolve_is_mock(*, flag: bool, env: Mapping[str, str] | None = None) -> bool:
+    """``--mock`` wins; else ``KIWOOM_IS_MOCK`` parsed like ``KiwoomAPI.from_env()``.
+
+    Unset or empty means live (``False``), the same default as everywhere else.
+    A value that is not a recognised boolean (e.g. ``"ture"``) raises instead
+    of silently connecting to the live server.
+    """
+    if flag:
+        return True
+    source = os.environ if env is None else env
+    value = source.get(ENV_IS_MOCK, "")
+    return parse_bool(value) if value.strip() else False
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -181,7 +197,11 @@ def main(argv: Sequence[str] | None = None) -> None:
         )
         sys.exit(1)
 
-    is_mock = args.mock or os.environ.get("KIWOOM_IS_MOCK", "false").strip().lower() == "true"
+    try:
+        is_mock = resolve_is_mock(flag=args.mock)
+    except ValueError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        sys.exit(1)
     toolsets: frozenset[str] | None
     if args.toolsets is not None:
         toolsets = None if args.toolsets == set(TOOLSET_NAMES) else args.toolsets
