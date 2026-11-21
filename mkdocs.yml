@@ -22,6 +22,7 @@ hooks:
 
 theme:
   name: material
+  custom_dir: overrides
   language: ko
   logo: images/brand/mark-white.svg
   favicon: images/brand/mark.svg

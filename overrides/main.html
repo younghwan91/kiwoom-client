@@ -1,0 +1,79 @@
+{#-
+  Material 테마 확장 (mkdocs.yml 의 theme.custom_dir). 검색엔진·SNS 미리보기용 메타만 더한다.
+  - Open Graph · Twitter Card: 모든 페이지. 설명은 front matter `description` → 없으면 site_description(언어별).
+  - JSON-LD(SoftwareSourceCode + SoftwareApplication): 홈(한/영)에만.
+  사실만 적는다 — 라이선스·저장소·언어는 pyproject.toml 과 같아야 한다(tests/test_site_meta.py 가 검사).
+-#}
+{% extends "base.html" %}
+
+{% block extrahead %}
+  {% if page %}
+    {% set kc_root = config.site_url %}
+    {# 본문 언어: 영어판이 없어 한국어 본문으로 대체된 /en/ 페이지는 ko #}
+    {% set kc_lang = i18n_file_locale | default(lang.t("language"), true) %}
+    {% set kc_is_home = page.file and page.file.src_uri in ["index.md", "index.en.md"] %}
+    {% if page.meta and page.meta.title %}
+      {% set kc_title = page.meta.title %}
+    {% elif page.title and not kc_is_home %}
+      {% set kc_title = (page.title | striptags) ~ " - " ~ config.site_name %}
+    {% else %}
+      {% set kc_title = config.site_name %}
+    {% endif %}
+    {% set kc_desc = page.meta.description if page.meta and page.meta.description else config.site_description %}
+    {% set kc_image = kc_root ~ "images/social-preview.png" %}
+    {% set kc_image_alt = "kiwoom-client — Kiwoom Securities REST API for Python and AI agents (MCP)" %}
+    <meta property="og:type" content="{{ 'website' if kc_is_home else 'article' }}">
+    <meta property="og:site_name" content="{{ config.site_name }}">
+    <meta property="og:title" content="{{ kc_title | e }}">
+    <meta property="og:description" content="{{ kc_desc | e }}">
+    {% if page.canonical_url %}
+      <meta property="og:url" content="{{ page.canonical_url }}">
+    {% endif %}
+    <meta property="og:image" content="{{ kc_image }}">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1280">
+    <meta property="og:image:height" content="640">
+    <meta property="og:image:alt" content="{{ kc_image_alt }}">
+    {% if kc_lang == "en" %}
+      <meta property="og:locale" content="en_US">
+      <meta property="og:locale:alternate" content="ko_KR">
+    {% else %}
+      <meta property="og:locale" content="ko_KR">
+      <meta property="og:locale:alternate" content="en_US">
+    {% endif %}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ kc_title | e }}">
+    <meta name="twitter:description" content="{{ kc_desc | e }}">
+    <meta name="twitter:image" content="{{ kc_image }}">
+    <meta name="twitter:image:alt" content="{{ kc_image_alt }}">
+    {% if kc_is_home %}
+      {% set kc_app = {
+        "@type": "SoftwareApplication",
+        "@id": (page.canonical_url or kc_root) ~ "#software",
+        "name": config.site_name,
+        "description": config.site_description,
+        "url": page.canonical_url or kc_root,
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Windows, macOS, Linux",
+        "inLanguage": kc_lang,
+        "license": "https://opensource.org/licenses/MIT",
+        "image": kc_image,
+        "offers": {"@type": "Offer", "price": "0", "priceCurrency": "KRW"},
+        "downloadUrl": "https://pypi.org/project/kiwoom-client/"
+      } %}
+      {% set kc_code = {
+        "@type": "SoftwareSourceCode",
+        "@id": (page.canonical_url or kc_root) ~ "#source",
+        "name": config.site_name,
+        "description": config.site_description,
+        "url": page.canonical_url or kc_root,
+        "codeRepository": config.repo_url,
+        "programmingLanguage": {"@type": "ComputerLanguage", "name": "Python"},
+        "runtimePlatform": "Python 3.10+",
+        "license": "https://opensource.org/licenses/MIT",
+        "targetProduct": {"@id": (page.canonical_url or kc_root) ~ "#software"}
+      } %}
+      <script type="application/ld+json">{{ {"@context": "https://schema.org", "@graph": [kc_code, kc_app]} | tojson }}</script>
+    {% endif %}
+  {% endif %}
+{% endblock %}
