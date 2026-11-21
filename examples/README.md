@@ -15,6 +15,16 @@ export KIWOOM_ACCOUNT_NO="your_account_number"  # required for account/order exa
 
 ## Scripts
 
+### `quickstart.py`
+
+Start here. Reads `KIWOOM_APP_KEY`/`KIWOOM_APP_SECRET` (or a `.env` in the current directory) with
+`KiwoomAPI.from_env(is_mock=True)` — always the mock server, no orders — then looks up a code by name,
+fetches the current price and a daily chart (as an OHLCV DataFrame if pandas is installed).
+
+```bash
+uv run python examples/quickstart.py
+```
+
 ### `basic_usage.py`
 
 Login, fetch basic stock info for Samsung Electronics (005930), query account evaluation, then logout.
