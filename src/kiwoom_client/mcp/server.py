@@ -22,6 +22,7 @@ from mcp.server.stdio import stdio_server
 from kiwoom_client import AsyncKiwoomAPI
 from kiwoom_client.base import KiwoomAPIError
 from kiwoom_client.domestic.condition_search import ConditionSearch
+from kiwoom_client.mcp.annotations import tool_annotations, tool_title
 from kiwoom_client.mcp.condition_search_session import (
     ConditionSearchSession,
     ConditionSearchTimeout,
@@ -95,8 +96,10 @@ def build_server(
             tools=[
                 types.Tool(
                     name=spec.tool_name,
+                    title=tool_title(spec),
                     description=spec.description,
                     input_schema=_input_schema(spec),
+                    annotations=tool_annotations(spec),
                 )
                 for spec in all_specs
             ]
