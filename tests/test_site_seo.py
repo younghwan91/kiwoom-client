@@ -218,3 +218,24 @@ def test_generated_pages_have_search_title_and_description():
         rel = path.relative_to(_ROOT)
         assert 20 <= len(fm.get("seo_title", "")) <= 80, f"{rel}: seo_title 20~80자"
         assert 50 <= len(fm.get("description", "")) <= 180, f"{rel}: description 50~180자"
+
+
+def test_404_is_noindex_and_links_to_existing_pages():
+    template = (_ROOT / "overrides" / "404.html").read_text(encoding="utf-8")
+    assert '<meta name="robots" content="noindex">' in template
+    docs = _ROOT / "docs"
+    targets = re.findall(r'href="\{\{ root \}\}([^"#]*)', template)
+    assert len(targets) >= 8
+    for target in targets:
+        stem = target.rstrip("/")
+        lang = ""
+        if stem == "en" or stem.startswith("en/"):
+            stem, lang = stem[3:], ".en"
+        candidates = [f"{stem}{lang}.md", f"{stem}/index{lang}.md"] if stem else [f"index{lang}.md"]
+        assert any((docs / c).is_file() for c in candidates), target
+
+
+def test_mkdocs_meta_for_footer_and_author():
+    cfg = (_ROOT / "mkdocs.yml").read_text(encoding="utf-8")
+    for needle in ("site_author: ", "repo_url: https://github.com/", "copyright: ", "  social:\n"):
+        assert needle in cfg, needle
