@@ -59,7 +59,7 @@ df = to_dataframe(resp)
   you, show the command to the user instead of working around it.
 - **Generated files** — after changing endpoints, docstrings or `__all__`, regenerate and commit them together;
   CI compares them with the code:
-  `python scripts/gen_docs.py` (docs/endpoints.md, llms.txt, llms-full.txt, AGENTS.md) and
+  `python scripts/gen_docs.py` (docs/endpoints.md, llms.txt, llms-full.txt, AGENTS.md, the skill, Cursor/Copilot rules) and
   `python scripts/build_stubs.py` (`domestic/*.pyi`).
 - **Docs code is tested**: Python blocks must compile, `api.<module>.<method>(` and api_ids must exist, and
   examples under `docs/` must build clients with `is_mock=True` (`tests/test_docs_code_blocks.py`).

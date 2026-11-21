@@ -1,0 +1,23 @@
+<!-- 자동 생성 파일 — scripts/templates/editor-rules.md (와 usage-rules.md) 를 고치고 `python scripts/gen_docs.py` 로 다시 만듭니다. -->
+
+# kiwoom-client
+
+Python client for the Kiwoom Securities (키움증권) REST API and WebSocket (`import kiwoom_client`). It can place real
+orders on a real brokerage account.
+
+- `KiwoomAPI(app_key, app_secret, is_mock=False)` — **`is_mock` defaults to `False`, the live server.** Pass `is_mock=True` for paper trading (모의투자, mockapi.kiwoom.com). Live and paper keys are different; a key used against the wrong server is rejected (Kiwoom error 8030/8031, raised as `KiwoomServerMismatchError`).
+- `KiwoomAPI.from_env(is_mock=True)` reads `KIWOOM_APP_KEY` / `KIWOOM_APP_SECRET` / `KIWOOM_IS_MOCK` (the same variables as the MCP server). Never hard-code or print keys.
+- `api.order.*` and `api.credit_order.*` place **real, irreversible orders** when `is_mock=False`. Nothing in the Python API blocks them; only the MCP server has an opt-in guard (`KIWOOM_MCP_ALLOW_LIVE_ORDERS`). Do not run order code against a live account unless the user explicitly asks.
+- `api.logout()` revokes the access token. Other processes sharing the same app key may lose their session — do not call it casually.
+- Every REST method has the same signature `(cont_yn="N", next_key="", **fields)`. Pass Kiwoom's own request field names as keyword arguments with **string** values (`stk_cd="005930"`, `ord_qty="10"`). Find the method for an api_id (`ka10081`) or a Korean TR name in the endpoint reference; look fields up with `kiwoom_client.spec.get("ka10081").required_fields` or Kiwoom's guide. Do not invent method names.
+- Coded fields have named constants in `kiwoom_client.codes` (`OrderType.LIMIT`, `Exchange.KRX`, …).
+- Responses are plain dicts whose values are strings (`"+70000"`, `"1,234"`). `to_dataframe()` / `normalize()` / `to_number()` convert them; codes and dates stay strings. A non-zero `return_code` raises `KiwoomAPIError(code, message, response)` or one of its subclasses in `kiwoom_client.errors`.
+- Continuation: a response carries `"cont-yn"` and `"next-key"`; call again with `cont_yn="Y", next_key=...`, or use `api._client.request_all(url, api_id, body)`.
+- Rate limits are per api_id (about 1 req/s, burst 2) and handled by the client; different api_ids run concurrently under `AsyncKiwoomAPI`.
+- Limit prices must be on the KRX tick grid: `round_to_tick(price)`.
+- Real-time: `ws = api.create_websocket()`, `await ws.connect()`, `ws.on("0B", cb)`, `await ws.subscribe("0B", "005930")`, `await ws.listen()`. `values` keys are Kiwoom FID numbers (`"10"` = current price).
+
+Look up methods in `docs/endpoints.md` (api_id, Korean TR name), fields with `kiwoom_client.spec.get(api_id)`, and every
+public signature in `llms-full.txt`. Inside this repository also follow `AGENTS.md`: unit tests mock HTTP with
+`pytest-httpx` and never touch the live server, existing public behaviour is only added to, never changed, and generated
+files are refreshed with `python scripts/gen_docs.py`.
