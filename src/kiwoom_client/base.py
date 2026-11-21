@@ -50,6 +50,14 @@ class KiwoomAPIError(KiwoomError):
         self.hint: str | None = None
         super().__init__(f"[{code}] {message}")
 
+    def __reduce__(self) -> tuple[Any, ...]:
+        # Exception's default pickling calls cls(*self.args) — args is the
+        # formatted string, not (code, message, response). Rebuild from the
+        # constructor arguments, then restore hint/error_code and ``args``
+        # (which carries the hint text in str(exc)).
+        state = {**self.__dict__, "args": self.args}
+        return (type(self), (self.code, self.message, self.response), state)
+
     def _with_hint(self, hint: str | None) -> KiwoomAPIError:
         """Attach a hint and fold it into ``str(exc)``. Returns self."""
         if hint:
