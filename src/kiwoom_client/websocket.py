@@ -27,6 +27,8 @@ from typing import Any
 import websockets
 from websockets.asyncio.client import ClientConnection
 
+from kiwoom_client._errors import KiwoomError
+
 logger = logging.getLogger(__name__)
 
 #: Callback for a real-time item or a raw frame. May be sync or async.
@@ -56,7 +58,7 @@ REALTIME_TYPES = {
 }
 
 
-class KiwoomWebSocketError(Exception):
+class KiwoomWebSocketError(KiwoomError):
     """WebSocket login or protocol failure."""
 
 

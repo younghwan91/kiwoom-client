@@ -10,8 +10,10 @@ from typing import Any, Protocol, runtime_checkable
 
 import httpx
 
+from kiwoom_client._errors import KiwoomError
 
-class KiwoomAuthError(Exception):
+
+class KiwoomAuthError(KiwoomError):
     """Token issuance or revocation failed."""
 
 

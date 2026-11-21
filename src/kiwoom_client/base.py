@@ -8,6 +8,7 @@ from typing import Any, Protocol, TypeVar
 
 import httpx
 
+from kiwoom_client._errors import KiwoomError, parse_error_code
 from kiwoom_client.auth import AsyncTokenProvider, TokenProvider
 from kiwoom_client.rate_limiter import AsyncPerKeyRateLimiter, PerKeyRateLimiter
 
@@ -16,14 +17,96 @@ from kiwoom_client.rate_limiter import AsyncPerKeyRateLimiter, PerKeyRateLimiter
 ResponseT = TypeVar("ResponseT", covariant=True)
 
 
-class KiwoomAPIError(Exception):
-    """Kiwoom API error with return_code and return_msg."""
+class KiwoomAPIError(KiwoomError):
+    """Kiwoom API error with return_code and return_msg.
+
+    Raised for any non-zero ``return_code``. Where the code or the message
+    says more, a subclass is raised instead (:class:`KiwoomTokenError`,
+    :class:`KiwoomRateLimitError`, ...) — all of them are still
+    ``KiwoomAPIError``, with the same ``code``/``message``/``response``.
+
+    Attributes:
+        code: ``return_code`` from the payload.
+        message: ``return_msg`` from the payload, untouched.
+        response: The whole payload.
+        error_code: Kiwoom's 4-digit error code embedded in ``return_msg``
+            (``"...[8005:Token이 유효하지 않습니다]"`` -> ``8005``), or None.
+    """
 
     def __init__(self, code: int, message: str, response: dict[str, Any] | None = None):
         self.code = code
         self.message = message
         self.response = response
+        self.error_code: int | None = parse_error_code(message)
         super().__init__(f"[{code}] {message}")
+
+
+class KiwoomTokenError(KiwoomAPIError):
+    """The access token was rejected (``return_code`` 3; 8003/8005/8010/8103).
+
+    Raised only after the automatic reissue-and-retry has already been tried
+    (or when no token provider is attached).
+    """
+
+
+class KiwoomServerMismatchError(KiwoomTokenError):
+    """Mock/live mismatch: a mock key or token used on the live server, or
+    the reverse (8030/8031). Check ``is_mock`` against the kind of key.
+    """
+
+
+class KiwoomRateLimitError(KiwoomAPIError):
+    """Request quota exceeded (``return_code`` 5; 1700/1701/1702), after the
+    automatic backoff retries ran out.
+    """
+
+
+class KiwoomRequestError(KiwoomAPIError):
+    """The request itself is malformed — missing or invalid parameters,
+    unknown api-id, bad headers (15xx, 1687).
+    """
+
+
+class KiwoomStockNotFoundError(KiwoomRequestError):
+    """Unknown stock code or market/exchange for it (1901/1902/1903)."""
+
+
+class KiwoomUnsupportedError(KiwoomAPIError):
+    """The API is not offered for this account or server — e.g. not
+    available on the mock server (8104) or for corporate customers (8200).
+    """
+
+
+_ERROR_CODE_CLASSES: dict[int, type[KiwoomAPIError]] = {
+    **dict.fromkeys((8003, 8005, 8010, 8103), KiwoomTokenError),
+    **dict.fromkeys((8030, 8031), KiwoomServerMismatchError),
+    **dict.fromkeys((1700, 1701, 1702), KiwoomRateLimitError),
+    **dict.fromkeys(
+        (1501, 1504, 1505, 1511, 1512, 1513, 1514, 1515, 1516, 1517, 1687),
+        KiwoomRequestError,
+    ),
+    **dict.fromkeys((1901, 1902, 1903), KiwoomStockNotFoundError),
+    **dict.fromkeys((8104, 8200), KiwoomUnsupportedError),
+}
+
+_RETURN_CODE_CLASSES: dict[int, type[KiwoomAPIError]] = {
+    3: KiwoomTokenError,
+    5: KiwoomRateLimitError,
+}
+
+
+def api_error_class(return_code: Any, message: Any) -> type[KiwoomAPIError]:
+    """Pick the most specific :class:`KiwoomAPIError` subclass for a payload.
+
+    The 4-digit code inside ``return_msg`` wins; ``return_code`` is the
+    fallback; anything unrecognised is a plain ``KiwoomAPIError``.
+    """
+    error_code = parse_error_code(message)
+    if error_code is not None and error_code in _ERROR_CODE_CLASSES:
+        return _ERROR_CODE_CLASSES[error_code]
+    if isinstance(return_code, int) and return_code in _RETURN_CODE_CLASSES:
+        return _RETURN_CODE_CLASSES[return_code]
+    return KiwoomAPIError
 
 
 class ClientProtocol(Protocol[ResponseT]):
@@ -113,9 +196,10 @@ class _ClientCore:
         """Raise if the payload carries a non-zero return_code."""
         return_code = data.get("return_code", 0)
         if return_code != 0:
-            raise KiwoomAPIError(
+            message = data.get("return_msg", "Unknown error")
+            raise api_error_class(return_code, message)(
                 code=return_code,
-                message=data.get("return_msg", "Unknown error"),
+                message=message,
                 response=data,
             )
 

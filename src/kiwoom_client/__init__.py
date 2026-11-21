@@ -36,9 +36,18 @@ from kiwoom_client._registry import ModuleRegistry
 from kiwoom_client.auth import AsyncKiwoomAuth, KiwoomAuth, KiwoomAuthError
 from kiwoom_client.base import AsyncBaseClient, BaseClient, KiwoomAPIError
 from kiwoom_client.codes import Exchange, OrderType
+from kiwoom_client.errors import (
+    KiwoomError,
+    KiwoomRateLimitError,
+    KiwoomRequestError,
+    KiwoomServerMismatchError,
+    KiwoomStockNotFoundError,
+    KiwoomTokenError,
+    KiwoomUnsupportedError,
+)
 from kiwoom_client.parsing import extract_records, normalize, to_dataframe, to_number
 from kiwoom_client.tick_size import round_to_tick, tick_size, ticks_in
-from kiwoom_client.websocket import KiwoomWebSocket
+from kiwoom_client.websocket import KiwoomWebSocket, KiwoomWebSocketError
 
 try:
     # Single source of truth is pyproject.toml — never hardcode it here.
@@ -52,7 +61,15 @@ __all__ = [
     "KiwoomAPI",
     "KiwoomAPIError",
     "KiwoomAuthError",
+    "KiwoomError",
+    "KiwoomRateLimitError",
+    "KiwoomRequestError",
+    "KiwoomServerMismatchError",
+    "KiwoomStockNotFoundError",
+    "KiwoomTokenError",
+    "KiwoomUnsupportedError",
     "KiwoomWebSocket",
+    "KiwoomWebSocketError",
     "OrderType",
     "__version__",
     "extract_records",
