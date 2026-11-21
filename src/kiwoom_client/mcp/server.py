@@ -18,7 +18,7 @@ from mcp import types
 from mcp.server import Server, ServerRequestContext
 from mcp.server.stdio import stdio_server
 
-from kiwoom_client import AsyncKiwoomAPI
+from kiwoom_client import AsyncKiwoomAPI, __version__
 from kiwoom_client.base import KiwoomAPIError
 from kiwoom_client.domestic.condition_search import ConditionSearch
 from kiwoom_client.mcp import resources as mcp_resources
@@ -39,6 +39,8 @@ from kiwoom_client.mcp.tools import RestToolSpec, discover_rest_tools
 from kiwoom_client.websocket import KiwoomWebSocket
 
 logger = logging.getLogger(__name__)
+
+WEBSITE_URL = "https://github.com/younghwan91/kiwoom-client/blob/main/docs/mcp.md"
 
 #: The 4 condition_search tools don't fit the generic **kwargs pattern (they
 #: have real, non-passthrough parameters), so they're spelled out here.
@@ -115,7 +117,13 @@ def build_server(
         if toolsets is None or tool.toolset in toolsets
     ]
     local_by_name = {tool.name: tool for tool in local_tools}
-    app: Server = Server("kiwoom-client")
+    app: Server = Server(
+        "kiwoom-client",
+        version=__version__,
+        title="Kiwoom Securities REST API",
+        instructions=mcp_resources.INSTRUCTIONS,
+        website_url=WEBSITE_URL,
+    )
 
     catalog = [
         CatalogEntry(

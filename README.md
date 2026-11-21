@@ -306,6 +306,8 @@ except KiwoomAPIError as e:
 
 ## MCP 서버로 사용하기
 
+<!-- mcp-name: io.github.younghwan91/kiwoom-client (MCP 레지스트리 PyPI 소유 확인용, server.json 참고) -->
+
 Claude Code, Cursor 등 MCP(Model Context Protocol) 클라이언트에서 이 라이브러리를 직접 부릅니다. 모듈 15개의 REST 엔드포인트 전부와 조건검색 4종이 MCP 도구로 노출됩니다.
 
 ```bash
