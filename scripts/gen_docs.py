@@ -36,6 +36,9 @@ from kiwoom_client._registry import MODULE_NAMES, ModuleRegistry  # noqa: E402
 from kiwoom_client.domestic.condition_search import ConditionSearch  # noqa: E402
 from kiwoom_client.websocket import REALTIME_TYPES  # noqa: E402
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import gen_reference  # noqa: E402  (scripts/gen_reference.py — 필드 레퍼런스)
+
 REPO_URL = "https://github.com/younghwan91/kiwoom-client"
 OFFICIAL_GUIDE = "https://openapi.kiwoom.com/guide/apiguide"
 
@@ -196,6 +199,11 @@ GENERATED_NOTE = (
 )
 
 
+def _api_id_link(ep: Endpoint) -> str:
+    """api_id 칸 — 필드 레퍼런스(docs/reference/<모듈>.md)의 그 TR 로 링크."""
+    return f"[`{ep.api_id}`]({gen_reference.anchor_link(ep.module, ep.api_id)})"
+
+
 def render_endpoints() -> str:
     eps = rest_endpoints()
     calls = ws_calls()
@@ -214,8 +222,9 @@ def render_endpoints() -> str:
         "- **api_id** 는 키움 공식 가이드의 TR 코드(`ka10001` 등)와 같습니다. 이 페이지에서 "
         "`Ctrl+F` 로 api_id·한글 TR 이름·메서드 이름 어느 것으로든 찾을 수 있습니다.",
         "- 모든 REST 메서드는 시그니처가 같습니다: `(cont_yn=\"N\", next_key=\"\", **요청필드)`. "
-        "요청 필드는 키워드 인자로 그대로 넘기면 본문(JSON)이 됩니다 — 필드 목록은 "
-        f"[키움 REST API 가이드]({OFFICIAL_GUIDE})에서 api_id 로 찾으세요.",
+        "요청 필드는 키워드 인자로 그대로 넘기면 본문(JSON)이 됩니다 — api_id 를 누르면 그 TR 의 "
+        "요청·응답 필드가 있는 [필드 레퍼런스](reference/index.md)로 갑니다 "
+        f"(원문: [키움 REST API 가이드]({OFFICIAL_GUIDE})).",
         "- **MCP 도구 이름**은 `<모듈>_<메서드>` 입니다 (예: `stock_info_basic_stock_info`).",
         "- ⚠️ 표시는 **실주문**입니다. `is_mock=False`(기본값) 로 부르면 실계좌에서 체결됩니다.",
         "",
@@ -282,7 +291,7 @@ def render_endpoints() -> str:
         for ep in group:
             mark = "⚠️ " if ep.is_order else ""
             lines.append(
-                f"| `{ep.api_id}` | {mark}`{ep.call}()` | {_md_escape(ep.name_ko)} | "
+                f"| {_api_id_link(ep)} | {mark}`{ep.call}()` | {_md_escape(ep.name_ko)} | "
                 f"{_md_escape(ep.name_en)} |"
             )
         lines.append("")
@@ -312,7 +321,7 @@ def render_endpoints() -> str:
     ]
     for ep in sorted(eps, key=lambda e: (e.api_id, e.module, e.method)):
         mark = "⚠️ " if ep.is_order else ""
-        lines.append(f"| `{ep.api_id}` | {mark}`{ep.call}()` | {_md_escape(ep.name_ko)} |")
+        lines.append(f"| {_api_id_link(ep)} | {mark}`{ep.call}()` | {_md_escape(ep.name_ko)} |")
     lines.append("")
     return "\n".join(lines)
 
@@ -601,6 +610,7 @@ TARGETS: dict[str, Callable[[], str]] = {
     LLMS_PATH: render_llms_txt,
     LLMS_FULL_PATH: render_llms_full,
     AGENTS_PATH: render_agents,
+    **gen_reference.targets(),
 }
 
 
