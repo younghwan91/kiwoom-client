@@ -1,6 +1,6 @@
-<!-- 자동 생성 파일 — 손으로 고치지 마세요. `python scripts/gen_docs.py` 로 다시 만듭니다. -->
-
 # 엔드포인트 전체 목록 (Endpoint reference)
+
+<!-- 자동 생성 파일 — 손으로 고치지 마세요. `python scripts/gen_docs.py` 로 다시 만듭니다. -->
 
 kiwoom-client 가 감싼 키움 REST API **182개**, 조건검색 **4종**, 실시간 시세 **19종**을 코드에서 그대로 뽑은 표입니다.
 
