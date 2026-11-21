@@ -5,6 +5,9 @@
 
     python scripts/check_site_seo.py site
 
+hreflang(절대 URL·ko/en/x-default)과 sitemap(겹침·canonical 일치)도 본다 —
+scripts/mkdocs_hooks.py 가 맞춰 둔 것.
+
 문제가 있으면 페이지별로 출력하고 종료 코드 1.
 """
 
@@ -91,6 +94,23 @@ def check_page(rel: str, html: str) -> list[str]:
     if m.get("twitter:card") and m["twitter:card"] != "summary_large_image":
         problems.append(f"twitter:card 가 summary_large_image 가 아님: {m['twitter:card']!r}")
 
+    hreflang = {
+        lk.get("hreflang", ""): lk.get("href", "")
+        for lk in head.links
+        if lk.get("rel") == "alternate"
+    }
+    hreflang.pop("", None)
+    if hreflang:
+        if set(hreflang) != {"ko", "en", "x-default"}:
+            problems.append(f"hreflang 은 ko·en·x-default 세트여야 함: {sorted(hreflang)}")
+        problems += [
+            f"hreflang {k} 가 절대 URL 이 아님: {v!r}"
+            for k, v in hreflang.items()
+            if not v.startswith("https://")
+        ]
+        if canonical not in hreflang.values():
+            problems.append("hreflang 에 자기 자신(canonical)이 없음")
+
     if rel in HOME_PAGES:
         problems += _check_jsonld(head.jsonld)
     elif head.jsonld:
@@ -124,14 +144,49 @@ def check_site(site: Path) -> dict[str, list[str]]:
     if not (site / "index.html").is_file():
         return {"index.html": ["사이트 루트에 index.html 이 없음 — 빌드를 먼저"]}
     out: dict[str, list[str]] = {}
+    canonicals: dict[str, str] = {}
     for path in sorted(site.rglob("*.html")):
         rel = path.relative_to(site).as_posix()
         if rel in SKIP or rel.startswith("assets/"):
             continue
-        problems = check_page(rel, path.read_text(encoding="utf-8"))
+        html = path.read_text(encoding="utf-8")
+        canonicals[rel] = next(
+            (lk.get("href", "") for lk in parse_head(html).links if lk.get("rel") == "canonical"),
+            "",
+        )
+        problems = check_page(rel, html)
         if problems:
             out[rel] = problems
+    sitemap = site / "sitemap.xml"
+    if sitemap.is_file():
+        problems = check_sitemap(
+            sitemap.read_text(encoding="utf-8"), canonicals["index.html"], canonicals
+        )
+        if problems:
+            out["sitemap.xml"] = problems
     return out
+
+
+def check_sitemap(xml: str, root: str, canonicals: dict[str, str]) -> list[str]:
+    """sitemap 의 URL 은 겹치지 않고, 각각 실제 페이지이며 그 canonical 이 자기 자신이어야 한다.
+
+    (영어판이 없어 한국어 본문으로 대체된 ``/en/`` 사본은 canonical 이 한국어판이라
+    sitemap 에 있으면 안 된다.)
+    """
+    locs = re.findall(r"<loc>([^<]*)</loc>", xml)
+    problems = [
+        f"sitemap 에 같은 URL 이 두 번: {u}" for u in sorted({u for u in locs if locs.count(u) > 1})
+    ]
+    for loc in locs:
+        if not loc.startswith(root):
+            problems.append(f"sitemap URL 이 사이트 밖: {loc}")
+            continue
+        rel = loc[len(root) :] + "index.html"
+        if rel not in canonicals:
+            problems.append(f"sitemap URL 에 해당하는 페이지가 없음: {loc}")
+        elif canonicals[rel] != loc:
+            problems.append(f"sitemap URL 의 canonical 이 다른 곳: {loc} → {canonicals[rel]}")
+    return problems
 
 
 def main(argv: list[str]) -> int:

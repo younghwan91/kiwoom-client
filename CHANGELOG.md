@@ -9,6 +9,8 @@
 
 - 문서 사이트: 모든 페이지에 Open Graph·Twitter Card 메타, 홈에 JSON-LD(SoftwareApplication·SoftwareSourceCode).
   CI 가 빌드한 사이트를 `scripts/check_site_seo.py` 로 검사한다
+- 문서 사이트: 한/영 `hreflang` 을 절대 URL + `x-default` 로. 영어판이 없어 한국어 본문으로 대체된 `/en/` 사본은
+  canonical 을 한국어판으로 돌리고 hreflang·sitemap 에서 뺀다(중복 문서 정리)
 
 ## [0.5.0] - 2026-11-21
 
