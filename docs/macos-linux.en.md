@@ -72,7 +72,7 @@ print(df.tail())
 ```
 
 TRs that do not fit in one response continue via `cont-yn`/`next-key` — see the
-[pagination recipe](cookbook/pagination.md) (Korean).
+[pagination recipe](cookbook/pagination.md).
 
 ## 5. Real-time trades (WebSocket)
 
