@@ -18,3 +18,7 @@ tests/integration_report.json
 
 # mkdocs build 출력
 site/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml

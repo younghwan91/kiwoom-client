@@ -76,7 +76,17 @@ jobs:
           cache-dependency-glob: pyproject.toml
 
       - name: Run tests
-        run: uv run --extra dev --extra mcp pytest tests/ -v
+        run: uv run --extra dev --extra mcp pytest tests/ -v --cov --cov-report=term
+
+      # 커버리지 표를 실행 요약 페이지에 붙인다(외부 서비스·토큰 없음). 한 버전에서만.
+      - name: Coverage summary
+        if: matrix.python-version == '3.12'
+        run: |
+          {
+            echo "## Coverage (Python ${{ matrix.python-version }})"
+            echo
+            uv run --extra dev --extra mcp coverage report --format=markdown
+          } >> "${GITHUB_STEP_SUMMARY:-/dev/stdout}"
 
   # 배포물(sdist·wheel)이 실제로 쓸 만한지 본다 — 레포 체크아웃이 아니라 설치한 wheel 로.
   # 키·네트워크(키움 서버) 없이 끝난다. 무엇을 보는지는 scripts/check_dist.sh 주석에.
