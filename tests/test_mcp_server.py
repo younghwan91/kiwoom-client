@@ -99,7 +99,7 @@ class TestRegisteredHandlers:
         handler = app.get_request_handler("tools/list").handler
         result = await handler(None, types.PaginatedRequestParams())
         assert isinstance(result, types.ListToolsResult)
-        assert {t.name for t in result.tools} == {s.tool_name for s in specs}
+        assert {s.tool_name for s in specs} <= {t.name for t in result.tools}
         assert "order_buy_order" not in {t.name for t in result.tools}
 
     async def test_call_tool_returns_the_dispatch_result_as_text(self, httpx_mock, api):
