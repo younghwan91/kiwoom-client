@@ -59,6 +59,16 @@ GUIDE = """\
 """
 
 
+#: Sent in the ``initialize`` result; clients show it to the model up front.
+#: Kept short — the long form is the ``kiwoom://guide`` resource.
+INSTRUCTIONS = (
+    "키움증권 REST API 서버. 종목코드를 모르면 stock_search, 시세는 stock_snapshot, "
+    "계좌는 account_summary 부터. 긴 리스트는 max_rows 로 줄인다. 주문은 order_preview 로 "
+    "미리보기를 사용자에게 보여 주고 명시적 확인을 받은 뒤에만 한다. 주문 도구가 목록에 "
+    "없으면 이 서버로는 주문할 수 없다 — 우회하지 않는다. 자세한 규칙: kiwoom://guide"
+)
+
+
 @dataclass(frozen=True)
 class _Resource:
     uri: str

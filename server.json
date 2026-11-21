@@ -1,0 +1,61 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.younghwan91/kiwoom-client",
+  "title": "Kiwoom Securities (키움증권) REST API",
+  "description": "Korean stocks via the Kiwoom REST API: quotes, charts, rankings, account. Live orders opt-in only.",
+  "repository": {
+    "url": "https://github.com/younghwan91/kiwoom-client",
+    "source": "github"
+  },
+  "websiteUrl": "https://github.com/younghwan91/kiwoom-client/blob/main/docs/mcp.md",
+  "version": "0.4.0",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "registryBaseUrl": "https://pypi.org",
+      "identifier": "kiwoom-client",
+      "version": "0.4.0",
+      "runtimeHint": "uvx",
+      "runtimeArguments": [
+        {
+          "type": "named",
+          "name": "--from",
+          "value": "kiwoom-client[mcp]==0.4.0"
+        }
+      ],
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "KIWOOM_APP_KEY",
+          "description": "Kiwoom REST API app key (키움 REST API 앱키)",
+          "isRequired": true,
+          "isSecret": true
+        },
+        {
+          "name": "KIWOOM_APP_SECRET",
+          "description": "Kiwoom REST API app secret (시크릿키)",
+          "isRequired": true,
+          "isSecret": true
+        },
+        {
+          "name": "KIWOOM_IS_MOCK",
+          "description": "true = paper trading server (모의투자). Default false = live server.",
+          "isRequired": false,
+          "default": "true"
+        },
+        {
+          "name": "KIWOOM_MCP_TOOLSETS",
+          "description": "Comma-separated modules to expose, e.g. market,chart,account. Default: all.",
+          "isRequired": false
+        },
+        {
+          "name": "KIWOOM_MCP_MODE",
+          "description": "discovery = expose only search_tools/describe_tool/call_tool to save context.",
+          "isRequired": false
+        }
+      ]
+    }
+  ]
+}

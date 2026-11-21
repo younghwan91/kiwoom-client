@@ -46,7 +46,7 @@ pandas = [
     "pandas>=2.0",
 ]
 mcp = [
-    "mcp>=1.0",
+    "mcp>=2.0,<3",
 ]
 docs = [
     "mkdocs>=1.6,<2",
