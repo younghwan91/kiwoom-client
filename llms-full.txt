@@ -460,6 +460,18 @@ noise risk at low price bands) should not round this themselves.
 ## Errors
 
 - `kiwoom_client.base.KiwoomAPIError`: Kiwoom API error with return_code and return_msg.
+
+Raised for any non-zero ``return_code``. Where the code or the message
+says more, a subclass is raised instead (:class:`KiwoomTokenError`,
+:class:`KiwoomRateLimitError`, ...) — all of them are still
+``KiwoomAPIError``, with the same ``code``/``message``/``response``.
+
+Attributes:
+    code: ``return_code`` from the payload.
+    message: ``return_msg`` from the payload, untouched.
+    response: The whole payload.
+    error_code: Kiwoom's 4-digit error code embedded in ``return_msg``
+        (``"...[8005:Token이 유효하지 않습니다]"`` -> ``8005``), or None.
 - `kiwoom_client.auth.KiwoomAuthError`: Token issuance or revocation failed.
 - `kiwoom_client.websocket.KiwoomWebSocketError`: WebSocket login or protocol failure.
 
