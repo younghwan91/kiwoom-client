@@ -1,3 +1,8 @@
+---
+seo_title: "키움 REST API 파이썬 자주 묻는 질문 (FAQ)"
+description: "키움증권 REST API 와 kiwoom-client 를 처음 쓸 때 자주 묻는 것 — 공식 여부, 앱키 발급, 모의투자, 맥·리눅스 지원, 주문 안전장치, MCP·AI 에이전트 연동."
+---
+
 # 자주 묻는 질문 (FAQ)
 
 ## 시작

@@ -1,3 +1,8 @@
+---
+seo_title: "키움 OpenAPI+·pykiwoom 에서 REST API 로 옮기기 — TR 대응표"
+description: "키움 OpenAPI+(OCX/KOA Studio)나 pykiwoom 코드를 키움 REST API 로 옮길 때 보는 TR·함수 대응표. opt10001→ka10001 처럼 번호가 이어지는 TR 과 이름이 달라진 TR 을 나눠 정리했습니다."
+---
+
 # OpenAPI+(OCX) · pykiwoom 에서 옮겨 오기
 
 키움 **OpenAPI+**(OCX/COM, KOA Studio)나 이를 감싼 `pykiwoom` 으로 짜 둔 코드를 키움 **REST API** 와

@@ -148,3 +148,63 @@ def test_sitemap_must_not_list_pages_canonicalised_elsewhere():
     problems = mod.check_sitemap(bad, root, canonicals)
     assert any("두 번" in p for p in problems)
     assert any("canonical" in p for p in problems)
+
+
+# --- 페이지별 검색 제목·설명 (front matter) -------------------------------------
+
+#: 검색 의도가 분명한 주요 페이지 — 한국어판과(있으면) 영어판 모두
+#: seo_title·description 이 있어야 한다.
+KEY_PAGES = (
+    "index",
+    "why",
+    "migration-from-openapi-plus",
+    "mcp",
+    "faq",
+    "troubleshooting",
+    "cookbook/index",
+    "ai-tools",
+    "convenience",
+    "resources",
+    "showcase",
+)
+
+
+def _front_matter(path: Path) -> dict[str, str]:
+    """``key: "value"`` 꼴 줄만 읽는다.
+
+    값은 JSON 문자열 — 콜론이 들어가도 YAML 이 안 깨지게 따옴표로 감싼다.
+    """
+    text = path.read_text(encoding="utf-8")
+    if not text.startswith("---\n"):
+        return {}
+    out = {}
+    for line in text[4:].split("\n---\n", 1)[0].splitlines():
+        key, sep, value = line.partition(": ")
+        if sep and value.startswith('"'):
+            out[key] = json.loads(value)
+    return out
+
+
+def _key_page_files() -> list[Path]:
+    docs = _ROOT / "docs"
+    files = []
+    for stem in KEY_PAGES:
+        files.append(docs / f"{stem}.md")
+        if (docs / f"{stem}.en.md").is_file():
+            files.append(docs / f"{stem}.en.md")
+    return files
+
+
+def test_key_pages_have_search_title_and_description():
+    for path in _key_page_files():
+        fm = _front_matter(path)
+        rel = path.relative_to(_ROOT)
+        assert 20 <= len(fm.get("seo_title", "")) <= 80, f"{rel}: seo_title 20~80자"
+        assert 50 <= len(fm.get("description", "")) <= 180, f"{rel}: description 50~180자"
+
+
+def test_english_pages_have_english_meta():
+    for path in _key_page_files():
+        if path.name.endswith(".en.md"):
+            fm = _front_matter(path)
+            assert not re.search(r"[가-힣]", fm["seo_title"] + fm["description"]), path.name

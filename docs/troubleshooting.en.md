@@ -1,3 +1,8 @@
+---
+seo_title: "Kiwoom REST API error codes and fixes — tokens, 429, pagination"
+description: "Common Kiwoom Securities REST API errors from Python and how to fix them: what Kiwoom's error codes (8005 token, 1700 rate limit and more) mean and what to check."
+---
+
 # Troubleshooting
 
 Common errors and how to fix them. Error-code meanings are summarised from Kiwoom's official

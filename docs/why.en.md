@@ -1,3 +1,8 @@
+---
+seo_title: "Kiwoom Python libraries compared — OpenAPI+ (OCX), pykiwoom, REST API"
+description: "Kiwoom OpenAPI+ (OCX/COM) vs the Kiwoom REST API, and the Python libraries for each, compared on facts: OS, 64-bit, servers, authentication — and when to pick something else."
+---
+
 # Why kiwoom-client
 
 There are two ways to automate Kiwoom Securities from Python: libraries around the older **OpenAPI+ (OCX/COM)**, and

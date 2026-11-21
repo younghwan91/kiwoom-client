@@ -1,3 +1,8 @@
+---
+seo_title: "Kiwoom REST API resources — official guide, spec, community"
+description: "Links for using the Kiwoom Securities REST API from Python or AI agents: Kiwoom's official guide and spec, MCP material, public market data and community, with sources."
+---
+
 # Resources
 
 Links you keep coming back to when using the Kiwoom REST API from Python or AI agents. The official material belongs to

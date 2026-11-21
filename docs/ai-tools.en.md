@@ -1,3 +1,8 @@
+---
+seo_title: "Using kiwoom-client from AI coding tools — llms.txt, Cursor rules, Claude Skill"
+description: "llms.txt, AGENTS.md, an Agent Skill and editor rules that help Claude Code, Cursor, Copilot and Codex use kiwoom-client correctly — generated from the code."
+---
+
 # Using it from AI coding tools
 
 What this repository gives Claude Code, Cursor, Copilot, Codex and other AI coding tools so that they use kiwoom-client

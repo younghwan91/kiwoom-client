@@ -1,3 +1,8 @@
+---
+seo_title: "키움증권 파이썬 API 비교 — OpenAPI+(OCX)·pykiwoom vs REST API"
+description: "키움 OpenAPI+(OCX/COM)와 REST API, pykiwoom 등 파이썬 라이브러리를 운영체제·64bit·서버 배포·인증 방식으로 사실대로 비교합니다. 다른 것을 고를 때도 함께 적었습니다."
+---
+
 # 왜 kiwoom-client 인가
 
 키움증권으로 파이썬 자동매매·데이터 수집을 하는 방법은 크게 둘입니다. 오래된 **OpenAPI+(OCX/COM)** 를 감싼 라이브러리,

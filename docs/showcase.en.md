@@ -1,3 +1,8 @@
+---
+seo_title: "Projects using kiwoom-client"
+description: "Public projects that run on kiwoom-client every day — a data pipeline, a quant core and trading daemons — and how they use the Kiwoom REST API."
+---
+
 # Showcase
 
 Public projects that run on kiwoom-client. They run every day, so they double as examples of the library in use.
