@@ -316,7 +316,7 @@ flowchart LR
 | Short Selling | `api.short_selling` | 1 |
 | Real-time WebSocket | `api.create_websocket()` | 19 types |
 
-Method names and parameters: [`src/kiwoom_client/domestic/`](src/kiwoom_client/domestic/) or your IDE's autocomplete. API IDs (`ka10001` etc.) match the TR codes in Kiwoom's official guide.
+Every method with its api_id and Korean/English TR name: [`docs/endpoints.md`](https://github.com/younghwan91/kiwoom-client/blob/main/docs/endpoints.md) (generated from the code). API IDs (`ka10001` etc.) match the TR codes in Kiwoom's official guide.
 
 ## FAQ
 
