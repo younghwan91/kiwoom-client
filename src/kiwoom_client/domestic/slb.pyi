@@ -29,8 +29,8 @@ class SLB(Generic[ResponseT]):
         api_id ``ka90012`` · 대차거래내역요청 · ``POST /api/dostk/slb``
 
         Args:
-            dt: 일자 (필수) — YYYYMMDD
-            mrkt_tp: 시장구분 (필수) — 001:코스피, 101:코스닥
+            dt: 일자 (필수)
+            mrkt_tp: 시장구분 (필수)
         """
         ...
 
@@ -49,9 +49,9 @@ class SLB(Generic[ResponseT]):
         api_id ``ka10068`` · 대차거래추이요청 · ``POST /api/dostk/slb``
 
         Args:
-            strt_dt: 시작일자 — YYYYMMDD
-            end_dt: 종료일자 — YYYYMMDD
-            all_tp: 전체구분 (필수) — 1: 전체표시
+            strt_dt: 시작일자
+            end_dt: 종료일자
+            all_tp: 전체구분 (필수)
         """
         ...
 
@@ -71,9 +71,9 @@ class SLB(Generic[ResponseT]):
         api_id ``ka20068`` · 대차거래추이요청(종목별) · ``POST /api/dostk/slb``
 
         Args:
-            strt_dt: 시작일자 — YYYYMMDD
-            end_dt: 종료일자 — YYYYMMDD
-            all_tp: 전체구분 — 0:종목코드 입력종목만 표시
+            strt_dt: 시작일자
+            end_dt: 종료일자
+            all_tp: 전체구분
             stk_cd: 종목코드 (필수)
         """
         ...
@@ -93,8 +93,8 @@ class SLB(Generic[ResponseT]):
         api_id ``ka10069`` · 대차거래상위10종목요청 · ``POST /api/dostk/slb``
 
         Args:
-            strt_dt: 시작일자 (필수) — YYYYMMDD (연도4자리, 월 2자리, 일 2자리 형식)
-            end_dt: 종료일자 — YYYYMMDD (연도4자리, 월 2자리, 일 2자리 형식)
-            mrkt_tp: 시장구분 (필수) — 001:코스피, 101:코스닥
+            strt_dt: 시작일자 (필수)
+            end_dt: 종료일자
+            mrkt_tp: 시장구분 (필수)
         """
         ...

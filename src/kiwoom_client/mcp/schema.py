@@ -5,9 +5,9 @@
 ``params={...}`` 로 부르던 클라이언트는 그대로 동작한다. ``additionalProperties`` 는 열어 둔다
 (카탈로그에 없는 필드도 지금처럼 키움에 넘긴다).
 
-코드값은 ``enum`` 으로 강제하지 않고 설명에 적는다. 코드값은 필드 설명에서 휴리스틱으로
-뽑은 것이고(발행사 코드처럼 예시만 적힌 목록도 있다), 강제하면 유효한 값을 클라이언트가
-막을 수 있다.
+설명은 한글 필드명과 필수 여부뿐이다 — 카탈로그는 키움 필드 설명 원문·코드값을 싣지 않는다
+(``spec/SOURCE.md``). 코드값은 ``enum`` 으로 강제하지 않는다. 자주 쓰는 코드값은
+``kiwoom://codes/*`` 리소스와 :mod:`kiwoom_client.codes` 에 있다.
 """
 
 from __future__ import annotations
@@ -27,16 +27,14 @@ _PAGING = {
 
 
 def field_description(field: spec.Field) -> str:
-    """필드 하나의 사람이 읽을 설명: ``한글명 (필수). 설명``."""
+    """필드 하나의 사람이 읽을 설명: ``한글명`` 또는 ``한글명 (필수)``."""
     head = field.name or field.id
     if field.required:
         head += " (필수)"
-    desc = " ".join(field.desc.split())
-    return f"{head}. {desc}" if desc else head
+    return head
 
 
 def _field_schema(field: spec.Field) -> dict[str, Any]:
-    # 코드값은 설명에 이미 있다 — examples 로 한 번 더 싣지 않는다.
     return {"type": "string", "description": field_description(field)}
 
 

@@ -52,8 +52,10 @@ class Field:
     required: bool
     length: int | None = None
     desc: str = ""
+    """하위 호환으로 남긴 속성 — 카탈로그는 필드 설명 원문을 싣지 않아 늘 빈 문자열이다
+    (``SOURCE.md``). 코드값·단위는 :mod:`kiwoom_client.codes` 나 키움 REST API 포털 문서를 본다."""
     codes: Mapping[str, str] = field(default_factory=lambda: MappingProxyType({}))
-    """``desc`` 에서 휴리스틱으로 뽑은 ``코드 → 뜻``. 비어 있으면 코드값이 없거나 못 뽑은 것."""
+    """하위 호환으로 남긴 속성 — 카탈로그는 코드값 목록을 싣지 않아 늘 비어 있다 (``SOURCE.md``)."""
     parent: str | None = None
     """``list`` 필드의 자식이면 그 list 필드의 id."""
 
@@ -244,7 +246,7 @@ def resolve(target: Any) -> TRSpec:
 
 
 def describe(target: Any) -> str:
-    """TR 하나의 사람이 읽을 도움말 — 호출 예, 요청 필드(필수·코드값), 응답 필드.
+    """TR 하나의 사람이 읽을 도움말 — 호출 예, 요청 필드(필수 표시), 응답 필드.
 
     ``target`` 은 :func:`resolve` 가 받는 것 무엇이든. ``print(spec.describe("ka10001"))``.
     """
@@ -262,11 +264,6 @@ def describe(target: Any) -> str:
     for f in tr.request_fields:
         mark = "*" if f.required else " "
         lines.append(f" {mark}{f.id:<16} {f.name}")
-        if f.codes:
-            codes = ", ".join(f"{k}={v}" for k, v in f.codes.items())
-            lines.append(f"  {'':<16} 코드: {codes}")
-        elif f.desc:
-            lines.append(f"  {'':<16} {' '.join(f.desc.split())}")
     lines += ["  (* 필수)", "", "응답 필드:"]
     if not tr.response:
         lines.append("  (미확인)")

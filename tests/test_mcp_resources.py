@@ -9,8 +9,13 @@ import pytest
 from mcp import types
 
 from kiwoom_client import spec
-from kiwoom_client.codes import OrderType
-from kiwoom_client.mcp.codes import LIMIT_PRICE_TRADE_TYPES, NO_PRICE_TRADE_TYPES, TRADE_TYPES
+from kiwoom_client.codes import OrderType, StockListMarket
+from kiwoom_client.mcp.codes import (
+    LIMIT_PRICE_TRADE_TYPES,
+    NO_PRICE_TRADE_TYPES,
+    STOCK_LIST_MARKETS,
+    TRADE_TYPES,
+)
 from kiwoom_client.mcp.resources import (
     GUIDE_URI,
     MARKETS_URI,
@@ -44,9 +49,13 @@ async def _tool_names(app) -> set[str]:
 
 
 class TestCodes:
-    def test_trade_types_come_from_the_catalog_and_match_the_enum(self):
+    def test_trade_types_match_the_enum(self):
         assert {m.value for m in OrderType} == set(TRADE_TYPES)
         assert TRADE_TYPES["3"] == "시장가"
+
+    def test_stock_list_markets_match_the_enum(self):
+        assert {m.value for m in StockListMarket} == set(STOCK_LIST_MARKETS)
+        assert STOCK_LIST_MARKETS["10"] == "코스닥"
 
     def test_price_classes_only_use_known_codes_and_do_not_overlap(self):
         assert set(TRADE_TYPES) >= LIMIT_PRICE_TRADE_TYPES | NO_PRICE_TRADE_TYPES

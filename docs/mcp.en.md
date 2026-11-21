@@ -100,11 +100,11 @@ Every tool definition lands in the agent's context. The size of `tools/list` by 
 
 | Setting | Tools | `tools/list` size (characters) |
 |---|---|---|
-| everything (live, guarded) | 178 | about 230 K |
-| `--toolsets market,chart,account` | 80 | about 100 K |
+| everything (live, guarded) | 178 | about 220 K |
+| `--toolsets market,chart,account` | 80 | about 97 K |
 | `--discovery` | 3 | about 1.5 K |
 
-(As of 0.4.x. The TR tools' input schemas include field descriptions, which makes them large.)
+(Each TR tool's input schema lists its request field IDs and Korean names, which makes them large.)
 
 - **Toolsets**: turn on only the modules you use.
 - **Discovery mode**: use every TR through three tools: `search_tools` (keyword or toolset search) → `describe_tool` (input schema) → `call_tool` (run).

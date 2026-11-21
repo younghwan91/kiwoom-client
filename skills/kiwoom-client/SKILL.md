@@ -34,8 +34,9 @@ one WebSocket, with automatic token refresh, per-TR rate limiting and string-to-
    `python -c "from kiwoom_client import spec; print([(t.api_id, t.name) for t in spec.search('일봉')])"`.
 2. **Get the fields.** `spec.get("ka10081").required_fields` lists the required ones,
    `[f.id for f in spec.get("ka10081").request_fields]` all of them, and
-   `spec.get("ka10081").request_field("upd_stkpc_tp")` gives one field's `desc` and `codes`.
-   Kiwoom's guide is the authority when a meaning is unclear.
+   `spec.get("ka10081").request_field("upd_stkpc_tp")` gives one field's Korean name, length and
+   whether it is required. Common code values are in `kiwoom_client.codes`; for a field's meaning
+   and other code values, Kiwoom's guide (https://openapi.kiwoom.com) is the authority.
 3. **Build the client in paper-trading mode**: `KiwoomAPI.from_env(is_mock=True)` with the key in
    `KIWOOM_APP_KEY` / `KIWOOM_APP_SECRET`. Switch to the live server only when the user says so.
 4. **Call, then parse**: pass fields as string keyword arguments; turn the response into numbers with

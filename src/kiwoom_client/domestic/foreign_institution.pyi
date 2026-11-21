@@ -35,15 +35,14 @@ class ForeignInstitution(Generic[ResponseT]):
         api_id ``ka10131`` · 기관외국인연속매매현황요청 · ``POST /api/dostk/frgnistt``
 
         Args:
-            dt: 기간 (필수) — 1:최근일, 3:3일, 5:5일, 10:10일, 20:20일, 120:120일,
-                0:시작일자/종료일자로 조회
-            strt_dt: 시작일자 — YYYYMMDD
-            end_dt: 종료일자 — YYYYMMDD
-            mrkt_tp: 장구분 (필수) — 001:코스피, 101:코스닥
-            netslmt_tp: 순매도수구분 (필수) — 2:순매수(고정값)
-            stk_inds_tp: 종목업종구분 (필수) — 0:종목(주식),1:업종
-            amt_qty_tp: 금액수량구분 (필수) — 0:금액, 1:수량
-            stex_tp: 거래소구분 (필수) — 1:KRX, 2:NXT, 3:통합
+            dt: 기간 (필수)
+            strt_dt: 시작일자
+            end_dt: 종료일자
+            mrkt_tp: 장구분 (필수)
+            netslmt_tp: 순매도수구분 (필수)
+            stk_inds_tp: 종목업종구분 (필수)
+            amt_qty_tp: 금액수량구분 (필수)
+            stex_tp: 거래소구분 (필수)
         """
         ...
 
@@ -60,7 +59,7 @@ class ForeignInstitution(Generic[ResponseT]):
         api_id ``ka10008`` · 주식외국인종목별매매동향 · ``POST /api/dostk/frgnistt``
 
         Args:
-            stk_cd: 종목코드 (필수) — 거래소별 종목코드 (KRX:039490,NXT:039490_NX,SOR:039490_AL)
+            stk_cd: 종목코드 (필수)
         """
         ...
 
@@ -91,6 +90,6 @@ class ForeignInstitution(Generic[ResponseT]):
         tests/integration_api_smoke.py 표 기준이고 응답 필드는 미확인.
 
         Args:
-            stk_cd: 종목코드 (필수) — 거래소별 종목코드 (KRX:039490,NXT:039490_NX,SOR:039490_AL)
+            stk_cd: 종목코드 (필수)
         """
         ...

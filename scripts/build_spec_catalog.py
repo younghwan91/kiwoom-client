@@ -3,8 +3,9 @@
 원천: 키움증권 공식 GitHub 저장소 ``Kiwoom-Securities/Kiwoom-REST-API`` 의
 ``kiwoom/_data/kiwoom_api_spec.json`` (키움 REST API 포털 https://openapi.kiwoom.com 의
 "API 명세서 다운로드"와 같은 내용, 공식 kwcli·kiwoom-spec-mcp 가 번들하는 파일).
-원본 파일은 레포에 넣지 않는다 — 여기서 사실 정보(필드 ID·한글명·타입·길이·필수 여부·
-필드 설명·코드값)만 뽑아 카탈로그로 다시 쓴다. 개요 문장·요청/응답 예제·오류 메시지는 버린다.
+원본 파일은 레포에 넣지 않는다 — 여기서 사실 정보(필드 ID·한글명·타입·길이·필수 여부)만
+뽑아 카탈로그로 다시 쓴다. 필드 설명(description) 원문과 거기서 뽑던 코드값 목록, 개요 문장·
+요청/응답 예제·오류 메시지는 버린다 (이유는 ``src/kiwoom_client/spec/SOURCE.md``).
 
 재현 (레포 루트, 네트워크 필요 — 키움 API 서버가 아니라 GitHub 에서 문서 파일만 받는다):
 
@@ -19,7 +20,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import sys
 import urllib.request
 from pathlib import Path
@@ -41,52 +41,9 @@ SCHEMA_VERSION = 1
 
 _TYPES = {"string": "string", "list": "list", "list<map>": "list", "object": "object", "": "string"}
 
-# "0:보통 , 3:시장가" · "Y:연속조회요청,N:연속조회미요청" · "1:KRX, 2:NXT 3.통합" 꼴의 코드값.
-# 코드는 영숫자 1~6자, 앞은 줄머리·쉼표·공백·괄호, 뒤는 ':' (전각 포함) 또는 "3.통합" 의 '.'.
-_CODE = re.compile(
-    r"(?:^|(?<=[\s,(/]))(?:([A-Za-z0-9%]{1,6})\s*[:\uff1a]\s*|(\d{1,2})\.(?=[가-힣]))"
-)
-# "코스피:0, 코스닥:1" · "당일 : 1, 전일 : 2" 처럼 뜻이 앞에 오는 꼴.
-_REVERSED = re.compile(r"^\s*([^:,]+?)\s*:\s*([A-Za-z0-9]{1,12})\s*$")
-# "KRX:039490,NXT:039490_NX" 처럼 뜻 자리에 예시값만 있으면 코드표가 아니다.
-_EXAMPLE_ONLY = re.compile(r"^[0-9A-Z_]+\)?$")
-
-
-def parse_codes(desc: str) -> dict[str, str]:
-    """필드 설명에서 ``코드: 뜻`` 목록을 뽑는다.
-
-    휴리스틱이라 틀릴 수 있다 — 원문 ``desc`` 를 같이 남기고, 검증은 코드값을 강제하지 않는다.
-    """
-    text = desc.replace("\n", " ").strip()
-    tokens = [t for t in (x.strip() for x in text.split(",")) if t]
-    code_first = re.match(r"^[A-Za-z0-9]{1,6}\s*:", text)
-    if tokens and not code_first and all(_REVERSED.match(t) for t in tokens):
-        reversed_codes: dict[str, str] = {}
-        for t in tokens:
-            m = _REVERSED.match(t)
-            assert m is not None
-            reversed_codes.setdefault(m.group(2), m.group(1))
-        return reversed_codes
-    matches = list(_CODE.finditer(text))
-    # 코드 하나짜리는 설명 전체가 "코드:뜻" 일 때만 (예: "0:조건검색", "K:KRX").
-    if not matches or (len(matches) == 1 and matches[0].start() != 0):
-        return {}
-    codes: dict[str, str] = {}
-    for i, m in enumerate(matches):
-        end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
-        label = text[m.end():end].strip().strip(",").strip()
-        code = m.group(1) or m.group(2)
-        # 시각("09:00")처럼 보이는 것은 코드값이 아니다.
-        if not label or (re.fullmatch(r"\d{2}", code) and re.match(r"\d{2}\b", label)):
-            return {}
-        codes.setdefault(code, label)
-    if all(_EXAMPLE_ONLY.match(v) for v in codes.values()):
-        return {}
-    return codes
-
-
-def _clean(text: str) -> str:
-    return re.sub(r"[ \t]*\n[ \t]*", "\n", text).strip()
+#: 카탈로그 필드에 싣지 않는 키. 원문 문장을 거의 그대로 옮기게 되는 필드 설명과, 거기서 뽑은
+#: 코드값 목록이다 (SOURCE.md "무엇을 담고 무엇을 버리나"). 보조 표에 섞여 들어와도 막는다.
+DROPPED_FIELD_KEYS = ("desc", "codes")
 
 
 def _length(raw: str) -> int | None:
@@ -110,12 +67,6 @@ def convert_fields(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         if length is not None:
             field["length"] = length
         field["required"] = row.get("required", "").strip().upper() == "Y"
-        desc = _clean(row.get("description", ""))
-        if desc:
-            field["desc"] = desc
-            codes = parse_codes(desc)
-            if codes:
-                field["codes"] = codes
         if depth > 0 and depth - 1 in parents:
             field["parent"] = parents[depth - 1]
         if ftype == "list":
@@ -167,6 +118,11 @@ def build(spec: dict[str, Any]) -> dict[str, Any]:
         if api_id in trs:
             raise SystemExit(f"{api_id} 는 이제 공식 명세에 있다 — spec_supplement.json 에서 뺄 것")
         trs[api_id] = tr
+    for api_id, tr in trs.items():
+        for f in (*tr["request"], *tr["response"]):
+            bad = [k for k in DROPPED_FIELD_KEYS if k in f]
+            if bad:
+                raise SystemExit(f"{api_id}.{f['id']}: 카탈로그에 싣지 않는 키 {bad}")
     return {
         "schema_version": SCHEMA_VERSION,
         "source": {

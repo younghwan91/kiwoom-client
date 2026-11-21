@@ -2,7 +2,7 @@
 
 # `api.credit_order` — 신용주문 (Credit Order)
 
-요청·응답 필드는 키움 공식 REST API 명세에서 만든 TR 카탈로그([출처·라이선스](https://github.com/younghwan91/kiwoom-client/blob/main/src/kiwoom_client/spec/SOURCE.md))를 그대로 옮긴 것입니다. 뜻이 애매하면 [키움 REST API 포털](https://openapi.kiwoom.com)이 기준입니다. 값은 모두 문자열로 넘깁니다.
+요청·응답 필드는 키움 공식 REST API 명세에서 만든 TR 카탈로그([출처·라이선스](https://github.com/younghwan91/kiwoom-client/blob/main/src/kiwoom_client/spec/SOURCE.md))에서 옮긴 필드 ID·한글명·필수·길이입니다. 필드 설명·코드값은 싣지 않으니 [키움 REST API 포털](https://openapi.kiwoom.com) 문서를 보세요(자주 쓰는 코드값은 `kiwoom_client.codes`). 값은 모두 문자열로 넘깁니다.
 
 공통 헤더(`api-id`·`cont-yn`·`next-key`·`authorization`)는 라이브러리가 채웁니다 — 연속조회는 메서드의 `cont_yn`·`next_key` 인자나 `request_all()` 을 쓰세요.
 
@@ -27,21 +27,21 @@ api.credit_order.margin_buy_order(dmst_stex_tp=..., stk_cd=..., ord_qty=..., trd
 
 **요청**
 
-| 필드 | 한글명 | 필수 | 길이 | 설명 |
-|---|---|:---:|---:|---|
-| `dmst_stex_tp` | 국내거래소구분 | Y | 3 | KRX,NXT,SOR |
-| `stk_cd` | 종목코드 | Y | 12 |   |
-| `ord_qty` | 주문수량 | Y | 12 | 단위: 1주 |
-| `ord_uv` | 주문단가 |  | 12 | 단위: 원 |
-| `trde_tp` | 매매구분 | Y | 2 | 0:보통 , 3:시장가 , 5:조건부지정가 , 81:장마감후시간외 , 61:장시작전시간외, 62:시간외단일가 , 6:최유리지정가 , 7:최우선지정가 , 10:보통(IOC) , 13:시장가(IOC) , 16:최유리(IOC) , 20:보통(FOK) , 23:시장가(FOK) , 26:최유리(FOK) , 28:스톱지정가,29:중간가,30:중간가(IOC),31:중간가(FOK) |
-| `cond_uv` | 조건단가 |  | 12 | 단위: 원 |
+| 필드 | 한글명 | 필수 | 길이 |
+|---|---|:---:|---:|
+| `dmst_stex_tp` | 국내거래소구분 | Y | 3 |
+| `stk_cd` | 종목코드 | Y | 12 |
+| `ord_qty` | 주문수량 | Y | 12 |
+| `ord_uv` | 주문단가 |  | 12 |
+| `trde_tp` | 매매구분 | Y | 2 |
+| `cond_uv` | 조건단가 |  | 12 |
 
 **응답**
 
-| 필드 | 한글명 | 길이 | 설명 |
-|---|---|---:|---|
-| `ord_no` | 주문번호 | 7 | 7자리 주문번호 |
-| `dmst_stex_tp` | 국내거래소구분 | 6 | KRX, NXT, SOR |
+| 필드 | 한글명 | 길이 |
+|---|---|---:|
+| `ord_no` | 주문번호 | 7 |
+| `dmst_stex_tp` | 국내거래소구분 | 6 |
 
 <a id="kt10007"></a>
 
@@ -55,23 +55,23 @@ api.credit_order.margin_sell_order(dmst_stex_tp=..., stk_cd=..., ord_qty=..., tr
 
 **요청**
 
-| 필드 | 한글명 | 필수 | 길이 | 설명 |
-|---|---|:---:|---:|---|
-| `dmst_stex_tp` | 국내거래소구분 | Y | 3 | KRX,NXT,SOR |
-| `stk_cd` | 종목코드 | Y | 12 |   |
-| `ord_qty` | 주문수량 | Y | 12 | 단위: 1주 |
-| `ord_uv` | 주문단가 |  | 12 | 단위: 원 |
-| `trde_tp` | 매매구분 | Y | 2 | 0:보통 , 3:시장가 , 5:조건부지정가 , 81:장마감후시간외 , 61:장시작전시간외, 62:시간외단일가 , 6:최유리지정가 , 7:최우선지정가 , 10:보통(IOC) , 13:시장가(IOC) , 16:최유리(IOC) , 20:보통(FOK) , 23:시장가(FOK) , 26:최유리(FOK) , 28:스톱지정가,29:중간가,30:중간가(IOC),31:중간가(FOK) |
-| `crd_deal_tp` | 신용거래구분 | Y | 2 | 33:융자 , 99:융자합 |
-| `crd_loan_dt` | 대출일 |  | 8 | YYYYMMDD(융자일경우필수) |
-| `cond_uv` | 조건단가 |  | 12 | 단위: 원 |
+| 필드 | 한글명 | 필수 | 길이 |
+|---|---|:---:|---:|
+| `dmst_stex_tp` | 국내거래소구분 | Y | 3 |
+| `stk_cd` | 종목코드 | Y | 12 |
+| `ord_qty` | 주문수량 | Y | 12 |
+| `ord_uv` | 주문단가 |  | 12 |
+| `trde_tp` | 매매구분 | Y | 2 |
+| `crd_deal_tp` | 신용거래구분 | Y | 2 |
+| `crd_loan_dt` | 대출일 |  | 8 |
+| `cond_uv` | 조건단가 |  | 12 |
 
 **응답**
 
-| 필드 | 한글명 | 길이 | 설명 |
-|---|---|---:|---|
-| `ord_no` | 주문번호 | 7 | 7자리 주문번호 |
-| `dmst_stex_tp` | 국내거래소구분 | 6 | KRX, NXT, SOR |
+| 필드 | 한글명 | 길이 |
+|---|---|---:|
+| `ord_no` | 주문번호 | 7 |
+| `dmst_stex_tp` | 국내거래소구분 | 6 |
 
 <a id="kt10008"></a>
 
@@ -85,23 +85,23 @@ api.credit_order.margin_modify_order(dmst_stex_tp=..., orig_ord_no=..., stk_cd=.
 
 **요청**
 
-| 필드 | 한글명 | 필수 | 길이 | 설명 |
-|---|---|:---:|---:|---|
-| `dmst_stex_tp` | 국내거래소구분 | Y | 3 | KRX,NXT,SOR |
-| `orig_ord_no` | 원주문번호 | Y | 7 | 매수/매도 주문 요청 응답 결과로 받은 7자리 주문번호 |
-| `stk_cd` | 종목코드 | Y | 12 |   |
-| `mdfy_qty` | 정정수량 | Y | 12 | 단위: 1주, '0' 입력시 잔량 전부 정정 |
-| `mdfy_uv` | 정정단가 | Y | 12 | 단위: 원 |
-| `mdfy_cond_uv` | 정정조건단가 |  | 12 | 단위: 원 |
+| 필드 | 한글명 | 필수 | 길이 |
+|---|---|:---:|---:|
+| `dmst_stex_tp` | 국내거래소구분 | Y | 3 |
+| `orig_ord_no` | 원주문번호 | Y | 7 |
+| `stk_cd` | 종목코드 | Y | 12 |
+| `mdfy_qty` | 정정수량 | Y | 12 |
+| `mdfy_uv` | 정정단가 | Y | 12 |
+| `mdfy_cond_uv` | 정정조건단가 |  | 12 |
 
 **응답**
 
-| 필드 | 한글명 | 길이 | 설명 |
-|---|---|---:|---|
-| `ord_no` | 주문번호 | 7 | 새 주문번호 |
-| `base_orig_ord_no` | 모주문번호 | 7 | 원 주문번호 |
-| `mdfy_qty` | 정정수량 | 12 | 단위: 1주, 좌측 0-padding 처리된 부호 포함 12자리 숫자 |
-| `dmst_stex_tp` | 국내거래소구분 | 6 | KRX, NXT, SOR |
+| 필드 | 한글명 | 길이 |
+|---|---|---:|
+| `ord_no` | 주문번호 | 7 |
+| `base_orig_ord_no` | 모주문번호 | 7 |
+| `mdfy_qty` | 정정수량 | 12 |
+| `dmst_stex_tp` | 국내거래소구분 | 6 |
 
 <a id="kt10009"></a>
 
@@ -115,17 +115,17 @@ api.credit_order.margin_cancel_order(dmst_stex_tp=..., orig_ord_no=..., stk_cd=.
 
 **요청**
 
-| 필드 | 한글명 | 필수 | 길이 | 설명 |
-|---|---|:---:|---:|---|
-| `dmst_stex_tp` | 국내거래소구분 | Y | 3 | KRX,NXT,SOR |
-| `orig_ord_no` | 원주문번호 | Y | 7 | 매수/매도 주문 요청 응답 결과로 받은 7자리 주문번호 |
-| `stk_cd` | 종목코드 | Y | 12 |   |
-| `cncl_qty` | 취소수량 | Y | 12 | 단위: 1주, '0' 입력시 잔량 전부 취소 |
+| 필드 | 한글명 | 필수 | 길이 |
+|---|---|:---:|---:|
+| `dmst_stex_tp` | 국내거래소구분 | Y | 3 |
+| `orig_ord_no` | 원주문번호 | Y | 7 |
+| `stk_cd` | 종목코드 | Y | 12 |
+| `cncl_qty` | 취소수량 | Y | 12 |
 
 **응답**
 
-| 필드 | 한글명 | 길이 | 설명 |
-|---|---|---:|---|
-| `ord_no` | 주문번호 | 7 | 새 주문번호 |
-| `base_orig_ord_no` | 모주문번호 | 7 | 원 주문번호 |
-| `cncl_qty` | 취소수량 | 12 | 단위: 1주, 좌측 0-padding 처리된 부호 포함 12자리 숫자 |
+| 필드 | 한글명 | 길이 |
+|---|---|---:|
+| `ord_no` | 주문번호 | 7 |
+| `base_orig_ord_no` | 모주문번호 | 7 |
+| `cncl_qty` | 취소수량 | 12 |

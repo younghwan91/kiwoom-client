@@ -21,12 +21,17 @@
 원본 명세 파일은 키움증권 주식회사에 저작권이 있다(원 저장소 `LICENSE.md`: 복제·배포는 사전 서면 동의 필요).
 이 레포는 원본 파일을 싣지 않고, API 를 호출하는 데 필요한 **사실 정보만** 뽑아 다시 적는다.
 
-- 담는 것: TR 의 api_id·이름·메뉴 위치·HTTP 메서드·URL, 필드별 ID·한글명·타입·길이·필수 여부·짧은 필드 설명(단위·형식·코드값)
-- 버리는 것: TR 개요 문장, 요청/응답 예제, 공통 헤더(`api-id`·`cont-yn`·`next-key`·`authorization` — 라이브러리가 채운다), 오류 코드 표
+- 담는 것: TR 의 api_id·이름·메뉴 위치·HTTP 메서드·URL, 필드별 ID·한글명·타입·길이·필수 여부
+- 버리는 것: 필드 설명(`description`) 원문과 거기서 뽑던 코드값 목록, TR 개요 문장, 요청/응답 예제,
+  공통 헤더(`api-id`·`cont-yn`·`next-key`·`authorization` — 라이브러리가 채운다), 오류 코드 표
 
-카탈로그는 공식 문서를 대신하지 않는다. 필드 뜻이 애매하면 [키움 REST API 포털](https://openapi.kiwoom.com) 문서가 기준이다.
-키움 측에서 이 사실 정보 재사용에 문제를 제기하면 필드 설명(`desc`)·코드값(`codes`)을 빼고 다시 만든다
-(스키마상 둘 다 선택 항목이다).
+필드 설명은 짧아도 원문 문장을 거의 그대로 옮기게 되고, 코드값 목록은 그 문장을 쪼갠 것이라 2026-11 에 둘 다
+뺐다(이전 카탈로그의 `desc`·`codes`). 한글명은 필드 이름 수준의 사실이라 남긴다. 생성기는 보조 표
+(`scripts/spec_supplement.json`)에 그 키가 섞여도 멈춘다(`DROPPED_FIELD_KEYS`), `tests/test_spec_catalog.py` 가
+카탈로그에 없는지 본다. `Field.desc`·`Field.codes` 속성은 하위 호환으로 남아 늘 빈 값이다.
+
+필드의 뜻·단위·코드값은 [키움 REST API 포털](https://openapi.kiwoom.com) 문서가 기준이다. 자주 쓰는 코드값
+(매매구분·거래소·시장구분 등)은 이 레포가 따로 정리한 `kiwoom_client.codes` Enum 에 있다.
 
 ## 출처 수준 (`source`)
 
@@ -34,8 +39,6 @@
 |----|----|
 | `official` | 위 고정 커밋의 공식 명세에서 그대로 변환 |
 | `repo` | 공식 명세에 없는 TR. `scripts/spec_supplement.json` 에 레포 코드·스모크 표에서 확인된 필드만 손으로 적었다. `note` 에 근거가 있다 |
-
-`codes` 는 필드 설명(`desc`)에서 `0:보통, 3:시장가` 꼴을 휴리스틱으로 뽑은 것이라 틀릴 수 있다. 원문은 `desc` 에 남아 있다.
 
 ## 스키마 (`schema_version` 1)
 
@@ -49,7 +52,7 @@
       "method": "POST", "url": "/api/dostk/stkinfo", "transport": "rest",   // 또는 "websocket"
       "source": "official",
       "request":  [{"id": "stk_cd", "name": "종목코드", "type": "string", "length": 20,
-                    "required": true, "desc": "...", "codes": {"0": "..."}}],
+                    "required": true}],
       "response": [{"id": "...", "type": "list"}, {"id": "...", "parent": "<list 필드 id>"}]
     }
   }
