@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "kiwoom-client"
 version = "0.5.0"
-description = "키움증권 REST API 파이썬 클라이언트 — 엔드포인트 182개·실시간 WebSocket·sync/async·AI 에이전트용 MCP 서버 (비공식) | Unofficial Python client for the Kiwoom Securities REST API with a built-in MCP server"
+description = "키움증권 REST API 파이썬 클라이언트 — 엔드포인트 182개·실시간 WebSocket·sync/async·AI 에이전트용 MCP 서버, OCX 없이 macOS·Linux 에서도 (비공식) | Unofficial Python client for the Kiwoom Securities REST API with a built-in MCP server — no OCX, runs on macOS and Linux"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
@@ -16,6 +16,7 @@ keywords = [
     "asyncio", "async", "pandas", "주식", "증권", "자동주문",
     "mcp", "model-context-protocol", "ai-agents", "claude-code", "cursor",
     "mcp-server", "llm", "kiwoom-rest-api", "kiwoom-api", "키움 REST API", "krx", "trading-bot",
+    "openapi-plus", "macos", "linux",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
