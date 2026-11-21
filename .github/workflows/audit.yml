@@ -1,0 +1,53 @@
+name: Dependency audit
+
+# 의존성을 지금 해상도(최신 허용 버전)로 풀어 알려진 취약점(PyPI advisory·OSV)을 찾는다.
+# 외부 토큰 불필요. 다른 PR 을 막지 않도록 PR 에서는 의존성 선언이 바뀔 때만 돈다 —
+# 새 취약점은 주간 실행과 main 푸시에서 잡는다.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - pyproject.toml
+      - .github/workflows/audit.yml
+  schedule:
+    - cron: "17 0 * * 1"  # 월요일 09:17 KST
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pip-audit:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # 사용자가 설치하는 것: 기본 + mcp + pandas
+          - name: runtime
+            extras: --extra mcp --extra pandas
+          # 기여자·CI 가 설치하는 것: 모든 extra (dev, docs 포함)
+          - name: all-extras
+            extras: --all-extras
+    name: pip-audit (${{ matrix.name }})
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d  # v10.4.0
+        with:
+          python-version: "3.12"
+
+      - name: Resolve pinned requirements
+        run: uv pip compile pyproject.toml ${{ matrix.extras }} -o requirements-audit.txt
+
+      - name: pip-audit
+        run: |
+          uvx pip-audit -r requirements-audit.txt --no-deps --disable-pip \
+            --progress-spinner off --desc on
