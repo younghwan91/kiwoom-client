@@ -112,7 +112,8 @@ class TestRaisedFromRequest:
         assert exc.message == "[1902:종목 정보가 없습니다]"
         assert exc.error_code == 1902
         assert exc.response["return_msg"] == payload["return_msg"]
-        assert str(exc) == "[1] [1902:종목 정보가 없습니다]"
+        # First line is exactly what it always was; a hint may follow.
+        assert str(exc).splitlines()[0] == "[1] [1902:종목 정보가 없습니다]"
 
     def test_unknown_stays_plain(self, httpx_mock):
         httpx_mock.add_response(url=URL, json={"return_code": 20, "return_msg": "거부"})

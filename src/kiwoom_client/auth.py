@@ -10,11 +10,52 @@ from typing import Any, Protocol, runtime_checkable
 
 import httpx
 
-from kiwoom_client._errors import KiwoomError
+from kiwoom_client._errors import KiwoomError, error_hint, parse_error_code
 
 
 class KiwoomAuthError(KiwoomError):
-    """Token issuance or revocation failed."""
+    """Token issuance or revocation failed.
+
+    Attributes:
+        error_code: Kiwoom's 4-digit code from the message (``[8030:...]``),
+            or None.
+        hint: One-line next step (e.g. which ``is_mock`` to use), or None.
+            Also appended to ``str(exc)``.
+    """
+
+    def __init__(self, *args: object, hint: str | None = None) -> None:
+        self.error_code: int | None = parse_error_code(args[0]) if args else None
+        self.hint = hint
+        if hint and args:
+            args = (f"{args[0]}\n  힌트: {hint}", *args[1:])
+        super().__init__(*args)
+
+
+def _auth_failure(
+    prefix: str, detail: str, return_code: object, base_url: str | None
+) -> KiwoomAuthError:
+    """Build a KiwoomAuthError with a hint derived from Kiwoom's error code."""
+    hint = error_hint(parse_error_code(detail), return_code, base_url)
+    return KiwoomAuthError(f"{prefix}: {detail}", hint=hint)
+
+
+def _http_failure(prefix: str, exc: httpx.HTTPError, base_url: str | None) -> KiwoomAuthError:
+    """Like :func:`_auth_failure` for transport/status errors.
+
+    For an HTTP error status the body's ``return_msg`` (if any) is added to the
+    message, since httpx's own text doesn't include it.
+    """
+    detail = str(exc)
+    return_code: object = None
+    if isinstance(exc, httpx.HTTPStatusError):
+        try:
+            body = exc.response.json()
+        except ValueError:
+            body = None
+        if isinstance(body, dict) and body.get("return_msg"):
+            detail = f"{detail} — {body['return_msg']}"
+            return_code = body.get("return_code")
+    return _auth_failure(prefix, detail, return_code, base_url)
 
 
 @runtime_checkable
@@ -68,7 +109,9 @@ class _TokenCache:
         token = data.get("token") or data.get("access_token")
         if not token:
             msg = data.get("return_msg") or "응답에 토큰이 없습니다"
-            raise KiwoomAuthError(f"토큰 발급 실패: {msg}")
+            raise _auth_failure(
+                "토큰 발급 실패", msg, data.get("return_code"), getattr(self, "base_url", None)
+            )
         self._token = token
         self._expires_at = self._parse_expiry(data)
         return token
@@ -185,7 +228,7 @@ class KiwoomAuth(_TokenCache):
             resp.raise_for_status()
             data = resp.json()
         except httpx.HTTPError as exc:
-            raise KiwoomAuthError(f"토큰 발급 요청 실패: {exc}") from exc
+            raise _http_failure("토큰 발급 요청 실패", exc, self.base_url) from exc
 
         self._store(data)
         return data
@@ -211,7 +254,7 @@ class KiwoomAuth(_TokenCache):
             resp.raise_for_status()
             data = resp.json()
         except httpx.HTTPError as exc:
-            raise KiwoomAuthError(f"토큰 폐기 요청 실패: {exc}") from exc
+            raise _http_failure("토큰 폐기 요청 실패", exc, self.base_url) from exc
 
         if token == self._token:
             self._clear()
@@ -288,7 +331,7 @@ class AsyncKiwoomAuth(_TokenCache):
             resp.raise_for_status()
             data = resp.json()
         except httpx.HTTPError as exc:
-            raise KiwoomAuthError(f"토큰 발급 요청 실패: {exc}") from exc
+            raise _http_failure("토큰 발급 요청 실패", exc, self.base_url) from exc
 
         self._store(data)
         return data
@@ -308,7 +351,7 @@ class AsyncKiwoomAuth(_TokenCache):
             resp.raise_for_status()
             data = resp.json()
         except httpx.HTTPError as exc:
-            raise KiwoomAuthError(f"토큰 폐기 요청 실패: {exc}") from exc
+            raise _http_failure("토큰 폐기 요청 실패", exc, self.base_url) from exc
 
         if token == self._token:
             self._clear()

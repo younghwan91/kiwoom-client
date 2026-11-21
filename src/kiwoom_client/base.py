@@ -8,7 +8,7 @@ from typing import Any, Protocol, TypeVar
 
 import httpx
 
-from kiwoom_client._errors import KiwoomError, parse_error_code
+from kiwoom_client._errors import KiwoomError, error_hint, parse_error_code
 from kiwoom_client.auth import AsyncTokenProvider, TokenProvider
 from kiwoom_client.rate_limiter import AsyncPerKeyRateLimiter, PerKeyRateLimiter
 
@@ -38,7 +38,17 @@ class KiwoomAPIError(KiwoomError):
         self.message = message
         self.response = response
         self.error_code: int | None = parse_error_code(message)
+        #: One-line next step (e.g. "is_mock=True 로 바꾸세요"), or None. Also
+        #: appended to ``str(exc)``; ``message`` keeps the raw return_msg.
+        self.hint: str | None = None
         super().__init__(f"[{code}] {message}")
+
+    def _with_hint(self, hint: str | None) -> KiwoomAPIError:
+        """Attach a hint and fold it into ``str(exc)``. Returns self."""
+        if hint:
+            self.hint = hint
+            self.args = (f"{self.args[0]}\n  힌트: {hint}",)
+        return self
 
 
 class KiwoomTokenError(KiwoomAPIError):
@@ -192,16 +202,20 @@ class _ClientCore:
         return headers
 
     @staticmethod
-    def _check_return_code(data: dict[str, Any]) -> None:
-        """Raise if the payload carries a non-zero return_code."""
+    def _check_return_code(data: dict[str, Any], base_url: str | None = None) -> None:
+        """Raise if the payload carries a non-zero return_code.
+
+        ``base_url`` only feeds the error's hint (which server we talked to).
+        """
         return_code = data.get("return_code", 0)
         if return_code != 0:
             message = data.get("return_msg", "Unknown error")
-            raise api_error_class(return_code, message)(
+            exc = api_error_class(return_code, message)(
                 code=return_code,
                 message=message,
                 response=data,
             )
+            raise exc._with_hint(error_hint(exc.error_code, return_code, base_url))
 
     @staticmethod
     def _accumulate(
@@ -364,7 +378,7 @@ class BaseClient(_ClientCore):
                 self.token_provider.refresh_token()
                 continue
 
-            self._check_return_code(data)
+            self._check_return_code(data, self.base_url)
             return data
 
         # Unreachable: the final attempt either returns, raises KiwoomAPIError,
@@ -531,7 +545,7 @@ class AsyncBaseClient(_ClientCore):
                 await self.token_provider.refresh_token()
                 continue
 
-            self._check_return_code(data)
+            self._check_return_code(data, self.base_url)
             return data
 
         raise RuntimeError("request retry loop exited unexpectedly")
