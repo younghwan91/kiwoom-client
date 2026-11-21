@@ -647,14 +647,16 @@ same field name means different things in different TRs. These enums give the
 common ones a name so a typo becomes an ``AttributeError`` instead of a
 rejected (or worse, accepted) order.
 
-Every member is a ``str``, so it can be passed straight into any endpoint::
+Every member is a ``str``, so it can be passed straight into any endpoint:
 
-    from kiwoom_client.codes import Exchange, OrderType
+```text
+from kiwoom_client.codes import Exchange, OrderType
 
-    api.order.buy_order(
-        dmst_stex_tp=Exchange.KRX, stk_cd="005930", ord_qty="10",
-        ord_uv="70000", trde_tp=OrderType.LIMIT,
-    )
+api.order.buy_order(
+    dmst_stex_tp=Exchange.KRX, stk_cd="005930", ord_qty="10",
+    ord_uv="70000", trde_tp=OrderType.LIMIT,
+)
+```
 
 Only values stated in Kiwoom's official API spec are included, and each enum
 lists the TRs it was checked against. A field whose codes differ per TR
@@ -812,19 +814,19 @@ Raises:
 
 Every exception kiwoom-client raises, in one place.
 
-::
-
-    KiwoomError
-    ├── KiwoomAuthError              토큰 발급·폐기 실패 (/oauth2/*)
-    ├── KiwoomWebSocketError         WebSocket 로그인·프로토콜 실패
-    ├── KiwoomParamError             요청 필드 불일치 (validate_params="error", 보내기 전)
-    └── KiwoomAPIError               return_code != 0
-        ├── KiwoomTokenError         토큰 거부 (return_code 3; 8003/8005/8010/8103)
-        │   └── KiwoomServerMismatchError  모의/실전 키·토큰 불일치 (8030/8031)
-        ├── KiwoomRateLimitError     호출 한도 초과 (return_code 5; 1700-1702)
-        ├── KiwoomRequestError       잘못된 요청 파라미터·헤더 (15xx, 1687)
-        │   └── KiwoomStockNotFoundError  종목코드 없음 (1901-1903)
-        └── KiwoomUnsupportedError   모의투자·법인 미지원 API (8104/8200)
+```text
+KiwoomError
+├── KiwoomAuthError              토큰 발급·폐기 실패 (/oauth2/*)
+├── KiwoomWebSocketError         WebSocket 로그인·프로토콜 실패
+├── KiwoomParamError             요청 필드 불일치 (validate_params="error", 보내기 전)
+└── KiwoomAPIError               return_code != 0
+    ├── KiwoomTokenError         토큰 거부 (return_code 3; 8003/8005/8010/8103)
+    │   └── KiwoomServerMismatchError  모의/실전 키·토큰 불일치 (8030/8031)
+    ├── KiwoomRateLimitError     호출 한도 초과 (return_code 5; 1700-1702)
+    ├── KiwoomRequestError       잘못된 요청 파라미터·헤더 (15xx, 1687)
+    │   └── KiwoomStockNotFoundError  종목코드 없음 (1901-1903)
+    └── KiwoomUnsupportedError   모의투자·법인 미지원 API (8104/8200)
+```
 
 The subclasses only *narrow* what was already raised: every one of them is a
 ``KiwoomAPIError`` with the same ``code``/``message``/``response`` as before,
@@ -837,130 +839,18 @@ still surface as ``httpx.HTTPStatusError``, as before.
 
 Error codes: 키움 REST API 가이드 "오류코드" (https://openapi.kiwoom.com/guide/apiguide).
 
-### `KiwoomAPIError`
-
-```
-class KiwoomAPIError(KiwoomError)
-```
-
-Kiwoom API error with return_code and return_msg.
-
-Raised for any non-zero ``return_code``. Where the code or the message
-says more, a subclass is raised instead (:class:`KiwoomTokenError`,
-:class:`KiwoomRateLimitError`, ...) — all of them are still
-``KiwoomAPIError``, with the same ``code``/``message``/``response``.
-
-Attributes:
-    code: ``return_code`` from the payload.
-    message: ``return_msg`` from the payload, untouched.
-    response: The whole payload.
-    error_code: Kiwoom's 4-digit error code embedded in ``return_msg``
-        (``"...[8005:Token이 유효하지 않습니다]"`` -> ``8005``), or None.
-
-### `KiwoomAuthError`
-
-```
-class KiwoomAuthError(KiwoomError)
-```
-
-Token issuance or revocation failed.
-
-Attributes:
-    error_code: Kiwoom's 4-digit code from the message (``[8030:...]``),
-        or None.
-    hint: One-line next step (e.g. which ``is_mock`` to use), or None.
-        Also appended to ``str(exc)``.
-
-### `KiwoomError`
-
-```
-class KiwoomError(Exception)
-```
-
-Base class of every error kiwoom-client raises on purpose.
-
-``except KiwoomError`` catches API errors, token errors and WebSocket
-errors alike. Subclassing it changes nothing for code that already
-catches ``KiwoomAPIError``, ``KiwoomAuthError`` or ``Exception``.
-
-### `KiwoomParamError`
-
-```
-class KiwoomParamError(KiwoomError, ValueError)
-```
-
-``validate_params="error"`` 에서 요청 바디가 카탈로그와 다를 때. 요청은 나가지 않았다.
-
-### `KiwoomParamWarning`
-
-```
-class KiwoomParamWarning(UserWarning)
-```
-
-``validate_params="warn"`` 에서 요청 바디가 카탈로그와 맞지 않을 때.
-
-### `KiwoomRateLimitError`
-
-```
-class KiwoomRateLimitError(KiwoomAPIError)
-```
-
-Request quota exceeded (``return_code`` 5; 1700/1701/1702), after the
-automatic backoff retries ran out.
-
-### `KiwoomRequestError`
-
-```
-class KiwoomRequestError(KiwoomAPIError)
-```
-
-The request itself is malformed — missing or invalid parameters,
-unknown api-id, bad headers (15xx, 1687).
-
-### `KiwoomServerMismatchError`
-
-```
-class KiwoomServerMismatchError(KiwoomTokenError)
-```
-
-Mock/live mismatch: a mock key or token used on the live server, or
-the reverse (8030/8031). Check ``is_mock`` against the kind of key.
-
-### `KiwoomStockNotFoundError`
-
-```
-class KiwoomStockNotFoundError(KiwoomRequestError)
-```
-
-Unknown stock code or market/exchange for it (1901/1902/1903).
-
-### `KiwoomTokenError`
-
-```
-class KiwoomTokenError(KiwoomAPIError)
-```
-
-The access token was rejected (``return_code`` 3; 8003/8005/8010/8103).
-
-Raised only after the automatic reissue-and-retry has already been tried
-(or when no token provider is attached).
-
-### `KiwoomUnsupportedError`
-
-```
-class KiwoomUnsupportedError(KiwoomAPIError)
-```
-
-The API is not offered for this account or server — e.g. not
-available on the mock server (8104) or for corporate customers (8200).
-
-### `KiwoomWebSocketError`
-
-```
-class KiwoomWebSocketError(KiwoomError)
-```
-
-WebSocket login or protocol failure.
+- `KiwoomAPIError(KiwoomError)`: Kiwoom API error with return_code and return_msg.
+- `KiwoomAuthError(KiwoomError)`: Token issuance or revocation failed.
+- `KiwoomError(Exception)`: Base class of every error kiwoom-client raises on purpose.
+- `KiwoomParamError(KiwoomError, ValueError)`: ``validate_params="error"`` 에서 요청 바디가 카탈로그와 다를 때. 요청은 나가지 않았다.
+- `KiwoomParamWarning(UserWarning)`: ``validate_params="warn"`` 에서 요청 바디가 카탈로그와 맞지 않을 때.
+- `KiwoomRateLimitError(KiwoomAPIError)`: Request quota exceeded (``return_code`` 5; 1700/1701/1702), after the automatic backoff retries ran out.
+- `KiwoomRequestError(KiwoomAPIError)`: The request itself is malformed — missing or invalid parameters, unknown api-id, bad headers (15xx, 1687).
+- `KiwoomServerMismatchError(KiwoomTokenError)`: Mock/live mismatch: a mock key or token used on the live server, or the reverse (8030/8031). Check ``is_mock`` against the kind of key.
+- `KiwoomStockNotFoundError(KiwoomRequestError)`: Unknown stock code or market/exchange for it (1901/1902/1903).
+- `KiwoomTokenError(KiwoomAPIError)`: The access token was rejected (``return_code`` 3; 8003/8005/8010/8103).
+- `KiwoomUnsupportedError(KiwoomAPIError)`: The API is not offered for this account or server — e.g. not available on the mock server (8104) or for corporate customers (8200).
+- `KiwoomWebSocketError(KiwoomError)`: WebSocket login or protocol failure.
 
 ### `api_error_class`
 

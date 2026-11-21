@@ -212,9 +212,9 @@ def render_endpoints() -> str:
         by_module.setdefault(ep.module, []).append(ep)
 
     lines: list[str] = [
-        GENERATED_NOTE,
-        "",
         "# 엔드포인트 전체 목록 (Endpoint reference)",
+        "",
+        GENERATED_NOTE,
         "",
         f"kiwoom-client 가 감싼 키움 REST API **{len(eps)}개**, 조건검색 **{len(calls)}종**, "
         f"실시간 시세 **{len(REALTIME_TYPES)}종**을 코드에서 그대로 뽑은 표입니다.",
@@ -469,6 +469,41 @@ def _class_entry(label: str, cls: type) -> Entry:
     )
 
 
+def _summary(obj: object) -> str:
+    """docstring 의 첫 문단을 한 줄로."""
+    doc = inspect.getdoc(obj) or ""
+    return " ".join(doc.split("\n\n")[0].split())
+
+
+def _rst_to_md(doc: str) -> str:
+    """docstring 의 RST 리터럴 블록 표시(``::`` 만 있는 줄)를 마크다운 코드 블록으로 바꾼다."""
+    out: list[str] = []
+    lines = doc.splitlines()
+    i = 0
+    while i < len(lines):
+        if lines[i].rstrip().endswith("::"):
+            head = lines[i].rstrip()[:-2].rstrip()
+            if head:
+                out.append(head + ":")  # "예::" → "예:" + 코드 블록 (RST 규칙)
+            j = i + 1
+            while j < len(lines) and not lines[j].strip():
+                j += 1
+            block = []
+            while j < len(lines) and (lines[j].startswith("    ") or not lines[j].strip()):
+                block.append(lines[j][4:])
+                j += 1
+            while block and not block[-1].strip():
+                block.pop()
+            if out and out[-1].strip():
+                out.append("")
+            out += ["```text", *block, "```", ""]
+            i = j
+            continue
+        out.append(lines[i])
+        i += 1
+    return "\n".join(out).rstrip()
+
+
 def _is_function(obj: object) -> bool:
     """함수 또는 ``lru_cache`` 같은 래퍼로 감싼 함수 (클래스는 아님)."""
     return callable(obj) and not isinstance(obj, type)
@@ -536,17 +571,21 @@ def _api_sections() -> list[tuple[str, str, list[Entry]]]:
             code_entries.append((label, f"class {name}(str, Enum)\n{members}", doc))
         elif _is_function(obj):
             code_entries.append(_entry(name, obj))
-    sections.append(("Named codes (`kiwoom_client.codes`)", inspect.getdoc(codes) or "",
+    sections.append(("Named codes (`kiwoom_client.codes`)", _rst_to_md(inspect.getdoc(codes) or ""),
                      code_entries))
 
+    # 예외는 docstring 전체 대신 요약 한 줄씩 목록으로 — 계층 트리는 모듈 docstring 에 있다.
+    error_lines: list[str] = []
     error_entries: list[Entry] = []
     for name in errors.__all__:
         obj = getattr(errors, name)
         if isinstance(obj, type) and issubclass(obj, BaseException):
-            error_entries.append(_class_entry(name, obj))
+            bases = ", ".join(b.__name__ for b in obj.__bases__)
+            error_lines.append(f"- `{name}({bases})`: {_summary(obj)}")
         elif _is_function(obj):
             error_entries.append(_entry(name, obj))
-    sections.append(("Errors (`kiwoom_client.errors`)", inspect.getdoc(errors) or "",
+    intro = _rst_to_md(inspect.getdoc(errors) or "")
+    sections.append(("Errors (`kiwoom_client.errors`)", "\n".join([intro, "", *error_lines]),
                      error_entries))
 
     spec_entries: list[Entry] = []
@@ -660,9 +699,9 @@ def render_skill() -> str:
 
 def render_skill_endpoints() -> str:
     return "\n".join([
-        GENERATED_NOTE,
-        "",
         "# kiwoom-client endpoints",
+        "",
+        GENERATED_NOTE,
         "",
         "Search this file for an api_id (`ka10081`), a Korean TR name (`일봉`) or a method name. "
         "Request fields: `kiwoom_client.spec.get(api_id)` or "

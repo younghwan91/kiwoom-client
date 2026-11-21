@@ -1,6 +1,6 @@
-<!-- 자동 생성 파일 — 손으로 고치지 마세요. `python scripts/gen_docs.py` 로 다시 만듭니다. -->
-
 # kiwoom-client endpoints
+
+<!-- 자동 생성 파일 — 손으로 고치지 마세요. `python scripts/gen_docs.py` 로 다시 만듭니다. -->
 
 Search this file for an api_id (`ka10081`), a Korean TR name (`일봉`) or a method name. Request fields: `kiwoom_client.spec.get(api_id)` or [Kiwoom's REST API guide](https://openapi.kiwoom.com/guide/apiguide).
 
