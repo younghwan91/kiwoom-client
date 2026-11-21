@@ -19,6 +19,7 @@
 - 문서 사이트: 쓸모 있는 링크를 단 404 페이지(noindex), 바닥글 GitHub·PyPI 링크, `site_author`
 - 문서: "맥·리눅스에서 키움증권 API 쓰기"(한/영) — OCX 없이 설치부터 첫 조회·일봉 DataFrame·실시간 체결·서버 실행까지
 - README(한/영) 첫 문단에 OpenAPI+(OCX) 대체·자동매매 용도를 밝힌다
+- PyPI 요약·키워드에 "OCX 없이 macOS·Linux" (`openapi-plus`·`macos`·`linux`)
 
 ## [0.5.0] - 2026-11-21
 
