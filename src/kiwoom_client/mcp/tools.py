@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import inspect
 from dataclasses import dataclass
+from typing import Any
 
 from kiwoom_client._registry import MODULE_NAMES, ModuleRegistry
 
@@ -49,7 +50,7 @@ def discover_rest_tools() -> list[RestToolSpec]:
     A throwaway ``ModuleRegistry`` (client=``object()``) is enough — module
     ``__init__`` only stores the client, it never calls it during discovery.
     """
-    registry: ModuleRegistry = ModuleRegistry()
+    registry: ModuleRegistry[Any] = ModuleRegistry()
     registry._client = object()  # type: ignore[assignment]
     registry._init_modules()
 
