@@ -1,0 +1,104 @@
+# 문서 사이트 (MkDocs Material). 로컬 미리보기:
+#   uv run --extra docs mkdocs serve
+# 검사(CI 와 같음):
+#   uv run --extra docs mkdocs build --strict
+#
+# 내비게이션은 docs/.nav.yml (mkdocs-awesome-nav) 이 정한다. docs/ 에 새 .md 를 넣으면 "*" 자리에 저절로 들어가므로
+# 여기를 고칠 필요가 없다. 영어판은 같은 이름에 .en.md 를 붙인 파일(예: why.en.md) — 없으면 한국어 본문으로 대체된다.
+site_name: kiwoom-client
+site_description: 키움증권 REST API 를 파이썬과 AI 에이전트(MCP)에서 — 비공식 오픈소스 클라이언트
+site_url: https://younghwan91.github.io/kiwoom-client/
+repo_url: https://github.com/younghwan91/kiwoom-client
+repo_name: younghwan91/kiwoom-client
+edit_uri: edit/main/docs/
+copyright: 키움증권과 무관한 비공식 오픈소스 프로젝트입니다 · MIT License
+
+exclude_docs: |
+  superpowers/
+
+theme:
+  name: material
+  language: ko
+  logo: images/brand/mark-white.svg
+  favicon: images/brand/mark.svg
+  font:
+    text: Noto Sans KR
+    code: JetBrains Mono
+  icon:
+    repo: fontawesome/brands/github
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: 다크 모드
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: 라이트 모드
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.action.edit
+    - toc.follow
+
+extra_css:
+  - stylesheets/brand.css
+
+plugins:
+  - search
+  - awesome-nav
+  - i18n:
+      docs_structure: suffix
+      fallback_to_default: true
+      reconfigure_material: true
+      languages:
+        - locale: ko
+          name: 한국어
+          default: true
+          build: true
+        - locale: en
+          name: English
+          build: true
+          site_description: The Kiwoom Securities REST API from Python and AI agents (MCP) — an unofficial open-source client
+          copyright: An unofficial open-source project, not affiliated with Kiwoom Securities · MIT License
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      # GitHub 과 같은 한글 앵커(#빠른-시작) — README 에서 옮겨 온 링크가 그대로 맞게
+      slugify: !!python/object/apply:pymdownx.slugs.slugify {kwds: {case: lower}}
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+validation:
+  omitted_files: warn
+  absolute_links: info
+  unrecognized_links: warn
+  anchors: warn

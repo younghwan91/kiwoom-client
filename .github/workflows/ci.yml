@@ -39,6 +39,25 @@ jobs:
       - name: Mypy
         run: uv run --extra dev --extra mcp mypy
 
+  docs:
+    # 문서 사이트(mkdocs.yml)가 경고 없이 빌드되는지만 본다. 배포는 하지 않는다.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -e ".[docs]"
+
+      - name: Build (strict)
+        env:
+          NO_MKDOCS_2_WARNING: "1"
+        run: mkdocs build --strict
+
   test:
     runs-on: ubuntu-latest
     strategy:

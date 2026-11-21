@@ -47,6 +47,12 @@ pandas = [
 mcp = [
     "mcp>=1.0",
 ]
+docs = [
+    "mkdocs>=1.6,<2",
+    "mkdocs-material>=9.5",
+    "mkdocs-static-i18n>=1.2",
+    "mkdocs-awesome-nav>=3.0",
+]
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.24.0",

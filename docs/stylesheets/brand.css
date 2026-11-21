@@ -1,0 +1,63 @@
+/* 브랜드 색 토큰 — docs/brand.md "색 토큰" 표, scripts/brand_tokens.py 와 같은 값 */
+:root,
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: #2563eb;
+  --md-primary-fg-color--light: #3b82f6;
+  --md-primary-fg-color--dark: #1d4ed8;
+  --md-accent-fg-color: #1d4ed8;
+  --md-typeset-a-color: #2563eb;
+}
+
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #161b22;
+  --md-primary-fg-color--light: #30363d;
+  --md-primary-fg-color--dark: #0d1117;
+  --md-accent-fg-color: #3b82f6;
+  --md-typeset-a-color: #3b82f6;
+  --md-default-bg-color: #0d1117;
+}
+
+/* 랜딩 히어로 */
+.kc-hero {
+  margin: 1rem 0 2rem;
+}
+.kc-hero img {
+  max-width: 420px;
+  width: 100%;
+}
+.kc-hero .kc-tagline {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin: 1rem 0 0.25rem;
+}
+.kc-hero .kc-sub {
+  color: var(--md-default-fg-color--light);
+  margin: 0 0 1.25rem;
+}
+
+/* 화면에는 안 보이고 스크린 리더·검색에만 남는 제목 (랜딩의 h1 — 워드마크 그림이 대신 보인다) */
+.md-typeset .kc-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  margin: 0;
+}
+
+/* 다크에선 헤더를 어둡게 두고 버튼·링크만 브랜드 파랑으로 */
+[data-md-color-scheme="slate"] .md-typeset .md-button {
+  color: #3b82f6;
+  border-color: #3b82f6;
+}
+[data-md-color-scheme="slate"] .md-typeset .md-button--primary {
+  color: #ffffff;
+  background-color: #3b82f6;
+}
+[data-md-color-scheme="slate"] .md-typeset .md-button:hover,
+[data-md-color-scheme="slate"] .md-typeset .md-button:focus {
+  color: #ffffff;
+  background-color: #2563eb;
+  border-color: #2563eb;
+}
