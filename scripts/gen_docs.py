@@ -349,6 +349,8 @@ LLMS_LINKS: list[tuple[str, str, str, str]] = [
     ("Docs", "docs/cookbook/index.md", "Cookbook (한국어)",
      "runnable paper-trading recipes: daily candles to DataFrame, pagination, balances, asyncio, "
      "tick-aligned limit orders, WebSocket trades, real-time condition search, rate limits"),
+    ("Docs", "docs/faq.en.md", "FAQ",
+     "keys, paper vs live, finding methods and fields, tokens, rate limits, NXT/SOR, orders, MCP"),
     ("Docs", "docs/troubleshooting.en.md", "Troubleshooting",
      "error codes (8030/8031 paper-vs-live key, 8005 token, 1700 rate limit, 15xx fields, 19xx "
      "stock codes), exception classes and fixes"),

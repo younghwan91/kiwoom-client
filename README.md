@@ -409,7 +409,7 @@ api.logout()     # 접근토큰 폐기
 **Q. 연속조회를 직접 관리하지 않고 한 번에 다 받고 싶어요.**
 `request_all()` 을 쓰세요. `cont-yn`/`next-key` 를 자동으로 순회합니다. [연속 조회](#연속-조회-페이지네이션) 참고.
 
-더 궁금한 점은 [Issues](https://github.com/younghwan91/kiwoom-client/issues)에 남겨주세요.
+더 많은 질문은 [FAQ](https://github.com/younghwan91/kiwoom-client/blob/main/docs/faq.md), 에러 코드별 해결은 [문제 해결](https://github.com/younghwan91/kiwoom-client/blob/main/docs/troubleshooting.md)에 있습니다. 그래도 궁금한 점은 [Issues](https://github.com/younghwan91/kiwoom-client/issues)에 남겨주세요.
 
 ## 어디서 쓰이나
 
