@@ -41,7 +41,7 @@ jobs:
         run: uv run --extra dev --extra mcp mypy
 
   docs:
-    # 문서 사이트(mkdocs.yml)가 경고 없이 빌드되는지만 본다. 배포는 하지 않는다.
+    # 문서 사이트(mkdocs.yml)가 경고 없이 빌드되는지만 본다. 배포는 docs-deploy.yml (main 푸시).
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
