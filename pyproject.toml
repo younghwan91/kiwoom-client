@@ -58,6 +58,7 @@ dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.24.0",
     "pytest-httpx>=0.34.0",
+    "pytest-cov>=5.0",
     "pandas>=2.0",
     "ruff>=0.6",
     "mypy>=1.11",
@@ -79,6 +80,20 @@ packages = ["src/kiwoom_client"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["kiwoom_client"]
+branch = true
+
+[tool.coverage.report]
+# 수치는 CI 요약(GITHUB_STEP_SUMMARY)에만 낸다 — 아직 하한(fail_under)은 걸지 않는다.
+show_missing = true
+skip_empty = true
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+    "^\\s*\\.\\.\\.$",
+]
 
 [tool.ruff]
 line-length = 100
