@@ -11,7 +11,7 @@ Claude Code · Cursor · Copilot · Codex 같은 AI 코딩 도구가 kiwoom-clie
 | [`skills/kiwoom-client/`](https://github.com/younghwan91/kiwoom-client/tree/main/skills/kiwoom-client) | Claude Code · Agent Skills | 규칙·작업 순서·예제 + 엔드포인트 목록 |
 | [`.cursor/rules/kiwoom-client.mdc`](https://github.com/younghwan91/kiwoom-client/blob/main/.cursor/rules/kiwoom-client.mdc) | Cursor | 같은 규칙 (파이썬 파일을 열 때 붙음) |
 | [`.github/copilot-instructions.md`](https://github.com/younghwan91/kiwoom-client/blob/main/.github/copilot-instructions.md) | GitHub Copilot | 같은 규칙 |
-| MCP 서버 (`kiwoom-client-mcp`) | MCP 클라이언트 | 엔드포인트를 도구로 직접 호출 — [README 의 MCP 절](https://github.com/younghwan91/kiwoom-client#mcp-서버로-사용하기) |
+| MCP 서버 (`kiwoom-client-mcp`) | MCP 클라이언트 | 엔드포인트를 도구로 직접 호출 — [MCP 서버](mcp.md) |
 
 모든 규칙의 첫 줄은 같습니다: **`is_mock` 기본값은 `False` = 실서버이고, `api.order.*` · `api.credit_order.*` 는 실주문입니다.**
 AI 가 만든 코드는 모의투자(`is_mock=True`)에서 먼저 돌리세요.

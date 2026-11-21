@@ -12,7 +12,7 @@ drift from the real code.
 | [`skills/kiwoom-client/`](https://github.com/younghwan91/kiwoom-client/tree/main/skills/kiwoom-client) | Claude Code · Agent Skills | rules, workflow, examples + endpoint list |
 | [`.cursor/rules/kiwoom-client.mdc`](https://github.com/younghwan91/kiwoom-client/blob/main/.cursor/rules/kiwoom-client.mdc) | Cursor | the same rules (attached when a Python file is open) |
 | [`.github/copilot-instructions.md`](https://github.com/younghwan91/kiwoom-client/blob/main/.github/copilot-instructions.md) | GitHub Copilot | the same rules |
-| MCP server (`kiwoom-client-mcp`) | MCP clients | call the endpoints as tools — [README, MCP server](https://github.com/younghwan91/kiwoom-client/blob/main/README_EN.md) |
+| MCP server (`kiwoom-client-mcp`) | MCP clients | call the endpoints as tools — [MCP server](mcp.md) |
 
 Every rule set starts the same way: **`is_mock` defaults to `False`, the live server, and `api.order.*` /
 `api.credit_order.*` place real orders.** Run AI-written code in paper trading (`is_mock=True`) first.
