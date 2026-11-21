@@ -5,6 +5,8 @@
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-21
+
 기존 코드는 그대로 돕니다 — `request()`·토큰 갱신·Rate Limiter·`tick_size`/`round_to_tick` 결과·
 `is_mock=False` 기본값은 바뀌지 않았습니다. MCP 서버를 쓴다면 아래 **Changed** 의 두 항목을 확인하세요.
 

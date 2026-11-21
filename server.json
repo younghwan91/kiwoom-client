@@ -8,19 +8,19 @@
     "source": "github"
   },
   "websiteUrl": "https://younghwan91.github.io/kiwoom-client/mcp/",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "packages": [
     {
       "registryType": "pypi",
       "registryBaseUrl": "https://pypi.org",
       "identifier": "kiwoom-client",
-      "version": "0.4.0",
+      "version": "0.5.0",
       "runtimeHint": "uvx",
       "runtimeArguments": [
         {
           "type": "named",
           "name": "--from",
-          "value": "kiwoom-client[mcp]==0.4.0"
+          "value": "kiwoom-client[mcp]==0.5.0"
         }
       ],
       "transport": {

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "kiwoom-client"
-version = "0.4.0"
+version = "0.5.0"
 description = "키움증권 REST API 파이썬 클라이언트 — 엔드포인트 182개·실시간 WebSocket·sync/async·AI 에이전트용 MCP 서버 (비공식) | Unofficial Python client for the Kiwoom Securities REST API with a built-in MCP server"
 readme = "README.md"
 license = "MIT"
