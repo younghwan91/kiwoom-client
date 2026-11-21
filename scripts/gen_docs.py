@@ -23,6 +23,7 @@ import re
 import sys
 from collections.abc import Callable
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
 from string import Template
 from typing import Any
@@ -411,49 +412,119 @@ def format_signature(name: str, fn: Callable[..., Any]) -> str:
     return f"{prefix} {name}({', '.join(parts)})" + (f" -> {ret}" if ret else "")
 
 
-def _api_sections() -> list[tuple[str, list[tuple[str, str, str]]]]:
-    """llms-full.txt 에 적을 공개 API: (제목, [(표시 이름, 시그니처, docstring)])."""
+Entry = tuple[str, str, str]
+"""(표시 이름, 시그니처, docstring)."""
+
+#: 공개 함수가 정의된 모듈 → llms-full.txt 섹션 제목. 없는 모듈은 모듈 이름을 그대로 쓴다.
+FUNCTION_SECTIONS = {
+    "kiwoom_client.parsing": "Response parsing",
+    "kiwoom_client.tick_size": "KRX tick size",
+}
+
+
+def _entry(label: str, fn: Callable[..., Any]) -> Entry:
+    return label, format_signature(label.split(".")[-1], fn), inspect.getdoc(fn) or ""
+
+
+def _class_entry(label: str, cls: type) -> Entry:
+    bases = ", ".join(b.__name__ for b in cls.__bases__ if b is not object)
+    return label, f"class {cls.__name__}({bases})" if bases else f"class {cls.__name__}", (
+        inspect.getdoc(cls) or ""
+    )
+
+
+def _is_function(obj: object) -> bool:
+    """함수 또는 ``lru_cache`` 같은 래퍼로 감싼 함수 (클래스는 아님)."""
+    return callable(obj) and not isinstance(obj, type)
+
+
+def _public_methods_of(cls: type, skip: frozenset[str] = frozenset()) -> list[str]:
+    """클래스에 정의된 공개 메서드 이름 (모듈 프로퍼티처럼 함수가 아닌 것은 뺀다)."""
+    names = []
+    for name in sorted(vars(cls)):
+        if name.startswith("_") or name in skip:
+            continue
+        raw = inspect.getattr_static(cls, name)
+        if isinstance(raw, (staticmethod, classmethod)) or inspect.isfunction(raw):
+            names.append(name)
+    return names
+
+
+def _api_sections() -> list[tuple[str, str, list[Entry]]]:
+    """llms-full.txt 에 적을 공개 API: (제목, 머리말, [Entry]).
+
+    ``kiwoom_client.__all__``·``codes.__all__``·``errors.__all__``·``spec.__all__`` 에서 뽑으므로
+    새로 공개한 이름은 다시 생성하기만 하면 들어간다.
+    """
     import kiwoom_client as kc
+    from kiwoom_client import codes, errors, spec
     from kiwoom_client.base import BaseClient
     from kiwoom_client.websocket import KiwoomWebSocket
 
-    def entry(label: str, fn: Callable[..., Any]) -> tuple[str, str, str]:
-        return label, format_signature(label.split(".")[-1], fn), inspect.getdoc(fn) or ""
-
-    def facade(cls: type) -> list[tuple[str, str, str]]:
+    def facade(cls: type) -> list[Entry]:
         name = cls.__name__
         init = format_signature("__init__", cls.__init__)  # type: ignore[misc]
-        sig = init.replace("def __init__(", f"class {name}(", 1).split(" -> ")[0]
-        out = [(name, sig, inspect.getdoc(cls) or "")]
-        for meth in ["from_env", "login", "logout", "close", "create_websocket"]:
-            if hasattr(cls, meth):
-                label, sig, doc = entry(f"{name}.{meth}", getattr(cls, meth))
-                # from_env 의 반환형은 TypeVar(_SyncT 등) — 읽는 쪽엔 클래스 이름이 맞다.
-                out.append((label, re.sub(r"-> _\w+T$", f"-> {name}", sig), doc))
+        out = [(name, init.replace("def __init__(", f"class {name}(", 1).split(" -> ")[0],
+                inspect.getdoc(cls) or "")]
+        for meth in _public_methods_of(cls):
+            label, sig, doc = _entry(f"{name}.{meth}", getattr(cls, meth))
+            # from_env 의 반환형은 TypeVar(_SyncT 등) — 읽는 쪽엔 클래스 이름이 맞다.
+            out.append((label, re.sub(r"-> _\w+T$", f"-> {name}", sig), doc))
         return out
 
-    ws_methods = ["connect", "disconnect", "on", "on_trnm", "on_message", "subscribe",
-                  "unsubscribe", "send", "listen"]
-    return [
-        ("KiwoomAPI (sync facade)", facade(kc.KiwoomAPI)),
-        ("AsyncKiwoomAPI (asyncio facade: same endpoints, every call awaited)",
+    sections: list[tuple[str, str, list[Entry]]] = [
+        ("KiwoomAPI (sync facade)", "", facade(kc.KiwoomAPI)),
+        ("AsyncKiwoomAPI (asyncio facade)", "Same endpoints as `KiwoomAPI`; every call is awaited.",
          facade(kc.AsyncKiwoomAPI)),
-        ("Low-level client (`api._client`)",
-         [entry(f"api._client.{m}", getattr(BaseClient, m)) for m in ["request", "request_all"]]),
-        ("KiwoomWebSocket (`ws = api.create_websocket()`)",
-         [entry(f"ws.{m}", getattr(KiwoomWebSocket, m)) for m in ws_methods]),
-        ("Response parsing",
-         [entry(n, getattr(kc, n)) for n in
-          ["to_number", "normalize", "extract_records", "to_dataframe"]]),
-        ("KRX tick size", [entry(n, getattr(kc, n)) for n in
-                           ["tick_size", "round_to_tick", "ticks_in"]]),
+        ("Low-level client (`api._client`)", "",
+         [_entry(f"api._client.{m}", getattr(BaseClient, m)) for m in ["request", "request_all"]]),
+        ("KiwoomWebSocket (`ws = api.create_websocket()`)", "",
+         [_entry(f"ws.{m}", getattr(KiwoomWebSocket, m))
+          for m in _public_methods_of(KiwoomWebSocket)]),
     ]
+
+    grouped: dict[str, list[Entry]] = {}
+    for name in kc.__all__:
+        obj = getattr(kc, name)
+        if _is_function(obj):
+            grouped.setdefault(obj.__module__, []).append(_entry(name, obj))
+    for module, entries in grouped.items():
+        sections.append((FUNCTION_SECTIONS.get(module, f"`{module}`"), "", entries))
+
+    code_entries: list[Entry] = []
+    for name in codes.__all__:
+        obj = getattr(codes, name)
+        if isinstance(obj, type) and issubclass(obj, Enum):
+            members = "\n".join(f'{m.name} = "{m.value}"' for m in obj)
+            label, _, doc = _class_entry(name, obj)
+            code_entries.append((label, f"class {name}(str, Enum)\n{members}", doc))
+        elif _is_function(obj):
+            code_entries.append(_entry(name, obj))
+    sections.append(("Named codes (`kiwoom_client.codes`)", inspect.getdoc(codes) or "",
+                     code_entries))
+
+    error_entries: list[Entry] = []
+    for name in errors.__all__:
+        obj = getattr(errors, name)
+        if isinstance(obj, type) and issubclass(obj, BaseException):
+            error_entries.append(_class_entry(name, obj))
+        elif _is_function(obj):
+            error_entries.append(_entry(name, obj))
+    sections.append(("Errors (`kiwoom_client.errors`)", inspect.getdoc(errors) or "",
+                     error_entries))
+
+    spec_entries: list[Entry] = []
+    for name in spec.__all__:
+        obj = getattr(spec, name)
+        if isinstance(obj, type):
+            spec_entries.append(_class_entry(f"spec.{name}", obj))
+        elif _is_function(obj):
+            spec_entries.append(_entry(f"spec.{name}", obj))
+    sections.append(("TR field catalog (`kiwoom_client.spec`)", "", spec_entries))
+    return sections
 
 
 def render_llms_full() -> str:
-    from kiwoom_client import KiwoomAPIError, KiwoomAuthError
-    from kiwoom_client.websocket import KiwoomWebSocketError
-
     lines = [
         *_llms_summary(),
         "",
@@ -461,15 +532,16 @@ def render_llms_full() -> str:
         "docstrings below are the library's own.",
         "",
     ]
-    for title, entries in _api_sections():
+    for title, intro, entries in _api_sections():
         lines += [f"## {title}", ""]
+        if intro:
+            lines += [intro, ""]
         for label, sig, doc in entries:
             lines += [f"### `{label}`", "", "```", sig, "```", ""]
             if doc:
                 lines += [doc, ""]
-    lines += ["## Errors", ""]
-    for exc in (KiwoomAPIError, KiwoomAuthError, KiwoomWebSocketError):
-        lines.append(f"- `{exc.__module__}.{exc.__name__}`: {inspect.getdoc(exc) or ''}")
+    while lines and lines[-1] == "":
+        lines.pop()
 
     eps = rest_endpoints()
     lines += [

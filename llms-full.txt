@@ -47,6 +47,25 @@ Args:
     retry_backoff: Base seconds to wait before a retry (grows per attempt).
     expiry_margin: Reissue the token this many seconds before it expires.
 
+### `KiwoomAPI.close`
+
+```
+def close() -> None
+```
+
+Close all connections.
+
+### `KiwoomAPI.create_websocket`
+
+```
+def create_websocket() -> KiwoomWebSocket
+```
+
+Create a WebSocket client for real-time data.
+
+Returns:
+    KiwoomWebSocket instance configured with current auth.
+
 ### `KiwoomAPI.from_env`
 
 ```
@@ -100,26 +119,9 @@ def logout() -> dict[str, Any]
 
 Revoke the current access token.
 
-### `KiwoomAPI.close`
+## AsyncKiwoomAPI (asyncio facade)
 
-```
-def close() -> None
-```
-
-Close all connections.
-
-### `KiwoomAPI.create_websocket`
-
-```
-def create_websocket() -> KiwoomWebSocket
-```
-
-Create a WebSocket client for real-time data.
-
-Returns:
-    KiwoomWebSocket instance configured with current auth.
-
-## AsyncKiwoomAPI (asyncio facade: same endpoints, every call awaited)
+Same endpoints as `KiwoomAPI`; every call is awaited.
 
 ### `AsyncKiwoomAPI`
 
@@ -143,6 +145,25 @@ Args:
     max_retries: Automatic retries on HTTP 429 / return_code 5.
     retry_backoff: Base seconds to wait before a retry (grows per attempt).
     expiry_margin: Reissue the token this many seconds before it expires.
+
+### `AsyncKiwoomAPI.close`
+
+```
+async def close() -> None
+```
+
+Close all connections.
+
+### `AsyncKiwoomAPI.create_websocket`
+
+```
+async def create_websocket() -> KiwoomWebSocket
+```
+
+Create a WebSocket client for real-time data.
+
+Returns:
+    KiwoomWebSocket instance configured with current auth.
 
 ### `AsyncKiwoomAPI.from_env`
 
@@ -170,25 +191,6 @@ async def logout() -> dict[str, Any]
 ```
 
 Revoke the current access token.
-
-### `AsyncKiwoomAPI.close`
-
-```
-async def close() -> None
-```
-
-Close all connections.
-
-### `AsyncKiwoomAPI.create_websocket`
-
-```
-async def create_websocket() -> KiwoomWebSocket
-```
-
-Create a WebSocket client for real-time data.
-
-Returns:
-    KiwoomWebSocket instance configured with current auth.
 
 ## Low-level client (`api._client`)
 
@@ -255,6 +257,17 @@ async def disconnect() -> None
 
 Close the connection and stop the listener.
 
+### `ws.listen`
+
+```
+async def listen() -> None
+```
+
+Receive frames and dispatch them until ``disconnect()`` is called.
+
+Answers PING frames, restores subscriptions after a reconnect, and
+keeps running when a callback raises.
+
 ### `ws.on`
 
 ```
@@ -270,6 +283,14 @@ Args:
     data_type: Real-time data type code (e.g., "0B" for 주식체결).
     callback: Sync or async function called for each matching item.
 
+### `ws.on_message`
+
+```
+def on_message(callback: Callback) -> None
+```
+
+Register a callback that receives every decoded frame.
+
 ### `ws.on_trnm`
 
 ```
@@ -278,13 +299,18 @@ def on_trnm(trnm: str, callback: Callback) -> None
 
 Register a callback for a non-REAL message type (e.g. "CNSRLST").
 
-### `ws.on_message`
+### `ws.send`
 
 ```
-def on_message(callback: Callback) -> None
+async def send(payload: dict[str, Any]) -> None
 ```
 
-Register a callback that receives every decoded frame.
+Send a raw protocol message.
+
+Use it with the payloads built by ``api.condition_search``.
+
+Raises:
+    RuntimeError: If not connected.
 
 ### `ws.subscribe`
 
@@ -308,65 +334,117 @@ async def unsubscribe(types: list[str] | str, items: list[str] | str, grp_no: st
 
 Unregister real-time data for the given types and items.
 
-### `ws.send`
+## KRX tick size
+
+### `add_ticks`
 
 ```
-async def send(payload: dict[str, Any]) -> None
+def add_ticks(price: Decimal | int | float, ticks: int) -> Decimal
 ```
 
-Send a raw protocol message.
+Move ``ticks`` valid quotes up (positive) or down (negative) from ``price``.
 
-Use it with the payloads built by ``api.condition_search``.
+Band edges are handled: one tick up from 1,999 is 2,000, one tick down
+from 2,000 is 1,999 (not 1,995).
+
+>>> add_ticks(49_950, 2)
+Decimal('50100')
+
+Args:
+    price: A valid quote (see :func:`is_on_tick`).
+    ticks: Number of ticks to move; 0 returns ``price``.
 
 Raises:
-    RuntimeError: If not connected.
+    ValueError: If ``price`` is not on a tick, or the move would go to
+        zero or below.
 
-### `ws.listen`
+### `is_on_tick`
 
 ```
-async def listen() -> None
+def is_on_tick(price: Decimal | int | float) -> bool
 ```
 
-Receive frames and dispatch them until ``disconnect()`` is called.
+True if ``price`` is a valid KRX quote — positive and a multiple of its tick.
 
-Answers PING frames, restores subscriptions after a reconnect, and
-keeps running when a callback raises.
+>>> is_on_tick(70100), is_on_tick(70150)
+(True, False)
+
+### `round_to_tick`
+
+```
+def round_to_tick(price: Decimal | int | float) -> Decimal
+```
+
+Round a price down to the nearest valid KRX tick for its band.
+
+Args:
+    price: The price to round, in KRW. Must be positive.
+
+Returns:
+    `price` rounded down to the nearest multiple of its tick size.
+
+### `round_up_to_tick`
+
+```
+def round_up_to_tick(price: Decimal | int | float) -> Decimal
+```
+
+Round a price **up** to the nearest valid KRX tick for its band.
+
+The counterpart of :func:`round_to_tick` (which rounds down). Rounding up
+can cross into the next band: ``round_up_to_tick(1999.5)`` is ``2000``.
+
+Raises:
+    ValueError: If price is not positive.
+
+### `tick_size`
+
+```
+def tick_size(price: Decimal | int | float) -> Decimal
+```
+
+Return the KRX minimum quote increment (호가가격단위) for a price.
+
+Args:
+    price: The price to quote, in KRW. Must be positive.
+
+Returns:
+    The minimum tick size (KRW) applicable at that price band.
+
+Raises:
+    ValueError: If price is not positive.
+
+### `ticks_between`
+
+```
+def ticks_between(start: Decimal | int | float, end: Decimal | int | float) -> int
+```
+
+Signed number of ticks from ``start`` to ``end`` across bands.
+
+``add_ticks(start, ticks_between(start, end)) == end`` always holds.
+Unlike :func:`ticks_in`, which divides a width by a single band's tick,
+this counts each band at its own tick size.
+
+>>> ticks_between(49_900, 50_100)
+3
+
+Raises:
+    ValueError: If either price is not on a tick.
+
+### `ticks_in`
+
+```
+def ticks_in(width: Decimal | int | float, price: Decimal | int | float) -> Decimal
+```
+
+How many ticks a price gap ``width`` (KRW) spans at price band ``price``.
+
+Returns the exact (non-rounded) quotient -- callers that need to
+distinguish e.g. "2.2 ticks" from "3.0 ticks" (a real difference in stop
+noise risk at low price bands) should not round this themselves.
 
 ## Response parsing
-
-### `to_number`
-
-```
-def to_number(value: Any) -> Any
-```
-
-Convert a Kiwoom numeric string to int/float, leaving anything else.
-
-Handles a leading ``+``/``-``, comma grouping and surrounding whitespace.
-Blank strings become None. Strings with a meaningful leading zero
-(``"005930"``) and any non-numeric text are returned unchanged.
-
-Args:
-    value: A raw field value of any type.
-
-Returns:
-    int, float, None for blanks, or the original value untouched.
-
-### `normalize`
-
-```
-def normalize(data: Any, exclude: Iterable[str] | None = None) -> Any
-```
-
-Recursively convert numeric strings in an API response.
-
-Args:
-    data: A response dict, a list of records, or a single value.
-    exclude: Field names to leave untouched, on top of the built-in
-        identifier/date detection.
-
-Returns:
-    A new structure of the same shape; the input is not mutated.
 
 ### `extract_records`
 
@@ -391,6 +469,22 @@ Returns:
 Raises:
     KeyError: If an explicit key is absent from the response.
 
+### `normalize`
+
+```
+def normalize(data: Any, exclude: Iterable[str] | None = None) -> Any
+```
+
+Recursively convert numeric strings in an API response.
+
+Args:
+    data: A response dict, a list of records, or a single value.
+    exclude: Field names to leave untouched, on top of the built-in
+        identifier/date detection.
+
+Returns:
+    A new structure of the same shape; the input is not mutated.
+
 ### `to_dataframe`
 
 ```
@@ -412,54 +506,230 @@ Raises:
     ImportError: If pandas is not installed.
     KeyError: If an explicit key is absent from the response.
 
-## KRX tick size
-
-### `tick_size`
+### `to_number`
 
 ```
-def tick_size(price: Decimal | int | float) -> Decimal
+def to_number(value: Any) -> Any
 ```
 
-Return the KRX minimum quote increment (호가가격단위) for a price.
+Convert a Kiwoom numeric string to int/float, leaving anything else.
+
+Handles a leading ``+``/``-``, comma grouping and surrounding whitespace.
+Blank strings become None. Strings with a meaningful leading zero
+(``"005930"``) and any non-numeric text are returned unchanged.
 
 Args:
-    price: The price to quote, in KRW. Must be positive.
+    value: A raw field value of any type.
 
 Returns:
-    The minimum tick size (KRW) applicable at that price band.
+    int, float, None for blanks, or the original value untouched.
+
+## Named codes (`kiwoom_client.codes`)
+
+Named constants for Kiwoom's coded request/response fields.
+
+Kiwoom encodes options as short strings — ``trde_tp="3"`` is a market order,
+``stex_tp="3"`` means "KRX+NXT combined", ``mrkt_tp="101"`` is KOSDAQ — and the
+same field name means different things in different TRs. These enums give the
+common ones a name so a typo becomes an ``AttributeError`` instead of a
+rejected (or worse, accepted) order.
+
+Every member is a ``str``, so it can be passed straight into any endpoint::
+
+    from kiwoom_client.codes import Exchange, OrderType
+
+    api.order.buy_order(
+        dmst_stex_tp=Exchange.KRX, stk_cd="005930", ord_qty="10",
+        ord_uv="70000", trde_tp=OrderType.LIMIT,
+    )
+
+Only values stated in Kiwoom's official API spec are included, and each enum
+lists the TRs it was checked against. A field whose codes differ per TR
+(``mrkt_tp`` comes in at least five dialects) gets one enum per dialect.
+
+Sources:
+    - 키움 REST API 가이드: https://openapi.kiwoom.com/guide/apiguide
+    - 키움 공식 스펙 번들:
+      https://github.com/Kiwoom-Securities/Kiwoom-REST-API (``kiwoom/_data/kiwoom_api_spec.json``)
+
+### `AdjustedPrice`
+
+```
+class AdjustedPrice(str, Enum)
+RAW = "0"
+ADJUSTED = "1"
+```
+
+수정주가구분 ``upd_stkpc_tp`` for chart TRs (ka10079-ka10083, ka10094).
+
+### `Exchange`
+
+```
+class Exchange(str, Enum)
+KRX = "KRX"
+NXT = "NXT"
+SOR = "SOR"
+```
+
+국내거래소구분 ``dmst_stex_tp`` for orders.
+
+Checked against kt10000-kt10003 (주문) and kt10006-kt10009 (신용주문).
+Account TRs such as kt00004/kt00018 accept only ``KRX``/``NXT``; history
+TRs (kt00007, kt00009) additionally take ``"%"`` for all exchanges.
+The mock server supports ``KRX`` only.
+
+### `Market`
+
+```
+class Market(str, Enum)
+ALL = "000"
+KOSPI = "001"
+KOSDAQ = "101"
+```
+
+시장구분 ``mrkt_tp`` in the ``000/001/101`` dialect.
+
+Used by most ranking and stock-info TRs (e.g. ka10016-ka10018,
+ka10023-ka10028, ka10054, ka10098). Some of those (ka10020-ka10022,
+ka10044, ka10058, ka10069) accept only ``KOSPI``/``KOSDAQ``. Sector TRs
+(ka20001…), program-trading TRs (ka90003…) and ka10099 use other codes —
+see :class:`StockListMarket` for the last one.
+
+### `OrderType`
+
+```
+class OrderType(str, Enum)
+LIMIT = "0"
+MARKET = "3"
+CONDITIONAL_LIMIT = "5"
+BEST_LIMIT = "6"
+FIRST_LIMIT = "7"
+LIMIT_IOC = "10"
+MARKET_IOC = "13"
+BEST_IOC = "16"
+LIMIT_FOK = "20"
+MARKET_FOK = "23"
+BEST_FOK = "26"
+STOP_LIMIT = "28"
+MID_PRICE = "29"
+MID_PRICE_IOC = "30"
+MID_PRICE_FOK = "31"
+PRE_MARKET = "61"
+AFTER_HOURS_SINGLE = "62"
+POST_MARKET = "81"
+```
+
+매매구분 ``trde_tp`` for stock orders.
+
+Checked against kt10000 (매수), kt10001 (매도), kt10006 (신용 매수),
+kt10007 (신용 매도). Other TRs reuse the name ``trde_tp`` for unrelated
+codes (e.g. 순매수/순매도 in ranking TRs) — don't pass these there.
+
+### `PriceChangeSign`
+
+```
+class PriceChangeSign(str, Enum)
+UPPER_LIMIT = "1"
+UP = "2"
+UNCHANGED = "3"
+LOWER_LIMIT = "4"
+DOWN = "5"
+```
+
+전일대비기호 ``pred_pre_sig`` in responses (46+ TRs).
+
+### `QueryExchange`
+
+```
+class QueryExchange(str, Enum)
+KRX = "1"
+NXT = "2"
+ALL = "3"
+```
+
+거래소구분 ``stex_tp`` for market-data queries.
+
+The ``1:KRX, 2:NXT, 3:통합`` dialect used by ~45 query TRs (ranking,
+stock-info and sector TRs such as ka10016-ka10037, ka10051, ka20002).
+A few TRs (ka10075, ka10076, ka10085) use ``0`` for 통합 instead — check
+the TR's spec before using this enum there.
+
+### `StockListMarket`
+
+```
+class StockListMarket(str, Enum)
+KOSPI = "0"
+KOSDAQ = "10"
+K_OTC = "30"
+KONEX = "50"
+ETN = "60"
+LOSS_LIMITED_ETN = "70"
+GOLD_SPOT = "80"
+VOLATILITY_ETN = "90"
+INFRA_FUND = "2"
+ELW = "3"
+MUTUAL_FUND = "4"
+WARRANT = "5"
+REIT = "6"
+WARRANT_CERTIFICATE = "7"
+ETF = "8"
+HIGH_YIELD_FUND = "9"
+```
+
+시장구분 ``mrkt_tp`` for 종목정보 리스트 (ka10099, ``stock_info_list``).
+
+### `exchange_stock_code`
+
+```
+def exchange_stock_code(stk_cd: str, exchange: Exchange | str) -> str
+```
+
+Return the exchange-specific ``stk_cd`` that quote/chart TRs expect.
+
+Kiwoom's spec: ``KRX:039490, NXT:039490_NX, SOR:039490_AL``. Any existing
+suffix on ``stk_cd`` is replaced.
+
+>>> exchange_stock_code("005930", Exchange.NXT)
+'005930_NX'
 
 Raises:
-    ValueError: If price is not positive.
+    ValueError: If ``exchange`` is not KRX, NXT or SOR.
 
-### `round_to_tick`
+## Errors (`kiwoom_client.errors`)
+
+Every exception kiwoom-client raises, in one place.
+
+::
+
+    KiwoomError
+    ├── KiwoomAuthError              토큰 발급·폐기 실패 (/oauth2/*)
+    ├── KiwoomWebSocketError         WebSocket 로그인·프로토콜 실패
+    └── KiwoomAPIError               return_code != 0
+        ├── KiwoomTokenError         토큰 거부 (return_code 3; 8003/8005/8010/8103)
+        │   └── KiwoomServerMismatchError  모의/실전 키·토큰 불일치 (8030/8031)
+        ├── KiwoomRateLimitError     호출 한도 초과 (return_code 5; 1700-1702)
+        ├── KiwoomRequestError       잘못된 요청 파라미터·헤더 (15xx, 1687)
+        │   └── KiwoomStockNotFoundError  종목코드 없음 (1901-1903)
+        └── KiwoomUnsupportedError   모의투자·법인 미지원 API (8104/8200)
+
+The subclasses only *narrow* what was already raised: every one of them is a
+``KiwoomAPIError`` with the same ``code``/``message``/``response`` as before,
+so existing ``except KiwoomAPIError`` blocks catch them unchanged. The extra
+``error_code`` attribute holds the 4-digit code Kiwoom embeds in
+``return_msg`` (``"...[8005:Token이 유효하지 않습니다]"``).
+
+HTTP failures that survive the built-in retries (429, 401 after a refresh)
+still surface as ``httpx.HTTPStatusError``, as before.
+
+Error codes: 키움 REST API 가이드 "오류코드" (https://openapi.kiwoom.com/guide/apiguide).
+
+### `KiwoomAPIError`
 
 ```
-def round_to_tick(price: Decimal | int | float) -> Decimal
+class KiwoomAPIError(KiwoomError)
 ```
 
-Round a price down to the nearest valid KRX tick for its band.
-
-Args:
-    price: The price to round, in KRW. Must be positive.
-
-Returns:
-    `price` rounded down to the nearest multiple of its tick size.
-
-### `ticks_in`
-
-```
-def ticks_in(width: Decimal | int | float, price: Decimal | int | float) -> Decimal
-```
-
-How many ticks a price gap ``width`` (KRW) spans at price band ``price``.
-
-Returns the exact (non-rounded) quotient -- callers that need to
-distinguish e.g. "2.2 ticks" from "3.0 ticks" (a real difference in stop
-noise risk at low price bands) should not round this themselves.
-
-## Errors
-
-- `kiwoom_client.base.KiwoomAPIError`: Kiwoom API error with return_code and return_msg.
+Kiwoom API error with return_code and return_msg.
 
 Raised for any non-zero ``return_code``. Where the code or the message
 says more, a subclass is raised instead (:class:`KiwoomTokenError`,
@@ -472,14 +742,183 @@ Attributes:
     response: The whole payload.
     error_code: Kiwoom's 4-digit error code embedded in ``return_msg``
         (``"...[8005:Token이 유효하지 않습니다]"`` -> ``8005``), or None.
-- `kiwoom_client.auth.KiwoomAuthError`: Token issuance or revocation failed.
+
+### `KiwoomAuthError`
+
+```
+class KiwoomAuthError(KiwoomError)
+```
+
+Token issuance or revocation failed.
 
 Attributes:
     error_code: Kiwoom's 4-digit code from the message (``[8030:...]``),
         or None.
     hint: One-line next step (e.g. which ``is_mock`` to use), or None.
         Also appended to ``str(exc)``.
-- `kiwoom_client.websocket.KiwoomWebSocketError`: WebSocket login or protocol failure.
+
+### `KiwoomError`
+
+```
+class KiwoomError(Exception)
+```
+
+Base class of every error kiwoom-client raises on purpose.
+
+``except KiwoomError`` catches API errors, token errors and WebSocket
+errors alike. Subclassing it changes nothing for code that already
+catches ``KiwoomAPIError``, ``KiwoomAuthError`` or ``Exception``.
+
+### `KiwoomRateLimitError`
+
+```
+class KiwoomRateLimitError(KiwoomAPIError)
+```
+
+Request quota exceeded (``return_code`` 5; 1700/1701/1702), after the
+automatic backoff retries ran out.
+
+### `KiwoomRequestError`
+
+```
+class KiwoomRequestError(KiwoomAPIError)
+```
+
+The request itself is malformed — missing or invalid parameters,
+unknown api-id, bad headers (15xx, 1687).
+
+### `KiwoomServerMismatchError`
+
+```
+class KiwoomServerMismatchError(KiwoomTokenError)
+```
+
+Mock/live mismatch: a mock key or token used on the live server, or
+the reverse (8030/8031). Check ``is_mock`` against the kind of key.
+
+### `KiwoomStockNotFoundError`
+
+```
+class KiwoomStockNotFoundError(KiwoomRequestError)
+```
+
+Unknown stock code or market/exchange for it (1901/1902/1903).
+
+### `KiwoomTokenError`
+
+```
+class KiwoomTokenError(KiwoomAPIError)
+```
+
+The access token was rejected (``return_code`` 3; 8003/8005/8010/8103).
+
+Raised only after the automatic reissue-and-retry has already been tried
+(or when no token provider is attached).
+
+### `KiwoomUnsupportedError`
+
+```
+class KiwoomUnsupportedError(KiwoomAPIError)
+```
+
+The API is not offered for this account or server — e.g. not
+available on the mock server (8104) or for corporate customers (8200).
+
+### `KiwoomWebSocketError`
+
+```
+class KiwoomWebSocketError(KiwoomError)
+```
+
+WebSocket login or protocol failure.
+
+### `api_error_class`
+
+```
+def api_error_class(return_code: Any, message: Any) -> type[KiwoomAPIError]
+```
+
+Pick the most specific :class:`KiwoomAPIError` subclass for a payload.
+
+The 4-digit code inside ``return_msg`` wins; ``return_code`` is the
+fallback; anything unrecognised is a plain ``KiwoomAPIError``.
+
+### `parse_error_code`
+
+```
+def parse_error_code(message: object) -> int | None
+```
+
+Pull Kiwoom's 4-digit error code (``[8005:...]``) out of a message.
+
+## TR field catalog (`kiwoom_client.spec`)
+
+### `spec.Field`
+
+```
+class Field
+```
+
+요청 또는 응답 필드 하나.
+
+### `spec.TRSpec`
+
+```
+class TRSpec
+```
+
+TR(api_id) 하나의 명세.
+
+### `spec.api_ids`
+
+```
+def api_ids() -> list[str]
+```
+
+카탈로그의 모든 api_id (정렬).
+
+### `spec.catalog_source`
+
+```
+def catalog_source() -> dict[str, Any]
+```
+
+카탈로그를 만든 원천 (저장소·경로·고정 커밋).
+
+### `spec.endpoint_index`
+
+```
+def endpoint_index() -> Mapping[tuple[str, str], str]
+```
+
+``(모듈 이름, 메서드 이름) → api_id`` — REST 모듈 메서드 전부.
+
+소스를 파싱하지 않고 각 메서드를 기록용 가짜 클라이언트로 한 번씩 불러 얻는다
+(네트워크 없음). 조건검색(WebSocket)은 api_id 가 아니라 trnm 이라 뺀다.
+
+### `spec.for_method`
+
+```
+def for_method(module_name: str, method_name: str) -> TRSpec
+```
+
+``api.<module_name>.<method_name>`` 이 부르는 TR 의 명세.
+
+### `spec.get`
+
+```
+def get(api_id: str) -> TRSpec
+```
+
+api_id 로 TR 명세를 얻는다. 없으면 ``KeyError``.
+
+### `spec.search`
+
+```
+def search(query: str) -> list[TRSpec]
+```
+
+api_id·TR 이름·메뉴에 ``query`` 가 들어간 TR (대소문자 무시).
 
 ## REST endpoints (182)
 
