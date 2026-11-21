@@ -170,9 +170,9 @@ async def main():
         info, chart, ranking = await asyncio.gather(
             api.stock_info.basic_stock_info(stk_cd="005930"),
             api.chart.stock_daily_chart(stk_cd="005930", base_dt="20260326"),
-            api.ranking.top_volume_today(
-                mrkt_tp="0", stk_cnd="0", trde_qty_tp="0",
-                prc_tp="0", trde_amt_tp="0", updn_tp="0",
+            api.ranking.top_volume_today(  # ka10030 — 필드는 api.describe("ka10030")
+                mrkt_tp="000", sort_tp="1", mang_stk_incls="0", crd_tp="0", trde_qty_tp="0",
+                pric_tp="0", trde_prica_tp="0", mrkt_open_tp="0", stex_tp="3",
             ),
         )
         print(info["stk_nm"])
