@@ -101,10 +101,20 @@ def test_list_children_are_not_request_fields():
     assert child.id == "stk_cd"
 
 
-def test_codes_are_parsed_from_desc():
+def test_catalog_carries_no_field_descriptions_or_code_lists():
+    # 키움 명세의 필드 설명 원문·코드값은 싣지 않는다 (SOURCE.md).
+    # 속성은 하위 호환으로 남아 비어 있다.
+    raw = json.loads(
+        resources.files("kiwoom_client.spec").joinpath("catalog.json").read_text(encoding="utf-8")
+    )
+    for api_id, tr in raw["trs"].items():
+        for f in (*tr["request"], *tr["response"]):
+            assert not {"desc", "codes"} & set(f), f"{api_id}.{f['id']}"
     sort_tp = spec.get("ka10030").request_field("sort_tp")
     assert sort_tp is not None
-    assert dict(sort_tp.codes) == {"1": "거래량", "2": "거래회전율", "3": "거래대금"}
+    assert sort_tp.name == "정렬구분"
+    assert sort_tp.desc == ""
+    assert dict(sort_tp.codes) == {}
 
 
 def test_for_method_and_unknown():
@@ -148,7 +158,7 @@ class TestDescribe:
         assert text.splitlines()[0] == "ka10030 당일거래량상위요청 — POST /api/dostk/rkinfo"
         assert 'api.ranking.top_volume_today(mrkt_tp="...",' in text
         assert " *sort_tp" in text
-        assert "코드: 1=거래량, 2=거래회전율, 3=거래대금" in text
+        assert "코드:" not in text  # 카탈로그는 코드값을 싣지 않는다
         assert "tdy_trde_qty_upper[].stk_cd" in text
 
     def test_describe_on_both_facades_needs_no_network(self, httpx_mock):

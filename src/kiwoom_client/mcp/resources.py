@@ -10,9 +10,10 @@ Resources (read-only, no network):
 
 Prompts: ``analyze_stock``, ``review_account``, ``order_checklist``.
 
-Everything here is derived from the TR catalog (:mod:`kiwoom_client.spec`)
-and the server's own, already guard-filtered, tool catalog — so the tool
-index never lists an order tool the guard has removed.
+Everything here is derived from the TR catalog (:mod:`kiwoom_client.spec`),
+the code tables in :mod:`kiwoom_client.mcp.codes` and the server's own,
+already guard-filtered, tool catalog — so the tool index never lists an order
+tool the guard has removed.
 """
 
 from __future__ import annotations
@@ -25,7 +26,7 @@ from typing import Any
 from mcp import types
 
 from kiwoom_client import spec
-from kiwoom_client.mcp.codes import EXCHANGES, TRADE_TYPES
+from kiwoom_client.mcp.codes import EXCHANGES, STOCK_LIST_MARKETS, TRADE_TYPES
 from kiwoom_client.mcp.discovery import CatalogEntry
 
 GUIDE_URI = "kiwoom://guide"
@@ -93,8 +94,7 @@ def _dumps(data: Any) -> str:
 
 
 def market_codes() -> dict[str, str]:
-    field = spec.get("ka10099").request_field("mrkt_tp")
-    return dict(field.codes) if field is not None else {}
+    return dict(STOCK_LIST_MARKETS)
 
 
 def tool_index(catalog: list[CatalogEntry]) -> list[dict[str, Any]]:
@@ -123,10 +123,6 @@ def _field_json(field: spec.Field) -> dict[str, Any]:
         out["required"] = True
     if field.length is not None:
         out["length"] = field.length
-    if field.desc:
-        out["desc"] = field.desc
-    if field.codes:
-        out["codes"] = dict(field.codes)
     if field.parent:
         out["parent"] = field.parent
     return out

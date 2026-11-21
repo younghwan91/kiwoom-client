@@ -40,9 +40,9 @@ def test_params_schema_lists_catalog_fields_and_required():
     assert schema["required"] == ["params"]
     sort_tp = params["properties"]["sort_tp"]
     assert sort_tp["type"] == "string"
-    assert sort_tp["description"].startswith("정렬구분 (필수).")
-    assert "1:거래량" in sort_tp["description"]
-    assert "enum" not in sort_tp  # 휴리스틱 코드값이라 강제하지 않는다
+    # 한글명·필수 여부만 — 키움 필드 설명 원문·코드값은 싣지 않는다 (spec/SOURCE.md).
+    assert sort_tp["description"] == "정렬구분 (필수)"
+    assert "enum" not in sort_tp
 
 
 def test_paging_arguments_stay_at_top_level():

@@ -29,8 +29,8 @@ class Account(Generic[ResponseT]):
         api_id ``kt00004`` · 계좌평가현황요청 · ``POST /api/dostk/acnt``
 
         Args:
-            qry_tp: 상장폐지조회구분 (필수) — 0:전체, 1:상장폐지종목제외
-            dmst_stex_tp: 국내거래소구분 (필수) — KRX:한국거래소,NXT:넥스트트레이드
+            qry_tp: 상장폐지조회구분 (필수)
+            dmst_stex_tp: 국내거래소구분 (필수)
         """
         ...
 
@@ -59,7 +59,7 @@ class Account(Generic[ResponseT]):
         api_id ``ka10085`` · 계좌수익률요청 · ``POST /api/dostk/acnt``
 
         Args:
-            stex_tp: 거래소구분 (필수) — 0 : 통합, 1 : KRX, 2 : NXT
+            stex_tp: 거래소구분 (필수)
         """
         ...
 
@@ -84,16 +84,15 @@ class Account(Generic[ResponseT]):
         api_id ``kt00015`` · 위탁종합거래내역요청 · ``POST /api/dostk/acnt``
 
         Args:
-            strt_dt: 시작일자 (필수) — YYYYMMDD
-            end_dt: 종료일자 (필수) — YYYYMMDD
-            tp: 구분 (필수) —
-                0:전체,1:입출금,2:입출고,3:매매,4:매수,5:매도,6:입금,7:출금,A:예탁담보대출입금,B:매도담보대출입금,C:현금상환(융자,담보상환),F:환전,M:입출금+환전,G:외화매수,H:외화매도,I:환전정산입금,J:환전정산출금
-            stk_cd: 종목코드 — 종목 코드 입력
-            crnc_cd: 통화코드 — 통화코드 3자리
-            gds_tp: 상품구분 (필수) — 0:전체, 1:국내주식, 2:수익증권, 3:해외주식, 4:금융상품
+            strt_dt: 시작일자 (필수)
+            end_dt: 종료일자 (필수)
+            tp: 구분 (필수)
+            stk_cd: 종목코드
+            crnc_cd: 통화코드
+            gds_tp: 상품구분 (필수)
             frgn_stex_code: 해외거래소코드
-            dmst_stex_tp: 국내거래소구분 (필수) — %:(전체),KRX:한국거래소,NXT:넥스트트레이드
-            qry_sort_tp: 조회정렬구분 — 1:최근거래순, 2:과거거래순(미입력시 과거거래순)
+            dmst_stex_tp: 국내거래소구분 (필수)
+            qry_sort_tp: 조회정렬구분
         """
         ...
 
@@ -110,7 +109,7 @@ class Account(Generic[ResponseT]):
         api_id ``ka01690`` · 일별잔고수익률 · ``POST /api/dostk/acnt``
 
         Args:
-            qry_dt: 조회일자 (필수) — YYYYMMDD
+            qry_dt: 조회일자 (필수)
         """
         ...
 
@@ -128,8 +127,8 @@ class Account(Generic[ResponseT]):
         api_id ``kt00002`` · 일별추정예탁자산현황요청 · ``POST /api/dostk/acnt``
 
         Args:
-            start_dt: 시작조회기간 (필수) — YYYYMMDD
-            end_dt: 종료조회기간 (필수) — YYYYMMDD
+            start_dt: 시작조회기간 (필수)
+            end_dt: 종료조회기간 (필수)
         """
         ...
 
@@ -147,8 +146,8 @@ class Account(Generic[ResponseT]):
         api_id ``ka10074`` · 일자별실현손익요청 · ``POST /api/dostk/acnt``
 
         Args:
-            strt_dt: 시작일자 (필수) — YYYYMMDD
-            end_dt: 종료일자 (필수) — YYYYMMDD
+            strt_dt: 시작일자 (필수)
+            end_dt: 종료일자 (필수)
         """
         ...
 
@@ -166,8 +165,8 @@ class Account(Generic[ResponseT]):
         api_id ``kt00016`` · 일별계좌수익률상세현황요청 · ``POST /api/dostk/acnt``
 
         Args:
-            fr_dt: 평가시작일 (필수) — YYYYMMDD
-            to_dt: 평가종료일 (필수) — YYYYMMDD
+            fr_dt: 평가시작일 (필수)
+            to_dt: 평가종료일 (필수)
         """
         ...
 
@@ -184,7 +183,7 @@ class Account(Generic[ResponseT]):
         api_id ``kt00001`` · 예수금상세현황요청 · ``POST /api/dostk/acnt``
 
         Args:
-            qry_tp: 조회구분 (필수) — 3:추정조회, 2:일반조회
+            qry_tp: 조회구분 (필수)
         """
         ...
 
@@ -201,7 +200,7 @@ class Account(Generic[ResponseT]):
         api_id ``kt00003`` · 추정자산조회요청 · ``POST /api/dostk/acnt``
 
         Args:
-            qry_tp: 상장폐지조회구분 (필수) — 0:전체, 1:상장폐지종목제외
+            qry_tp: 상장폐지조회구분 (필수)
         """
         ...
 
@@ -219,8 +218,8 @@ class Account(Generic[ResponseT]):
         api_id ``kt00018`` · 계좌평가잔고내역요청 · ``POST /api/dostk/acnt``
 
         Args:
-            qry_tp: 조회구분 (필수) — 1:합산, 2:개별
-            dmst_stex_tp: 국내거래소구분 (필수) — KRX:한국거래소,NXT:넥스트트레이드
+            qry_tp: 조회구분 (필수)
+            dmst_stex_tp: 국내거래소구분 (필수)
         """
         ...
 
@@ -241,12 +240,11 @@ class Account(Generic[ResponseT]):
         api_id ``ka10076`` · 체결요청 · ``POST /api/dostk/acnt``
 
         Args:
-            stk_cd: 종목코드 — 종목코드 6자리
-            qry_tp: 조회구분 (필수) — 0:전체, 1:종목
-            sell_tp: 매도수구분 (필수) — 0:전체, 1:매도, 2:매수
-            ord_no: 주문번호 — 검색 기준 값으로 입력한 주문번호 보다 과거에 체결된 내역이
-                조회됩니다.
-            stex_tp: 거래소구분 (필수) — 0 : 통합, 1 : KRX, 2 : NXT
+            stk_cd: 종목코드
+            qry_tp: 조회구분 (필수)
+            sell_tp: 매도수구분 (필수)
+            ord_no: 주문번호
+            stex_tp: 거래소구분 (필수)
         """
         ...
 
@@ -263,7 +261,7 @@ class Account(Generic[ResponseT]):
         api_id ``kt00005`` · 체결잔고요청 · ``POST /api/dostk/acnt``
 
         Args:
-            dmst_stex_tp: 국내거래소구분 (필수) — KRX:한국거래소,NXT:넥스트트레이드
+            dmst_stex_tp: 국내거래소구분 (필수)
         """
         ...
 
@@ -310,16 +308,13 @@ class Account(Generic[ResponseT]):
         api_id ``kt50031`` · 금현물 주문체결조회 · ``POST /api/dostk/acnt``
 
         Args:
-            ord_dt: 주문일자 — YYYYMMDD
-            qry_tp: 조회구분 (필수) — 1:주문순, 2:역순, 3:미체결, 4:체결내역만
-            stk_bond_tp: 주식채권구분 (필수) — 0:전체, 1:주식, 2:채권
-            sell_tp: 매도수구분 (필수) — 0:전체, 1:매도, 2:매수
-            stk_cd: 종목코드 — M04020000: 금 99.99_1kg, M04020100: 미니금 99.99_100g, 전체 조회는
-                빈값('')으로 설정
-            fr_ord_no: 시작주문번호 — 시작주문번호 입력 시 이전 주문은 조회되지 않음, 전체 조회는
-                빈값('')으로 설정
-            dmst_stex_tp: 국내거래소구분 (필수) —
-                %:(전체),KRX:한국거래소,NXT:넥스트트레이드,SOR:최선주문집행
+            ord_dt: 주문일자
+            qry_tp: 조회구분 (필수)
+            stk_bond_tp: 주식채권구분 (필수)
+            sell_tp: 매도수구분 (필수)
+            stk_cd: 종목코드
+            fr_ord_no: 시작주문번호
+            dmst_stex_tp: 국내거래소구분 (필수)
         """
         ...
 
@@ -343,16 +338,14 @@ class Account(Generic[ResponseT]):
         api_id ``kt50030`` · 금현물 주문체결전체조회 · ``POST /api/dostk/acnt``
 
         Args:
-            ord_dt: 주문일자 (필수) — YYYYMMDD
-            qry_tp: 조회구분 — 1: 주문순, 2: 역순
-            mrkt_deal_tp: 시장구분 (필수) — 5:KRX금현물, 5값으로 고정
-            stk_bond_tp: 주식채권구분 (필수) — 0:전체, 1:주식, 2:채권
-            slby_tp: 매도수구분 (필수) — 0:전체, 1:매도, 2:매수
-            stk_cd: 종목코드 — M04020000: 금 99.99_1kg, M04020100: 미니금 99.99_100g, 전체 조회는
-                빈값('')으로 설정
-            fr_ord_no: 시작주문번호 — 시작주문번호 입력 시 이전 주문은 조회되지 않음, 전체 조회는
-                빈값('')으로 설정
-            dmst_stex_tp: 국내거래소구분 — %:(전체), KRX, NXT, SOR
+            ord_dt: 주문일자 (필수)
+            qry_tp: 조회구분
+            mrkt_deal_tp: 시장구분 (필수)
+            stk_bond_tp: 주식채권구분 (필수)
+            slby_tp: 매도수구분 (필수)
+            stk_cd: 종목코드
+            fr_ord_no: 시작주문번호
+            dmst_stex_tp: 국내거래소구분
         """
         ...
 
@@ -372,11 +365,10 @@ class Account(Generic[ResponseT]):
         api_id ``kt50032`` · 금현물 거래내역조회 · ``POST /api/dostk/acnt``
 
         Args:
-            strt_dt: 시작일자 — YYYYMMDD
-            end_dt: 종료일자 — YYYYMMDD
-            tp: 구분 — 0:전체, 1:입출금, 2:출고, 3:매매, 4:매수, 5:매도, 6:입금, 7:출금
-            stk_cd: 종목코드 — M04020000: 금 99.99_1kg, M04020100: 미니금 99.99_100g, 전체 조회는
-                빈값('')으로 설정
+            strt_dt: 시작일자
+            end_dt: 종료일자
+            tp: 구분
+            stk_cd: 종목코드
         """
         ...
 
@@ -400,16 +392,14 @@ class Account(Generic[ResponseT]):
         api_id ``kt50075`` · 금현물 미체결조회 · ``POST /api/dostk/acnt``
 
         Args:
-            ord_dt: 주문일자 (필수) — YYYYMMDD
-            qry_tp: 조회구분 — 1: 주문순, 2: 역순
-            mrkt_deal_tp: 시장구분 (필수) — 5:KRW금현물, 5값으로 고정
-            stk_bond_tp: 주식채권구분 (필수) — 0:전체, 1:주식, 2:채권
-            sell_tp: 매도수구분 (필수) — 0:전체, 1:매도, 2:매수
-            stk_cd: 종목코드 — M04020000: 금 99.99_1kg, M04020100: 미니금 99.99_100g, 전체 조회는
-                빈값('')으로 설정
-            fr_ord_no: 시작주문번호 — 시작주문번호 입력 시 이전 주문은 조회되지 않음, 전체 조회는
-                빈값('')으로 설정
-            dmst_stex_tp: 국내거래소구분 — %:(전체), KRX, NXT, SOR
+            ord_dt: 주문일자 (필수)
+            qry_tp: 조회구분
+            mrkt_deal_tp: 시장구분 (필수)
+            stk_bond_tp: 주식채권구분 (필수)
+            sell_tp: 매도수구분 (필수)
+            stk_cd: 종목코드
+            fr_ord_no: 시작주문번호
+            dmst_stex_tp: 국내거래소구분
         """
         ...
 
@@ -461,15 +451,13 @@ class Account(Generic[ResponseT]):
         api_id ``kt00007`` · 계좌별주문체결내역상세요청 · ``POST /api/dostk/acnt``
 
         Args:
-            ord_dt: 주문일자 — YYYYMMDD
-            qry_tp: 조회구분 (필수) — 1:주문순, 2:역순, 3:미체결, 4:체결내역만
-            stk_bond_tp: 주식채권구분 (필수) — 0:전체, 1:주식, 2:채권
-            sell_tp: 매도수구분 (필수) — 0:전체, 1:매도, 2:매수
-            stk_cd: 종목코드 — 전체 종목 조회는 빈값('')으로 설정
-            fr_ord_no: 시작주문번호 — 시작주문번호 입력 시 이전 주문은 조회되지 않음, 전체 조회는
-                빈값('')으로 설정
-            dmst_stex_tp: 국내거래소구분 (필수) —
-                %:(전체),KRX:한국거래소,NXT:넥스트트레이드,SOR:최선주문집행
+            ord_dt: 주문일자
+            qry_tp: 조회구분 (필수)
+            stk_bond_tp: 주식채권구분 (필수)
+            sell_tp: 매도수구분 (필수)
+            stk_cd: 종목코드
+            fr_ord_no: 시작주문번호
+            dmst_stex_tp: 국내거래소구분 (필수)
         """
         ...
 
@@ -493,16 +481,14 @@ class Account(Generic[ResponseT]):
         api_id ``kt00009`` · 계좌별주문체결현황요청 · ``POST /api/dostk/acnt``
 
         Args:
-            ord_dt: 주문일자 — YYYYMMDD
-            stk_bond_tp: 주식채권구분 (필수) — 0:전체, 1:주식, 2:채권
-            mrkt_tp: 시장구분 (필수) — 0:전체, 1:코스피, 2:코스닥, 3:OTCBB, 4:ECN
-            sell_tp: 매도수구분 (필수) — 0:전체, 1:매도, 2:매수
-            qry_tp: 조회구분 (필수) — 0:전체, 1:체결
-            stk_cd: 종목코드 — 전문 조회할 종목코드
-            fr_ord_no: 시작주문번호 — 시작주문번호의 이전 주문은 조회 되지 않으며 약정금액에도 포함
-                되지 않음
-            dmst_stex_tp: 국내거래소구분 (필수) —
-                %:(전체),KRX:한국거래소,NXT:넥스트트레이드,SOR:최선주문집행
+            ord_dt: 주문일자
+            stk_bond_tp: 주식채권구분 (필수)
+            mrkt_tp: 시장구분 (필수)
+            sell_tp: 매도수구분 (필수)
+            qry_tp: 조회구분 (필수)
+            stk_cd: 종목코드
+            fr_ord_no: 시작주문번호
+            dmst_stex_tp: 국내거래소구분 (필수)
         """
         ...
 
@@ -520,8 +506,8 @@ class Account(Generic[ResponseT]):
         api_id ``kt00012`` · 신용보증금율별주문가능수량조회요청 · ``POST /api/dostk/acnt``
 
         Args:
-            stk_cd: 종목번호 (필수) — 종목 코드 입력
-            uv: 매수가격 — 단위: 원
+            stk_cd: 종목번호 (필수)
+            uv: 매수가격
         """
         ...
 
@@ -539,8 +525,8 @@ class Account(Generic[ResponseT]):
         api_id ``kt00011`` · 증거금율별주문가능수량조회요청 · ``POST /api/dostk/acnt``
 
         Args:
-            stk_cd: 종목번호 (필수) — 종목 코드 입력
-            uv: 매수가격 — 단위: 원
+            stk_cd: 종목번호 (필수)
+            uv: 매수가격
         """
         ...
 
@@ -558,8 +544,8 @@ class Account(Generic[ResponseT]):
         api_id ``ka10072`` · 일자별종목별실현손익요청_일자 · ``POST /api/dostk/acnt``
 
         Args:
-            stk_cd: 종목코드 — 종목코드 6자리
-            strt_dt: 시작일자 (필수) — YYYYMMDD
+            stk_cd: 종목코드
+            strt_dt: 시작일자 (필수)
         """
         ...
 
@@ -578,9 +564,9 @@ class Account(Generic[ResponseT]):
         api_id ``ka10073`` · 일자별종목별실현손익요청_기간 · ``POST /api/dostk/acnt``
 
         Args:
-            stk_cd: 종목코드 — 종목코드 6자리
-            strt_dt: 시작일자 (필수) — YYYYMMDD
-            end_dt: 종료일자 (필수) — YYYYMMDD
+            stk_cd: 종목코드
+            strt_dt: 시작일자 (필수)
+            end_dt: 종료일자 (필수)
         """
         ...
 
@@ -609,7 +595,7 @@ class Account(Generic[ResponseT]):
         api_id ``ka10077`` · 당일실현손익상세요청 · ``POST /api/dostk/acnt``
 
         Args:
-            stk_cd: 종목코드 (필수) — 종목코드 6자리
+            stk_cd: 종목코드 (필수)
         """
         ...
 
@@ -628,9 +614,9 @@ class Account(Generic[ResponseT]):
         api_id ``ka10170`` · 당일매매일지요청 · ``POST /api/dostk/acnt``
 
         Args:
-            base_dt: 기준일자 — YYYYMMDD(공백입력시 금일데이터,최근 2개월까지 제공)
-            ottks_tp: 단주구분 (필수) — 1:당일매수에 대한 당일매도,2:당일매도 전체
-            ch_crd_tp: 현금신용구분 (필수) — 0:전체, 1:현금매매만, 2:신용매매만
+            base_dt: 기준일자
+            ottks_tp: 단주구분 (필수)
+            ch_crd_tp: 현금신용구분 (필수)
         """
         ...
 
@@ -650,10 +636,10 @@ class Account(Generic[ResponseT]):
         api_id ``ka10075`` · 미체결요청 · ``POST /api/dostk/acnt``
 
         Args:
-            all_stk_tp: 전체종목구분 (필수) — 0:전체, 1:종목
-            trde_tp: 매매구분 (필수) — 0:전체, 1:매도, 2:매수
-            stk_cd: 종목코드 — 종목코드 6자리
-            stex_tp: 거래소구분 (필수) — 0 : 통합, 1 : KRX, 2 : NXT
+            all_stk_tp: 전체종목구분 (필수)
+            trde_tp: 매매구분 (필수)
+            stk_cd: 종목코드
+            stex_tp: 거래소구분 (필수)
         """
         ...
 
@@ -670,7 +656,7 @@ class Account(Generic[ResponseT]):
         api_id ``ka10088`` · 미체결 분할주문 상세 · ``POST /api/dostk/acnt``
 
         Args:
-            ord_no: 주문번호 (필수) — 주문번호 7자리
+            ord_no: 주문번호 (필수)
         """
         ...
 
@@ -692,11 +678,11 @@ class Account(Generic[ResponseT]):
         api_id ``kt00010`` · 주문인출가능금액요청 · ``POST /api/dostk/acnt``
 
         Args:
-            io_amt: 입출금액 — 단위: 원
-            stk_cd: 종목번호 (필수) — 종목 코드 입력
-            trde_tp: 매매구분 (필수) — 1:매도, 2:매수
-            trde_qty: 매매수량 — 단위: 1주
-            uv: 매수가격 (필수) — 단위: 원
-            exp_buy_unp: 예상매수단가 — 단위: 원
+            io_amt: 입출금액
+            stk_cd: 종목번호 (필수)
+            trde_tp: 매매구분 (필수)
+            trde_qty: 매매수량
+            uv: 매수가격 (필수)
+            exp_buy_unp: 예상매수단가
         """
         ...

@@ -65,9 +65,8 @@ def _docstring(summary: str, tr: spec.TRSpec, indent: str) -> str:
         lines += ["", "Args:"]
         for f in fields:
             mark = " (필수)" if f.required else ""
-            desc = f" — {f.desc}" if f.desc else ""
             # 폭은 독스트링 들여쓰기까지 넣고 재고, 줄에는 Args 아래 들여쓰기만 남긴다.
-            wrapped = _wrap(f"{f.id}: {f.name}{mark}{desc}", indent + "    ", indent + "        ")
+            wrapped = _wrap(f"{f.id}: {f.name}{mark}", indent + "    ", indent + "        ")
             lines += [ln[len(indent):] for ln in wrapped]
     body = "\n".join(lines).replace("\\", "\\\\").replace('"""', '\\"\\"\\"')
     return textwrap.indent(f'"""{body}\n"""', indent)

@@ -67,15 +67,12 @@ class ETF(Generic[ResponseT]):
         api_id ``ka40004`` · ETF전체시세요청 · ``POST /api/dostk/etf``
 
         Args:
-            txon_type: 과세유형 (필수) — 0:전체, 1:비과세, 2:보유기간과세, 3:회사형, 4:외국,
-                5:비과세해외(보유기간관세)
-            navpre: NAV대비 (필수) — 0:전체, 1:NAV > 전일종가, 2:NAV < 전일종가
-            mngmcomp: 운용사 (필수) — 0000:전체, 3020:KODEX(삼성), 3027:KOSEF(키움),
-                3191:TIGER(미래에셋), 3228:KINDEX(한국투자), 3023:KStar(KB), 3022:아리랑(한화),
-                9999:기타운용사
-            txon_yn: 과세여부 (필수) — 0:전체, 1:과세, 2:비과세
-            trace_idex: 추적지수 (필수) — 0:전체
-            stex_tp: 거래소구분 (필수) — 1:KRX, 2:NXT, 3:통합
+            txon_type: 과세유형 (필수)
+            navpre: NAV대비 (필수)
+            mngmcomp: 운용사 (필수)
+            txon_yn: 과세여부 (필수)
+            trace_idex: 추적지수 (필수)
+            stex_tp: 거래소구분 (필수)
         """
         ...
 
@@ -96,7 +93,7 @@ class ETF(Generic[ResponseT]):
         Args:
             stk_cd: 종목코드 (필수)
             etfobjt_idex_cd: ETF대상지수코드 (필수)
-            dt: 기간 (필수) — 0:1주, 1:1달, 2:6개월, 3:1년
+            dt: 기간 (필수)
         """
         ...
 

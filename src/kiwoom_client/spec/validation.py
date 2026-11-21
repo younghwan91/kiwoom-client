@@ -2,7 +2,7 @@
 
 기본은 꺼져 있다. ``KiwoomAPI(..., validate_params="warn")`` 이면 경고만,
 ``validate_params="error"``(또는 ``True``)면 요청을 보내기 전에 :class:`KiwoomParamError` 를 낸다.
-값의 타입·코드값은 보지 않는다 — 카탈로그 코드값은 휴리스틱이라 유효한 값을 막을 수 있다.
+값의 타입·코드값은 보지 않는다 — 카탈로그는 코드값을 싣지 않고, 강제하면 유효한 값을 막을 수 있다.
 """
 
 from __future__ import annotations

@@ -53,7 +53,7 @@ class ModuleRegistry(Generic[ResponseT]):
     _client: ClientProtocol[ResponseT]
 
     def describe(self, target: object) -> str:
-        """TR 도움말 — 호출 예·요청 필드(필수·코드값)·응답 필드. 네트워크를 쓰지 않는다.
+        """TR 도움말 — 호출 예·요청 필드(필수 표시)·응답 필드. 네트워크를 쓰지 않는다.
 
         ``target`` 은 api_id(``"ka10001"``), ``"stock_info.basic_stock_info"``, 또는
         ``api.stock_info.basic_stock_info`` 같은 메서드. ``print(api.describe("ka10001"))``.

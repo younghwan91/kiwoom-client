@@ -72,21 +72,18 @@ def _methods(module: str) -> list[tuple[str, str, spec.TRSpec]]:
 
 def _field_rows(fields: tuple[spec.Field, ...], *, request: bool) -> list[str]:
     if request:
-        rows = ["| 필드 | 한글명 | 필수 | 길이 | 설명 |", "|---|---|:---:|---:|---|"]
+        rows = ["| 필드 | 한글명 | 필수 | 길이 |", "|---|---|:---:|---:|"]
     else:
-        rows = ["| 필드 | 한글명 | 길이 | 설명 |", "|---|---|---:|---|"]
+        rows = ["| 필드 | 한글명 | 길이 |", "|---|---|---:|"]
     for f in fields:
         name = f"`{f.parent}[].{f.id}`" if f.parent else f"`{f.id}`"
         if f.type == "list":
             name += " (list)"
         length = str(f.length) if f.length is not None else ""
         if request:
-            rows.append(
-                f"| {name} | {_cell(f.name)} | {'Y' if f.required else ''} | {length} | "
-                f"{_cell(f.desc)} |"
-            )
+            rows.append(f"| {name} | {_cell(f.name)} | {'Y' if f.required else ''} | {length} |")
         else:
-            rows.append(f"| {name} | {_cell(f.name)} | {length} | {_cell(f.desc)} |")
+            rows.append(f"| {name} | {_cell(f.name)} | {length} |")
     return rows
 
 
@@ -98,8 +95,9 @@ def render_module(module: str) -> str:
         f"# `api.{module}` — {title}",
         "",
         "요청·응답 필드는 키움 공식 REST API 명세에서 만든 TR 카탈로그"
-        f"([출처·라이선스]({SOURCE_DOC}))를 그대로 옮긴 것입니다. 뜻이 애매하면 "
-        f"[키움 REST API 포털]({OFFICIAL_PORTAL})이 기준입니다. 값은 모두 문자열로 넘깁니다.",
+        f"([출처·라이선스]({SOURCE_DOC}))에서 옮긴 필드 ID·한글명·필수·길이입니다. "
+        f"필드 설명·코드값은 싣지 않으니 [키움 REST API 포털]({OFFICIAL_PORTAL}) 문서를 보세요"
+        "(자주 쓰는 코드값은 `kiwoom_client.codes`). 값은 모두 문자열로 넘깁니다.",
         "",
         "공통 헤더(`api-id`·`cont-yn`·`next-key`·`authorization`)는 라이브러리가 채웁니다 — "
         "연속조회는 메서드의 `cont_yn`·`next_key` 인자나 `request_all()` 을 쓰세요.",
@@ -147,7 +145,7 @@ def render_index() -> str:
         "",
         "# 필드 레퍼런스 (Field reference)",
         "",
-        "REST 엔드포인트마다 요청·응답 필드(필드명·한글명·필수·길이·설명)를 모은 페이지입니다. "
+        "REST 엔드포인트마다 요청·응답 필드(필드명·한글명·필수·길이)를 모은 페이지입니다. "
         "모듈별 표에서 api_id 를 누르면 그 TR 로 갑니다.",
         "",
         f"- 데이터: 키움 공식 명세 [`{source['repository'].removeprefix('https://github.com/')}`]"

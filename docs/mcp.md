@@ -107,11 +107,11 @@ TR 도구는 `params` 에 키움 요청 필드를 문자열로 넣습니다. 각
 
 | 설정 | 도구 수 | `tools/list` 크기 (글자 수) |
 |---|---|---|
-| 전부 (실전, 가드) | 178 | 약 230 K |
-| `--toolsets market,chart,account` | 80 | 약 100 K |
+| 전부 (실전, 가드) | 178 | 약 220 K |
+| `--toolsets market,chart,account` | 80 | 약 97 K |
 | `--discovery` | 3 | 약 1.5 K |
 
-(0.4.x 기준. TR 도구의 입력 스키마에 필드 설명이 들어 있어 큽니다.)
+(TR 도구마다 입력 스키마에 요청 필드 ID·한글명이 들어 있어 큽니다.)
 
 - **toolset**: 쓰는 모듈만 켭니다.
 - **discovery 모드**: `search_tools`(키워드·toolset 검색) → `describe_tool`(입력 스키마) → `call_tool`(실행) 세 도구로 전체 TR 을 씁니다.

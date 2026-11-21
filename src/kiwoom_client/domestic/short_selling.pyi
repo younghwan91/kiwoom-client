@@ -31,9 +31,9 @@ class ShortSelling(Generic[ResponseT]):
         api_id ``ka10014`` · 공매도추이요청 · ``POST /api/dostk/shsa``
 
         Args:
-            stk_cd: 종목코드 (필수) — 거래소별 종목코드 (KRX:039490,NXT:039490_NX,SOR:039490_AL)
-            tm_tp: 시간구분 — 0:시작일, 1:기간
-            strt_dt: 시작일자 (필수) — YYYYMMDD
-            end_dt: 종료일자 (필수) — YYYYMMDD
+            stk_cd: 종목코드 (필수)
+            tm_tp: 시간구분
+            strt_dt: 시작일자 (필수)
+            end_dt: 종료일자 (필수)
         """
         ...

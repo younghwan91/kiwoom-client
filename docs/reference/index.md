@@ -2,7 +2,7 @@
 
 # 필드 레퍼런스 (Field reference)
 
-REST 엔드포인트마다 요청·응답 필드(필드명·한글명·필수·길이·설명)를 모은 페이지입니다. 모듈별 표에서 api_id 를 누르면 그 TR 로 갑니다.
+REST 엔드포인트마다 요청·응답 필드(필드명·한글명·필수·길이)를 모은 페이지입니다. 모듈별 표에서 api_id 를 누르면 그 TR 로 갑니다.
 
 - 데이터: 키움 공식 명세 [`Kiwoom-Securities/Kiwoom-REST-API`](https://github.com/Kiwoom-Securities/Kiwoom-REST-API) 커밋 `c7a3d25` 을 변환한 TR 카탈로그 ([출처·라이선스](https://github.com/younghwan91/kiwoom-client/blob/main/src/kiwoom_client/spec/SOURCE.md))
 - 코드에서: `kiwoom_client.spec.get("ka10001")`, IDE 에서는 메서드 키워드 인자 자동완성

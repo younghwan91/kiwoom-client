@@ -30,9 +30,9 @@ class Theme(Generic[ResponseT]):
         api_id ``ka90002`` · 테마구성종목요청 · ``POST /api/dostk/thme``
 
         Args:
-            date_tp: 날짜구분 — 1일 ~ 99일 날짜입력
-            thema_grp_cd: 테마그룹코드 (필수) — 테마그룹코드 번호
-            stex_tp: 거래소구분 (필수) — 1:KRX, 2:NXT 3.통합
+            date_tp: 날짜구분
+            thema_grp_cd: 테마그룹코드 (필수)
+            stex_tp: 거래소구분 (필수)
         """
         ...
 
@@ -54,12 +54,11 @@ class Theme(Generic[ResponseT]):
         api_id ``ka90001`` · 테마그룹별요청 · ``POST /api/dostk/thme``
 
         Args:
-            qry_tp: 검색구분 (필수) — 0:전체검색, 1:테마검색, 2:종목검색
-            stk_cd: 종목코드 — 검색하려는 종목코드
-            date_tp: 날짜구분 (필수) — n일전 (1일 ~ 99일 날짜입력)
-            thema_nm: 테마명 — 검색하려는 테마명
-            flu_pl_amt_tp: 등락수익구분 (필수) — 1:상위기간수익률, 2:하위기간수익률, 3:상위등락률,
-                4:하위등락률
-            stex_tp: 거래소구분 (필수) — 1:KRX, 2:NXT 3.통합
+            qry_tp: 검색구분 (필수)
+            stk_cd: 종목코드
+            date_tp: 날짜구분 (필수)
+            thema_nm: 테마명
+            flu_pl_amt_tp: 등락수익구분 (필수)
+            stex_tp: 거래소구분 (필수)
         """
         ...

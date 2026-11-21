@@ -11,8 +11,7 @@
       "source": "repo",
       "note": "현재 공식 명세(SOURCE_COMMIT)에 없다. 요청 필드는 tests/integration_api_smoke.py 표 기준이고 응답 필드는 미확인.",
       "request": [
-        {"id": "stk_cd", "name": "종목코드", "type": "string", "length": 20, "required": true,
-         "desc": "거래소별 종목코드\n(KRX:039490,NXT:039490_NX,SOR:039490_AL)"}
+        {"id": "stk_cd", "name": "종목코드", "type": "string", "length": 20, "required": true}
       ],
       "response": []
     }

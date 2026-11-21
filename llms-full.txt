@@ -911,7 +911,7 @@ def catalog_source() -> dict[str, Any]
 def describe(target: Any) -> str
 ```
 
-TR 하나의 사람이 읽을 도움말 — 호출 예, 요청 필드(필수·코드값), 응답 필드.
+TR 하나의 사람이 읽을 도움말 — 호출 예, 요청 필드(필수 표시), 응답 필드.
 
 ``target`` 은 :func:`resolve` 가 받는 것 무엇이든. ``print(spec.describe("ka10001"))``.
 
