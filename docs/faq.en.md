@@ -30,7 +30,7 @@ see [Troubleshooting](troubleshooting.md).
 
 **Q. Does it need Windows or 32-bit Python?**
 No. It is REST, so it runs on Windows, macOS and Linux with 64-bit Python 3.10+. There is no OCX or login window, so it
-runs on servers and in containers.
+runs on servers and in containers. Step by step: [macOS and Linux](macos-linux.md).
 
 **Q. How do I port OpenAPI+ (KOA Studio) / pykiwoom code?**
 What `opt10081`-style TRs, `SendOrder` and `SetRealReg` become in REST is in

@@ -74,6 +74,7 @@ print(info["stk_nm"])
 | 하고 싶은 것 | 갈 곳 |
 |---|---|
 | 설치·사용법 전체 (sync/async, WebSocket, 에러 처리) | [README](https://github.com/younghwan91/kiwoom-client#readme) |
+| 맥·리눅스·서버에서 설치부터 첫 조회까지 | [맥·리눅스에서 쓰기](macos-linux.md) |
 | 182개 메서드의 api_id·TR 이름 찾기 | [엔드포인트 전체 목록](endpoints.md) |
 | Claude Code·Cursor 에 붙이기 | [MCP 서버](mcp.md) |
 | OpenAPI+·pykiwoom 코드를 REST 로 옮기기 | [옮겨 오기 대응표](migration-from-openapi-plus.md) |

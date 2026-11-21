@@ -17,6 +17,7 @@
 - 문서 배포 뒤 바뀐 페이지 URL 을 IndexNow(Bing·Naver 등)에 알린다 — `scripts/indexnow.py`, 키 파일 `docs/<키>.txt`.
   실패해도 배포는 성공으로 둔다
 - 문서 사이트: 쓸모 있는 링크를 단 404 페이지(noindex), 바닥글 GitHub·PyPI 링크, `site_author`
+- 문서: "맥·리눅스에서 키움증권 API 쓰기"(한/영) — OCX 없이 설치부터 첫 조회·일봉 DataFrame·실시간 체결·서버 실행까지
 
 ## [0.5.0] - 2026-11-21
 

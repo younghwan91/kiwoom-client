@@ -166,6 +166,7 @@ KEY_PAGES = (
     "convenience",
     "resources",
     "showcase",
+    "macos-linux",
 )
 
 

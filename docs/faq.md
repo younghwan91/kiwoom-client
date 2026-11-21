@@ -30,6 +30,7 @@ print(api.stock_info.basic_stock_info(stk_cd="005930")["stk_nm"])
 
 **Q. Windows 가 아니어도 되나요? 32bit 파이썬이 필요한가요?**
 REST 라서 Windows · macOS · Linux 어디서나, 64bit 파이썬 3.10 이상이면 됩니다. OCX·로그인 창이 없어 서버·도커에서도 돕니다.
+순서대로 따라 하려면 [맥·리눅스에서 쓰기](macos-linux.md).
 
 **Q. OpenAPI+(KOA Studio)·pykiwoom 코드를 옮기려면?**
 `opt10081` 같은 TR, `SendOrder`, `SetRealReg` 가 REST 에서 무엇인지 [OpenAPI+ 에서 옮겨 오기](migration-from-openapi-plus.md)에 정리했습니다.
