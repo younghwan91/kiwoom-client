@@ -57,8 +57,8 @@ def test_korean_marker_only_on_untranslated_pages(page: Path) -> None:
     assert not stale, f"{page.name}: 영어판이 생긴 페이지에 '(Korean)' 표시가 남아 있다 — {stale}"
 
 
-def test_marker_detection_works() -> None:
-    """검사가 헛돌지 않게: 상대 경로·사이트 절대 URL 링크를 둘 다 알아본다.
+def test_marker_detection_works(tmp_path: Path) -> None:
+    """검사가 헛돌지 않게: 상대 경로·사이트 절대 URL 링크와 두 가지 표시 위치를 다 알아본다.
 
     외부 사이트(키움 문서 등)에 붙은 "(Korean)" 은 검사 대상이 아니다(None).
     """
@@ -68,5 +68,13 @@ def test_marker_detection_works() -> None:
     assert _translated(page, SITE + "migration-from-openapi-plus/") is True
     assert _translated(page, SITE) is True
     assert _translated(page, "https://openapi.kiwoom.com/guide/apiguide") is None
-    marked = [t for p in _english_pages() for t in _korean_marked_links(p)]
-    assert any(translated is not None for _, translated in marked), "'(Korean)' 표시를 못 찾음"
+
+    sample = tmp_path / "sample.en.md"
+    sample.write_text(
+        "[a (Korean)](a.md) · [b](b.md#x) (Korean) · [c](c.md) · [d (Korean)](https://example.com)",
+        encoding="utf-8",
+    )
+    (tmp_path / "a.en.md").write_text("", encoding="utf-8")
+    assert _korean_marked_links(sample) == [
+        ("a.md", True), ("b.md", False), ("https://example.com", None),
+    ]

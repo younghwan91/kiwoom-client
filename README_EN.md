@@ -269,7 +269,7 @@ are all `KiwoomAPIError`, so the block above still catches them. Known causes ca
 
 Stock search by name (`api.find_stock`), named codes (`OrderType.LIMIT`, `Exchange.KRX`), a read-only CLI
 (`kiwoom quote 005930 --mock`), masked `repr`, DEBUG request tracing and `timeout=` are covered in
-[the convenience docs](https://younghwan91.github.io/kiwoom-client/en/convenience/) (Korean).
+[the convenience docs](https://younghwan91.github.io/kiwoom-client/en/convenience/).
 
 ## Using as an MCP server
 
