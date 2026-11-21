@@ -103,7 +103,7 @@ api.chart.stock_daily_chart(stk_cd="005930", base_date="20260326")  # warns: bas
 ## Orders
 
 - **A limit order is rejected or fills at another price**: `ord_uv` is not a multiple of the tick size. Use
-  `round_to_tick()` / `add_ticks()` — [limit-order recipe (Korean)](cookbook/limit-order.md).
+  `round_to_tick()` / `add_ticks()` — [limit-order recipe](cookbook/limit-order.md).
 - **Numbers passed as numbers**: every Kiwoom field is a string — `ord_qty="10"`, `ord_uv=str(price)`.
 - **Order tools missing in MCP**: by design. On a live account (`KIWOOM_IS_MOCK=false`) they are not registered until
   `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true`.
