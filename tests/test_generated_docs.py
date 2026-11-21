@@ -71,3 +71,26 @@ def test_every_module_has_a_title():
 def test_check_mode_reports_clean_tree(capsys):
     assert gen_docs.main(["--check"]) == 0
     assert capsys.readouterr().out == ""
+
+
+def test_llms_txt_links_point_to_files_in_the_repo():
+    local = [t for _, t, _, _ in gen_docs.LLMS_LINKS if "://" not in t]
+    missing = [t for t in local if not (ROOT / t).exists()]
+    assert not missing, f"llms.txt 가 없는 파일을 가리킵니다: {missing}"
+
+
+def test_llms_txt_follows_llmstxt_format():
+    """llmstxt.org: H1 제목 → 인용(>) 요약 → H2 섹션의 '- [이름](url): 설명' 목록."""
+    lines = (ROOT / "llms.txt").read_text(encoding="utf-8").splitlines()
+    assert lines[0] == "# kiwoom-client"
+    assert next(line for line in lines[1:] if line.strip()).startswith("> ")
+    sections = [line for line in lines if line.startswith("## ")]
+    assert sections and sections[-1] == "## Optional"
+    after_first_h2 = lines[lines.index(sections[0]):]
+    links = [line for line in after_first_h2 if line.startswith("- ")]
+    assert links and all(line.startswith("- [") and "](" in line for line in links)
+
+
+def test_llms_full_signatures_do_not_leak_typevars():
+    text = (ROOT / "llms-full.txt").read_text(encoding="utf-8")
+    assert "_SyncT" not in text and "_AsyncT" not in text
