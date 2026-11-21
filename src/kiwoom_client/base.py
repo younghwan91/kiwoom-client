@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import time
 from typing import Any, Protocol, TypeVar
 
@@ -12,6 +13,11 @@ from kiwoom_client._errors import KiwoomError, error_hint, parse_error_code
 from kiwoom_client._redact import mask_secret, server_label, token_state
 from kiwoom_client.auth import AsyncTokenProvider, TokenProvider
 from kiwoom_client.rate_limiter import AsyncPerKeyRateLimiter, PerKeyRateLimiter
+
+#: DEBUG-level request tracing: api-id, path, HTTP status, return_code, retries.
+#: Never headers or bodies — the token travels in a header, account numbers
+#: in bodies.
+logger = logging.getLogger(__name__)
 
 #: What a module method hands back — a dict for the sync client, an awaitable
 #: of one for the async client. Lets both share the 15 endpoint modules.
@@ -144,6 +150,8 @@ class _ClientCore:
     # Defaults tuned to the measured Kiwoom per-TR limit (1 req/s, burst 2).
     DEFAULT_RATE_LIMIT = 1.0
     DEFAULT_RATE_BURST = 2
+    #: Seconds before an HTTP request gives up (connect/read/write/pool).
+    DEFAULT_TIMEOUT = 30.0
 
     # Statuses that mean "your token is no longer good" — refresh and retry.
     TOKEN_ERROR_STATUSES = (401,)
@@ -268,6 +276,8 @@ class BaseClient(_ClientCore):
         token_provider: Supplies (and refreshes) the access token. When set,
             an expired token is reissued automatically on HTTP 401. When
             omitted, the manually-assigned ``access_token`` is used as before.
+        timeout: HTTP timeout in seconds (or an ``httpx.Timeout``) for every
+            request. Defaults to 30s, as before.
     """
 
     def __init__(
@@ -281,9 +291,11 @@ class BaseClient(_ClientCore):
         max_retries: int = 3,
         retry_backoff: float = 1.1,
         token_provider: TokenProvider | None = None,
+        *,
+        timeout: float | httpx.Timeout = _ClientCore.DEFAULT_TIMEOUT,
     ):
         super().__init__(app_key, app_secret, base_url, is_mock, max_retries, retry_backoff)
-        self._client = httpx.Client(base_url=self.base_url, timeout=30.0)
+        self._client = httpx.Client(base_url=self.base_url, timeout=timeout)
         self._rate_limiter: PerKeyRateLimiter | None = (
             PerKeyRateLimiter(rate_limit, rate_burst) if rate_limit is not None else None
         )
@@ -342,9 +354,17 @@ class BaseClient(_ClientCore):
             if self._rate_limiter is not None:
                 self._rate_limiter.acquire(api_id)
             resp = self._client.post(resource_url, headers=headers, json=body or {})
+            logger.debug(
+                "%s %s -> HTTP %s (attempt %d)", api_id, resource_url, resp.status_code,
+                attempt + 1,
+            )
 
             # HTTP 429: rate limit exceeded — back off and retry.
             if resp.status_code == 429 and attempt < self._max_retries:
+                logger.debug(
+                    "%s rate-limited (HTTP 429), retrying in %.1fs",
+                    api_id, self._retry_backoff * (attempt + 1),
+                )
                 time.sleep(self._retry_backoff * (attempt + 1))
                 continue
 
@@ -356,6 +376,7 @@ class BaseClient(_ClientCore):
                 and attempt < self._max_retries
             ):
                 token_refreshed = True
+                logger.debug("%s token rejected (HTTP 401), reissuing", api_id)
                 self.token_provider.refresh_token()
                 continue
 
@@ -374,6 +395,10 @@ class BaseClient(_ClientCore):
 
             # return_code 5 also signals "허용된 요청 개수를 초과" — retry.
             if data.get("return_code") == 5 and attempt < self._max_retries:
+                logger.debug(
+                    "%s rate-limited (return_code 5), retrying in %.1fs",
+                    api_id, self._retry_backoff * (attempt + 1),
+                )
                 time.sleep(self._retry_backoff * (attempt + 1))
                 continue
 
@@ -385,9 +410,11 @@ class BaseClient(_ClientCore):
                 and attempt < self._max_retries
             ):
                 token_refreshed = True
+                logger.debug("%s token rejected (return_code 3), reissuing", api_id)
                 self.token_provider.refresh_token()
                 continue
 
+            logger.debug("%s return_code=%s", api_id, data.get("return_code", 0))
             self._check_return_code(data, self.base_url)
             return data
 
@@ -445,6 +472,8 @@ class AsyncBaseClient(_ClientCore):
         max_retries: Automatic retries on HTTP 429 / return_code 5.
         retry_backoff: Base seconds to wait before a retry (grows per attempt).
         token_provider: Supplies (and refreshes) the access token.
+        timeout: HTTP timeout in seconds (or an ``httpx.Timeout``) for every
+            request. Defaults to 30s, as before.
     """
 
     def __init__(
@@ -458,9 +487,11 @@ class AsyncBaseClient(_ClientCore):
         max_retries: int = 3,
         retry_backoff: float = 1.1,
         token_provider: AsyncTokenProvider | None = None,
+        *,
+        timeout: float | httpx.Timeout = _ClientCore.DEFAULT_TIMEOUT,
     ):
         super().__init__(app_key, app_secret, base_url, is_mock, max_retries, retry_backoff)
-        self._client = httpx.AsyncClient(base_url=self.base_url, timeout=30.0)
+        self._client = httpx.AsyncClient(base_url=self.base_url, timeout=timeout)
         self._rate_limiter: AsyncPerKeyRateLimiter | None = (
             AsyncPerKeyRateLimiter(rate_limit, rate_burst)
             if rate_limit is not None
@@ -512,8 +543,16 @@ class AsyncBaseClient(_ClientCore):
             if self._rate_limiter is not None:
                 await self._rate_limiter.acquire(api_id)
             resp = await self._client.post(resource_url, headers=headers, json=body or {})
+            logger.debug(
+                "%s %s -> HTTP %s (attempt %d)", api_id, resource_url, resp.status_code,
+                attempt + 1,
+            )
 
             if resp.status_code == 429 and attempt < self._max_retries:
+                logger.debug(
+                    "%s rate-limited (HTTP 429), retrying in %.1fs",
+                    api_id, self._retry_backoff * (attempt + 1),
+                )
                 await asyncio.sleep(self._retry_backoff * (attempt + 1))
                 continue
 
@@ -524,6 +563,7 @@ class AsyncBaseClient(_ClientCore):
                 and attempt < self._max_retries
             ):
                 token_refreshed = True
+                logger.debug("%s token rejected (HTTP 401), reissuing", api_id)
                 await self.token_provider.refresh_token()
                 continue
 
@@ -541,6 +581,10 @@ class AsyncBaseClient(_ClientCore):
                 data["next-key"] = resp.headers.get("next-key", "")
 
             if data.get("return_code") == 5 and attempt < self._max_retries:
+                logger.debug(
+                    "%s rate-limited (return_code 5), retrying in %.1fs",
+                    api_id, self._retry_backoff * (attempt + 1),
+                )
                 await asyncio.sleep(self._retry_backoff * (attempt + 1))
                 continue
 
@@ -552,9 +596,11 @@ class AsyncBaseClient(_ClientCore):
                 and attempt < self._max_retries
             ):
                 token_refreshed = True
+                logger.debug("%s token rejected (return_code 3), reissuing", api_id)
                 await self.token_provider.refresh_token()
                 continue
 
+            logger.debug("%s return_code=%s", api_id, data.get("return_code", 0))
             self._check_return_code(data, self.base_url)
             return data
 

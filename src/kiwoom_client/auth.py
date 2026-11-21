@@ -192,6 +192,7 @@ class KiwoomAuth(_TokenCache):
         app_secret: API app secret.
         base_url: API base URL.
         expiry_margin: Reissue this many seconds before actual expiry.
+        timeout: HTTP timeout for the token endpoints (default 30s).
     """
 
     def __init__(
@@ -200,12 +201,14 @@ class KiwoomAuth(_TokenCache):
         app_secret: str,
         base_url: str,
         expiry_margin: float = _TokenCache.DEFAULT_EXPIRY_MARGIN,
+        *,
+        timeout: float | httpx.Timeout = 30.0,
     ):
         super().__init__(expiry_margin)
         self.app_key = app_key
         self.app_secret = app_secret
         self.base_url = base_url.rstrip("/")
-        self._client = httpx.Client(base_url=self.base_url, timeout=30.0)
+        self._client = httpx.Client(base_url=self.base_url, timeout=timeout)
         self._lock = threading.Lock()
 
     def close(self) -> None:
@@ -301,6 +304,7 @@ class AsyncKiwoomAuth(_TokenCache):
         app_secret: API app secret.
         base_url: API base URL.
         expiry_margin: Reissue this many seconds before actual expiry.
+        timeout: HTTP timeout for the token endpoints (default 30s).
     """
 
     def __init__(
@@ -309,12 +313,14 @@ class AsyncKiwoomAuth(_TokenCache):
         app_secret: str,
         base_url: str,
         expiry_margin: float = _TokenCache.DEFAULT_EXPIRY_MARGIN,
+        *,
+        timeout: float | httpx.Timeout = 30.0,
     ):
         super().__init__(expiry_margin)
         self.app_key = app_key
         self.app_secret = app_secret
         self.base_url = base_url.rstrip("/")
-        self._client = httpx.AsyncClient(base_url=self.base_url, timeout=30.0)
+        self._client = httpx.AsyncClient(base_url=self.base_url, timeout=timeout)
         self._lock = asyncio.Lock()
 
     async def aclose(self) -> None:
