@@ -1,0 +1,104 @@
+name: 버그 신고 (Bug report)
+description: kiwoom-client 가 문서와 다르게 동작하거나 예외가 납니다
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > [!WARNING]
+        > **앱키·시크릿·접근 토큰·계좌번호를 절대 붙여넣지 마세요.** 이슈는 공개이고, 지워도 알림 메일·포크에 남습니다.
+        > 로그·응답에 들어 있으면 `XXXX` 로 가려 주세요. 이미 올렸다면 키움 OpenAPI 포털에서 앱키를 재발급하세요.
+        >
+        > 보안 문제(실주문 가드 우회, 키 유출 등)는 이슈가 아니라 [SECURITY.md](https://github.com/younghwan91/kiwoom-client/blob/main/SECURITY.md) 의 비공개 경로로 알려 주세요.
+
+  - type: input
+    id: version
+    attributes:
+      label: kiwoom-client 버전
+      description: "`python -c \"import kiwoom_client; print(kiwoom_client.__version__)\"`"
+      placeholder: "0.4.0"
+    validations:
+      required: true
+
+  - type: input
+    id: python
+    attributes:
+      label: Python 버전 · OS
+      placeholder: "3.12 · Windows 11"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: server
+    attributes:
+      label: 서버
+      description: "`is_mock=True` 는 모의투자, 기본값 `is_mock=False` 는 실전투자 서버입니다."
+      options:
+        - 모의투자 (mockapi.kiwoom.com, is_mock=True)
+        - 실전투자 (api.kiwoom.com, is_mock=False)
+        - 서버와 상관없음 (설치·import·타입 등)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: 어디서 났나요
+      multiple: true
+      options:
+        - REST (KiwoomAPI, 동기)
+        - REST (AsyncKiwoomAPI, 비동기)
+        - WebSocket 실시간 · 조건검색
+        - MCP 서버 (kiwoom-client-mcp)
+        - pandas 변환 · parsing
+        - 호가단위 (tick_size)
+        - 설치 · 패키징
+        - 기타
+
+  - type: input
+    id: api_id
+    attributes:
+      label: api_id · 메서드
+      description: 관련된 엔드포인트가 있으면 적어 주세요.
+      placeholder: "ka10001 · api.stock_info.basic_stock_info"
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: 재현 코드
+      description: 가능하면 최소한으로 줄여 주세요. 키는 환경변수로 읽게 하고 값은 넣지 마세요.
+      render: python
+      placeholder: |
+        import os
+        from kiwoom_client import KiwoomAPI
+
+        api = KiwoomAPI(os.environ["KIWOOM_APP_KEY"], os.environ["KIWOOM_APP_SECRET"], is_mock=True)
+        print(api.stock_info.basic_stock_info(stk_cd="005930"))
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 기대한 동작
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 실제 동작 · 에러 메시지
+      description: 트레이스백 전체나 `return_code`/`return_msg` 를 붙여 주세요(계좌번호·토큰은 가리고).
+      render: text
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 확인
+      options:
+        - label: 앱키·시크릿·토큰·계좌번호가 이 이슈에 들어 있지 않습니다.
+          required: true
+        - label: 최신 버전에서도 재현됩니다 (`pip install -U kiwoom-client`).

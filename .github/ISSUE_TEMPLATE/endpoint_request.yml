@@ -1,0 +1,68 @@
+name: 엔드포인트 요청 (Endpoint request)
+description: 아직 감싸지 않았거나 잘못 감싼 키움 REST·WebSocket 엔드포인트
+title: "[Endpoint] "
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        이미 감싼 엔드포인트 목록은 [docs/endpoints.md](https://github.com/younghwan91/kiwoom-client/blob/main/docs/endpoints.md) 에서 api_id 로 찾아 주세요.
+        키움 공식 문서의 필드명·값은 사실 정보만 적어 주시고, 응답 예시에서 **계좌번호·토큰은 가려 주세요.**
+
+  - type: input
+    id: api_id
+    attributes:
+      label: api_id
+      placeholder: "ka10099"
+    validations:
+      required: true
+
+  - type: input
+    id: name
+    attributes:
+      label: 키움 문서상 이름
+      placeholder: "종목정보 리스트"
+    validations:
+      required: true
+
+  - type: input
+    id: url
+    attributes:
+      label: URL 경로
+      placeholder: "/api/dostk/stkinfo"
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: 종류
+      options:
+        - 조회 (REST)
+        - 주문 · 정정 · 취소 (REST)
+        - 실시간 (WebSocket REAL)
+        - 조건검색 (WebSocket)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: state
+    attributes:
+      label: 지금 상태
+      options:
+        - 아직 없음
+        - 있지만 api_id · URL · 필드가 틀림
+    validations:
+      required: true
+
+  - type: input
+    id: source
+    attributes:
+      label: 출처 링크
+      description: 키움 OpenAPI 문서 페이지 링크
+      placeholder: "https://openapi.kiwoom.com/guide/apiguide"
+
+  - type: textarea
+    id: fields
+    attributes:
+      label: 주요 요청 · 응답 필드
+      description: 필드명 · 타입 · 필수 여부 · 코드값 정도면 충분합니다.
+      render: text
