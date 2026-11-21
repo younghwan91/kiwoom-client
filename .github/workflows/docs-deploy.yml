@@ -1,0 +1,59 @@
+name: Docs deploy
+
+# 문서 사이트(https://younghwan91.github.io/kiwoom-client/)를 GitHub Pages 에 올린다.
+# main 에 머지될 때마다 `mkdocs build --strict` 로 만들어 배포한다. PR 검사는 ci.yml 의 docs 잡이 한다.
+# llms.txt·llms-full.txt 는 mkdocs 훅(scripts/mkdocs_hooks.py)이 사이트 루트에 복사한다.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# 배포는 한 번에 하나만. 진행 중인 배포는 끊지 않고, 대기 중인 것만 최신 커밋으로 바꾼다.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -e ".[docs]"
+
+      - name: Build (strict)
+        env:
+          NO_MKDOCS_2_WARNING: "1"
+        run: mkdocs build --strict
+
+      - name: Check llms.txt is at the site root
+        run: test -s site/llms.txt && test -s site/llms-full.txt
+
+      - uses: actions/configure-pages@v6
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

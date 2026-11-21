@@ -16,6 +16,10 @@ copyright: 키움증권과 무관한 비공식 오픈소스 프로젝트입니�
 exclude_docs: |
   superpowers/
 
+# 레포 루트의 llms.txt·llms-full.txt 를 사이트 루트(/llms.txt)에도 복사한다.
+hooks:
+  - scripts/mkdocs_hooks.py
+
 theme:
   name: material
   language: ko
