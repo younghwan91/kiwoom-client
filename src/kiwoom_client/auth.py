@@ -11,6 +11,7 @@ from typing import Any, Protocol, runtime_checkable
 import httpx
 
 from kiwoom_client._errors import KiwoomError, error_hint, parse_error_code
+from kiwoom_client._redact import mask_secret, token_state
 
 
 class KiwoomAuthError(KiwoomError):
@@ -93,6 +94,15 @@ class _TokenCache:
         self.expiry_margin = expiry_margin
         self._token: str | None = None
         self._expires_at: float | None = None
+
+    def __repr__(self) -> str:
+        # Never the secret or the token: see kiwoom_client._redact.
+        return (
+            f"{type(self).__name__}(base_url={getattr(self, 'base_url', None)!r}, "
+            f"app_key={mask_secret(getattr(self, 'app_key', None))!r}, "
+            f"app_secret={mask_secret(getattr(self, 'app_secret', None), 0)!r}, "
+            f"token={token_state(self._token)!r}, expires_at={self._expires_at!r})"
+        )
 
     @property
     def token(self) -> str | None:

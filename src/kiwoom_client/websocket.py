@@ -96,6 +96,14 @@ class KiwoomWebSocket:
         self._subscriptions: list[dict[str, Any]] = []
         self._running = False
 
+    def __repr__(self) -> str:
+        # The access token is never shown.
+        return (
+            f"KiwoomWebSocket(ws_url={self.ws_url!r}, connected={self._ws is not None}, "
+            f"subscriptions={len(self._subscriptions)}, "
+            f"access_token={'set' if self.access_token else 'none'!r})"
+        )
+
     async def connect(self) -> None:
         """Open the connection and complete the LOGIN handshake.
 
