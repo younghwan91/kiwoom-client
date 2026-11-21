@@ -9,6 +9,7 @@ from typing import Any, Protocol, TypeVar
 import httpx
 
 from kiwoom_client._errors import KiwoomError, error_hint, parse_error_code
+from kiwoom_client._redact import mask_secret, server_label, token_state
 from kiwoom_client.auth import AsyncTokenProvider, TokenProvider
 from kiwoom_client.rate_limiter import AsyncPerKeyRateLimiter, PerKeyRateLimiter
 
@@ -172,6 +173,15 @@ class _ClientCore:
         self._access_token: str | None = None
         self._max_retries = max_retries
         self._retry_backoff = retry_backoff
+
+    def __repr__(self) -> str:
+        # Never the secret or the token: see kiwoom_client._redact.
+        return (
+            f"{type(self).__name__}(server={server_label(self.base_url)!r}, "
+            f"base_url={self.base_url!r}, app_key={mask_secret(self.app_key)!r}, "
+            f"app_secret={mask_secret(self.app_secret, 0)!r}, "
+            f"access_token={token_state(self._access_token)!r})"
+        )
 
     @property
     def access_token(self) -> str | None:

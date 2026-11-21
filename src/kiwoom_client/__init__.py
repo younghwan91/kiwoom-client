@@ -32,6 +32,7 @@ from importlib.metadata import version as _package_version
 from typing import Any, TypeVar
 
 from kiwoom_client._env import resolve_credentials
+from kiwoom_client._redact import mask_secret, server_label, token_state
 from kiwoom_client._registry import ModuleRegistry
 from kiwoom_client.auth import AsyncKiwoomAuth, KiwoomAuth, KiwoomAuthError
 from kiwoom_client.base import AsyncBaseClient, BaseClient, KiwoomAPIError
@@ -198,6 +199,15 @@ class KiwoomAPI(ModuleRegistry[dict[str, Any]]):
         creds = resolve_credentials(env_file, is_mock=is_mock)
         return cls(creds.app_key, creds.app_secret, is_mock=creds.is_mock, **kwargs)
 
+    def __repr__(self) -> str:
+        # Never the secret or the token: see kiwoom_client._redact.
+        client = self._base_client
+        return (
+            f"{type(self).__name__}(server={server_label(client.base_url)!r}, "
+            f"base_url={client.base_url!r}, app_key={mask_secret(client.app_key)!r}, "
+            f"token={token_state(self._auth.token)!r})"
+        )
+
     def login(self) -> dict[str, Any]:
         """Authenticate and obtain an access token.
 
@@ -358,6 +368,15 @@ class AsyncKiwoomAPI(ModuleRegistry[Awaitable[dict[str, Any]]]):
         """
         creds = resolve_credentials(env_file, is_mock=is_mock)
         return cls(creds.app_key, creds.app_secret, is_mock=creds.is_mock, **kwargs)
+
+    def __repr__(self) -> str:
+        # Never the secret or the token: see kiwoom_client._redact.
+        client = self._base_client
+        return (
+            f"{type(self).__name__}(server={server_label(client.base_url)!r}, "
+            f"base_url={client.base_url!r}, app_key={mask_secret(client.app_key)!r}, "
+            f"token={token_state(self._auth.token)!r})"
+        )
 
     async def login(self) -> dict[str, Any]:
         """Authenticate and obtain an access token (optional — see KiwoomAPI)."""
