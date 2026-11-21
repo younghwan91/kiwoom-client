@@ -1,0 +1,8 @@
+# 링크 검사(.github/workflows/links.yml)에서 뺄 주소. 한 줄에 정규식 하나.
+# 키움 API 서버 — 문서에 호스트로 적혀 있을 뿐 브라우저 링크가 아니고, 검사 봇이 요청을 보내면 안 된다.
+^https?://(api|mockapi)\.kiwoom\.com
+^wss?://
+# 로컬·예시 주소
+^https?://(localhost|127\.0\.0\.1)
+# 봇을 999 로 막는 사이트
+^https?://(www\.)?linkedin\.com

@@ -1,0 +1,58 @@
+name: Links
+
+# 문서 링크 검사 (lychee).
+# - internal: 레포 안 상대 링크·앵커(#fragment). 네트워크 없이 돌고, 깨지면 실패한다.
+# - external: 바깥 URL. 사이트 사정으로 흔들리니 실패해도 경고만(요약 페이지에 표).
+# 키움 API 서버(api/mockapi.kiwoom.com)는 .lycheeignore 로 뺀다 — 검사 봇이 요청을 보내면 안 된다.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "41 0 * * 1"  # 월요일 09:41 KST
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # docs/superpowers/ 는 작업 기록이라 뺀다.
+  LINK_INPUTS: "'./*.md' './docs/*.md' './examples/*.md' './.github/**/*.md'"
+
+jobs:
+  internal:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Internal links (offline, blocking)
+        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8  # v2.9.0
+        with:
+          args: >-
+            --offline --include-fragments --no-progress
+            --root-dir ${{ github.workspace }}
+            ${{ env.LINK_INPUTS }}
+          fail: true
+          jobSummary: false
+
+  external:
+    runs-on: ubuntu-latest
+    # 바깥 사이트가 잠깐 죽어도 PR 을 막지 않는다.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: External links (warn only)
+        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8  # v2.9.0
+        with:
+          args: >-
+            --no-progress --max-concurrency 8 --timeout 20 --max-retries 2
+            --root-dir ${{ github.workspace }}
+            ${{ env.LINK_INPUTS }}
+          fail: false
+          jobSummary: true
