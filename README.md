@@ -1,16 +1,19 @@
 [한국어](https://github.com/younghwan91/kiwoom-client/blob/main/README.md) | [English](https://github.com/younghwan91/kiwoom-client/blob/main/README_EN.md)
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/brand/wordmark-dark.svg">
+  <img alt="kiwoom-client" src="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/brand/wordmark-light.svg" height="56">
+</picture>
+
 # kiwoom-client — 키움증권 REST API 파이썬 클라이언트
 
-키움 REST API 전체를 파이썬 클라이언트 하나로. 182개 엔드포인트, 실시간 WebSocket, 그리고 MCP 서버로 AI 에이전트까지 — COM/OCX 없이 Windows · macOS · Linux 어디서나 돌아갑니다.
+**키움 REST API, 파이썬과 AI 에이전트로.** 182개 엔드포인트, 실시간 WebSocket, 그리고 MCP 서버로 AI 에이전트까지 — COM/OCX 없이 Windows · macOS · Linux 어디서나 돌아갑니다. 키움증권과 무관한 비공식 오픈소스입니다.
 
 [![PyPI version](https://img.shields.io/pypi/v/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
+[![Python](https://img.shields.io/pypi/pyversions/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
 [![Downloads](https://img.shields.io/pypi/dm/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
-[![Total Downloads](https://static.pepy.tech/badge/kiwoom-client)](https://pepy.tech/project/kiwoom-client)
 [![CI](https://github.com/younghwan91/kiwoom-client/actions/workflows/ci.yml/badge.svg)](https://github.com/younghwan91/kiwoom-client/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/github/license/younghwan91/kiwoom-client)](https://github.com/younghwan91/kiwoom-client/blob/main/LICENSE)
-[![Python](https://img.shields.io/pypi/pyversions/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-younghwan--chae-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/younghwan-chae/)
 
 - **REST 182개 + 조건검색 4종 + 실시간 19종**을 모듈 15개로 감쌌습니다. 아래 그림은 코드에서 센 것이라 타일 하나가 엔드포인트 하나입니다.
 - **MCP 서버 내장** — Claude Code · Cursor 가 `stock_info_basic_stock_info` 같은 도구로 시세·계좌·주문을 직접 부릅니다. 실전 계좌에서는 `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true` 를 켜기 전까지 주문 도구가 **등록조차 되지 않습니다**.
@@ -39,7 +42,26 @@ print(info["stk_nm"])
 
 접근토큰은 첫 호출에서 자동 발급되고 만료 전에 갱신되므로 따로 할 일이 없습니다. 앱키·시크릿키는
 [키움 REST API 포털](https://openapi.kiwoom.com)에서 발급받고, 처음에는 모의투자(`is_mock=True`)로 시작하세요.
-AI 에이전트에서 쓰려면 [MCP 서버](#mcp-서버로-사용하기)로 바로 가면 됩니다.
+
+### AI 에이전트에서 (MCP)
+
+```bash
+pip install 'kiwoom-client[mcp]'
+claude mcp add --transport stdio \
+  --env KIWOOM_APP_KEY=발급받은_앱키 --env KIWOOM_APP_SECRET=발급받은_시크릿키 --env KIWOOM_IS_MOCK=true \
+  kiwoom-client -- kiwoom-client-mcp
+```
+
+이제 Claude Code 에서 "삼성전자 지금 얼마야?" 라고 물으면 됩니다. Cursor 등 다른 클라이언트 설정과 환경변수는 [MCP 서버로 사용하기](#mcp-서버로-사용하기).
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/demo-mcp-ko-dark.png">
+  <img alt="예시 화면: MCP 클라이언트가 stock_info_basic_stock_info 도구로 삼성전자 시세를 조회하고, 실전투자 서버에서 매수를 요청하자 주문 도구가 등록돼 있지 않아 거절하는 대화" src="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/demo-mcp-ko-light.png" width="100%">
+</picture>
+
+<sub>실서버를 호출하지 않고 만든 예시 화면입니다(시세 값은 가상). 실전투자 서버에서는 `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true` 를 켜기 전까지 주문 도구가 등록되지 않아, 에이전트가 주문할 방법 자체가 없습니다.</sub>
+
+더 읽을거리: [왜 kiwoom-client 인가 — OpenAPI+·pykiwoom·다른 REST 래퍼와 비교](https://github.com/younghwan91/kiwoom-client/blob/main/docs/why.md) · [엔드포인트 전체 목록](https://github.com/younghwan91/kiwoom-client/blob/main/docs/endpoints.md)
 
 ## 무엇을 하나
 
@@ -401,6 +423,7 @@ api.logout()     # 접근토큰 폐기
 
 ## 참고
 
+- kiwoom-client 는 **키움증권과 무관한 비공식 오픈소스 프로젝트**입니다. "키움"·"Kiwoom" 은 키움증권(주)의 상표이며, 이 프로젝트는 키움증권이 공개한 REST API 를 호출하는 클라이언트일 뿐입니다.
 - 공식 API 가이드: https://openapi.kiwoom.com/guide/apiguide
 - 모의투자는 KRX 만 지원됩니다.
 - 모든 API 이름은 키움증권 공식 가이드 기준입니다.

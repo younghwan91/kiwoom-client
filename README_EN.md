@@ -1,16 +1,19 @@
 [한국어](https://github.com/younghwan91/kiwoom-client/blob/main/README.md) | [English](https://github.com/younghwan91/kiwoom-client/blob/main/README_EN.md)
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/brand/wordmark-dark.svg">
+  <img alt="kiwoom-client" src="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/brand/wordmark-light.svg" height="56">
+</picture>
+
 # kiwoom-client — Python client for the Kiwoom Securities REST API
 
-The whole Kiwoom REST API in one Python client: 182 endpoints, real-time WebSocket, and an MCP server so AI agents can trade Korean stocks too. No COM/OCX, so it runs on Windows, macOS and Linux.
+**The Kiwoom REST API, from Python and AI agents.** 182 endpoints, real-time WebSocket, and an MCP server so AI agents can trade Korean stocks too. No COM/OCX, so it runs on Windows, macOS and Linux. An unofficial open-source project, not affiliated with Kiwoom Securities.
 
 [![PyPI version](https://img.shields.io/pypi/v/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
+[![Python](https://img.shields.io/pypi/pyversions/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
 [![Downloads](https://img.shields.io/pypi/dm/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
-[![Total Downloads](https://static.pepy.tech/badge/kiwoom-client)](https://pepy.tech/project/kiwoom-client)
 [![CI](https://github.com/younghwan91/kiwoom-client/actions/workflows/ci.yml/badge.svg)](https://github.com/younghwan91/kiwoom-client/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/github/license/younghwan91/kiwoom-client)](https://github.com/younghwan91/kiwoom-client/blob/main/LICENSE)
-[![Python](https://img.shields.io/pypi/pyversions/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-younghwan--chae-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/younghwan-chae/)
 
 - **182 REST endpoints + 4 condition-search calls + 19 real-time types** across 15 modules. The figure below is counted from the code: one tile, one endpoint.
 - **MCP server built in**: Claude Code and Cursor call quotes, account and orders through tools like `stock_info_basic_stock_info`. Against a live account the order tools are **not even registered** until you set `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true`.
@@ -39,7 +42,26 @@ print(info["stk_nm"])
 
 No login step: the access token is issued on the first call and refreshed before it expires.
 Get an app key/secret at the [Kiwoom REST API portal](https://openapi.kiwoom.com) and start on the mock server (`is_mock=True`).
-Using it from an AI agent? Jump to [MCP server](#using-as-an-mcp-server).
+
+### From an AI agent (MCP)
+
+```bash
+pip install 'kiwoom-client[mcp]'
+claude mcp add --transport stdio \
+  --env KIWOOM_APP_KEY=YOUR_APP_KEY --env KIWOOM_APP_SECRET=YOUR_APP_SECRET --env KIWOOM_IS_MOCK=true \
+  kiwoom-client -- kiwoom-client-mcp
+```
+
+Now ask Claude Code "What's Samsung Electronics trading at?". Other clients such as Cursor, and the environment variables, are in [Using as an MCP server](#using-as-an-mcp-server).
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/demo-mcp-en-dark.png">
+  <img alt="Example: an MCP client quotes Samsung Electronics with the stock_info_basic_stock_info tool, then declines a buy on the live server because no order tools are registered" src="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/demo-mcp-en-light.png" width="100%">
+</picture>
+
+<sub>Illustration made without calling the live server (prices are made up). On a live account the order tools are not registered until `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true`, so the agent has no way to place an order.</sub>
+
+Further reading: [Why kiwoom-client — compared with OpenAPI+, pykiwoom and other REST wrappers](https://github.com/younghwan91/kiwoom-client/blob/main/docs/why.en.md) · [Endpoint reference](https://github.com/younghwan91/kiwoom-client/blob/main/docs/endpoints.md)
 
 ## What it does
 
@@ -354,6 +376,8 @@ The daily collection DAGs in [quant-airflow](https://github.com/younghwan91/quan
 ## License
 
 MIT
+
+kiwoom-client is an **unofficial open-source project, not affiliated with or endorsed by Kiwoom Securities**. "Kiwoom" is a trademark of Kiwoom Securities Co., Ltd.; this project is only a client for its public REST API.
 
 ## Author
 
