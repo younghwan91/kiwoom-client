@@ -25,6 +25,7 @@ Rules for writing code against this library:
 - [README (한국어)](https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/README.md): the same, in Korean
 - [AGENTS.md](https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/AGENTS.md): rules for AI agents using or working on this library: safety, lookups, tests
 - [Migrating from OpenAPI+ (OCX) / pykiwoom](https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/migration-from-openapi-plus.md): OpenAPI+ functions, SendOrder codes, real-time types and TR codes mapped to REST
+- [Cookbook (한국어)](https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/cookbook/index.md): runnable paper-trading recipes: daily candles to DataFrame, pagination, balances, asyncio, tick-aligned limit orders, WebSocket trades, real-time condition search, rate limits
 - [Using it from AI coding tools](https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/ai-tools.en.md): llms.txt, AGENTS.md, the Claude Code skill/plugin and how to install them
 
 ## Optional
