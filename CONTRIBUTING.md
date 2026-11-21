@@ -60,7 +60,7 @@ CI 는 pre-commit 을 강제하지 않습니다. `pre-commit run --all-files` �
 독스트링·이름을 바꿨다면 다시 생성해 **같이 커밋**하세요.
 
 ```bash
-uv run python scripts/gen_docs.py        # docs/endpoints.md, llms.txt, llms-full.txt
+uv run python scripts/gen_docs.py        # docs/endpoints.md, llms.txt, llms-full.txt, AGENTS.md
 uv run python scripts/build_stubs.py     # src/kiwoom_client/domestic/*.pyi
 ```
 
