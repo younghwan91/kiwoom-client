@@ -60,3 +60,21 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v5
+
+  # 배포가 끝난 뒤 바뀐 페이지를 IndexNow(Bing·Naver·Yandex 등)에 알린다. 실패해도 배포는 성공으로 둔다.
+  # 키 파일: docs/<키>.txt (공개가 원래 방식). 보낼 URL 고르기: scripts/indexnow.py
+  indexnow:
+    needs: deploy
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Ping IndexNow
+        env:
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+          ALL: ${{ github.event_name == 'workflow_dispatch' && '--all' || '' }}
+        run: python3 scripts/indexnow.py --before "$BEFORE" --after "$AFTER" $ALL
