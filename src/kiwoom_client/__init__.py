@@ -31,6 +31,8 @@ from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _package_version
 from typing import Any, TypeVar
 
+import httpx
+
 from kiwoom_client._env import resolve_credentials
 from kiwoom_client._redact import mask_secret, server_label, token_state
 from kiwoom_client._registry import ModuleRegistry
@@ -151,6 +153,8 @@ class KiwoomAPI(ModuleRegistry[dict[str, Any]]):
             as-is; ``"warn"`` emits :class:`~kiwoom_client.spec.validation.KiwoomParamWarning`;
             ``"error"``/``True`` raises
             :class:`~kiwoom_client.spec.validation.KiwoomParamError` and sends nothing.
+        timeout: HTTP timeout in seconds (or an ``httpx.Timeout``) for API and
+            token requests. Defaults to 30s.
     """
 
     def __init__(
@@ -165,15 +169,18 @@ class KiwoomAPI(ModuleRegistry[dict[str, Any]]):
         retry_backoff: float = 1.1,
         expiry_margin: float = KiwoomAuth.DEFAULT_EXPIRY_MARGIN,
         validate_params: bool | str = False,
+        *,
+        timeout: float | httpx.Timeout = BaseClient.DEFAULT_TIMEOUT,
     ):
         self._base_client = BaseClient(
             app_key, app_secret, base_url, is_mock,
             rate_limit=rate_limit, rate_burst=rate_burst, max_retries=max_retries,
-            retry_backoff=retry_backoff,
+            retry_backoff=retry_backoff, timeout=timeout,
         )
         self._client = _with_validation(self._base_client, validate_params)
         self._auth = KiwoomAuth(
-            app_key, app_secret, self._base_client.base_url, expiry_margin=expiry_margin
+            app_key, app_secret, self._base_client.base_url,
+            expiry_margin=expiry_margin, timeout=timeout,
         )
         # Token lifecycle is delegated to the auth object from the start.
         self._base_client.token_provider = self._auth
@@ -348,6 +355,8 @@ class AsyncKiwoomAPI(ModuleRegistry[Awaitable[dict[str, Any]]]):
             as-is; ``"warn"`` emits :class:`~kiwoom_client.spec.validation.KiwoomParamWarning`;
             ``"error"``/``True`` raises
             :class:`~kiwoom_client.spec.validation.KiwoomParamError` and sends nothing.
+        timeout: HTTP timeout in seconds (or an ``httpx.Timeout``) for API and
+            token requests. Defaults to 30s.
     """
 
     def __init__(
@@ -362,15 +371,18 @@ class AsyncKiwoomAPI(ModuleRegistry[Awaitable[dict[str, Any]]]):
         retry_backoff: float = 1.1,
         expiry_margin: float = AsyncKiwoomAuth.DEFAULT_EXPIRY_MARGIN,
         validate_params: bool | str = False,
+        *,
+        timeout: float | httpx.Timeout = AsyncBaseClient.DEFAULT_TIMEOUT,
     ):
         self._base_client = AsyncBaseClient(
             app_key, app_secret, base_url, is_mock,
             rate_limit=rate_limit, rate_burst=rate_burst, max_retries=max_retries,
-            retry_backoff=retry_backoff,
+            retry_backoff=retry_backoff, timeout=timeout,
         )
         self._client = _with_validation(self._base_client, validate_params)
         self._auth = AsyncKiwoomAuth(
-            app_key, app_secret, self._base_client.base_url, expiry_margin=expiry_margin
+            app_key, app_secret, self._base_client.base_url,
+            expiry_margin=expiry_margin, timeout=timeout,
         )
         self._base_client.token_provider = self._auth
         self._is_mock = is_mock

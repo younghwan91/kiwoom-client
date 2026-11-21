@@ -25,7 +25,7 @@ This file is generated from the code by `scripts/gen_docs.py`; the signatures an
 ### `KiwoomAPI`
 
 ```
-class KiwoomAPI(app_key: str, app_secret: str, base_url: str | None = None, is_mock: bool = False, rate_limit: float | None = 1.0, rate_burst: int = 2, max_retries: int = 3, retry_backoff: float = 1.1, expiry_margin: float = 60.0, validate_params: bool | str = False)
+class KiwoomAPI(app_key: str, app_secret: str, base_url: str | None = None, is_mock: bool = False, rate_limit: float | None = 1.0, rate_burst: int = 2, max_retries: int = 3, retry_backoff: float = 1.1, expiry_margin: float = 60.0, validate_params: bool | str = False, *, timeout: float | httpx.Timeout = 30.0)
 ```
 
 Unified facade for all Kiwoom REST API endpoints.
@@ -52,6 +52,8 @@ Args:
         as-is; ``"warn"`` emits :class:`~kiwoom_client.spec.validation.KiwoomParamWarning`;
         ``"error"``/``True`` raises
         :class:`~kiwoom_client.spec.validation.KiwoomParamError` and sends nothing.
+    timeout: HTTP timeout in seconds (or an ``httpx.Timeout``) for API and
+        token requests. Defaults to 30s.
 
 ### `KiwoomAPI.close`
 
@@ -169,7 +171,7 @@ Same endpoints as `KiwoomAPI`; every call is awaited.
 ### `AsyncKiwoomAPI`
 
 ```
-class AsyncKiwoomAPI(app_key: str, app_secret: str, base_url: str | None = None, is_mock: bool = False, rate_limit: float | None = 1.0, rate_burst: int = 2, max_retries: int = 3, retry_backoff: float = 1.1, expiry_margin: float = 60.0, validate_params: bool | str = False)
+class AsyncKiwoomAPI(app_key: str, app_secret: str, base_url: str | None = None, is_mock: bool = False, rate_limit: float | None = 1.0, rate_burst: int = 2, max_retries: int = 3, retry_backoff: float = 1.1, expiry_margin: float = 60.0, validate_params: bool | str = False, *, timeout: float | httpx.Timeout = 30.0)
 ```
 
 Asyncio facade for all Kiwoom REST API endpoints.
@@ -193,6 +195,8 @@ Args:
         as-is; ``"warn"`` emits :class:`~kiwoom_client.spec.validation.KiwoomParamWarning`;
         ``"error"``/``True`` raises
         :class:`~kiwoom_client.spec.validation.KiwoomParamError` and sends nothing.
+    timeout: HTTP timeout in seconds (or an ``httpx.Timeout``) for API and
+        token requests. Defaults to 30s.
 
 ### `AsyncKiwoomAPI.close`
 
