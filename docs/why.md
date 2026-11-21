@@ -62,6 +62,8 @@ REST 에 아직 없을 수 있으니, 꼭 필요한 TR 은 [키움 REST API 가�
   (약 1 req/s, 버스트 2)에 맞춘 토큰 버킷이고, 429 가 나면 백오프 후 다시 보냅니다.
 - **에이전트가 실주문을 모르게.** 내장 MCP 서버는 실전투자 서버에서 `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true` 를 켜기 전까지
   주문 도구 12개를 **등록하지 않습니다**. 모의투자에서는 항상 쓸 수 있습니다.
+  키움 공식 MCP·플러그인을 쓰면서 주문 **내용**(금액·수량 상한, 시장가 매수, 반복 전송, 하루 횟수)까지 막고 싶다면
+  같은 저자의 Claude Code 훅 [kiwoom-order-guard](https://github.com/younghwan91/kiwoom-order-guard)를 함께 쓰세요.
 - **계산 가능한 응답.** `to_dataframe()`·`to_number()` 가 `"+70000"`, `"1,234,567"` 같은 문자열을 숫자로 바꾸고,
   종목코드처럼 앞자리 0 이 의미 있는 값은 문자열로 남깁니다. `round_to_tick()` 은 지정가를 KRX 호가단위에 맞춥니다.
 - **타입 정보 포함.** `py.typed` 를 배포하고 CI 에서 mypy 를 돌립니다.
