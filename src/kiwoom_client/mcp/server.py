@@ -13,6 +13,7 @@ import json
 import logging
 import os
 import sys
+from collections.abc import Collection
 from typing import Any
 
 from mcp import types
@@ -29,6 +30,7 @@ from kiwoom_client.mcp.condition_search_session import (
 )
 from kiwoom_client.mcp.guard import live_orders_allowed
 from kiwoom_client.mcp.tools import RestToolSpec, discover_rest_tools
+from kiwoom_client.mcp.toolsets import toolsets_from_env
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +75,7 @@ def build_server(
     *,
     allow_live_orders: bool,
     session: ConditionSearchSession | None = None,
+    toolsets: Collection[str] | None = None,
 ) -> tuple[Server, list[RestToolSpec]]:
     """Assemble the MCP Server, wired with its ``tools/list``/``tools/call``
     handlers, and the filtered list of tool specs.
@@ -81,11 +84,16 @@ def build_server(
     the caller only wants ``specs`` for tool-filtering tests — that's safe as
     long as the registered handlers are never actually invoked, since both
     are closures that only touch ``api``/``session`` when called.
+
+    ``toolsets`` (module names, ``None`` = all) narrows the list further. It
+    is applied after the live-order guard and can only remove tools.
     """
     rest_specs = [
         spec for spec in discover_rest_tools() if not spec.guarded or allow_live_orders
     ]
     all_specs = rest_specs + _CONDITION_SEARCH_SPECS
+    if toolsets is not None:
+        all_specs = [spec for spec in all_specs if spec.module_name in toolsets]
     spec_by_name = {spec.tool_name: spec for spec in all_specs}
     app: Server = Server("kiwoom-client")
 
@@ -233,15 +241,23 @@ def main() -> None:
         )
         sys.exit(1)
     is_mock = os.environ.get("KIWOOM_IS_MOCK", "false").strip().lower() == "true"
+    try:
+        toolsets = toolsets_from_env()
+    except ValueError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        sys.exit(1)
 
     api = AsyncKiwoomAPI(app_key, app_secret, is_mock=is_mock)
     allow_live_orders = live_orders_allowed(is_mock=is_mock)
     session = ConditionSearchSession(connect=lambda: _connect_condition_search(api))
-    app, specs = build_server(api, allow_live_orders=allow_live_orders, session=session)
-    registered_rest = [s for s in specs if s.module_name != "condition_search"]
-    excluded = len(discover_rest_tools()) - len(registered_rest)
-    if excluded:
+    app, specs = build_server(
+        api, allow_live_orders=allow_live_orders, session=session, toolsets=toolsets
+    )
+    if not allow_live_orders:
+        excluded = sum(1 for s in discover_rest_tools() if s.guarded)
         logger.info("실주문 opt-in 미설정 — 주문 도구 %d개를 등록하지 않았습니다.", excluded)
+    if toolsets is not None:
+        logger.info("toolset 필터 %s — 도구 %d개를 등록했습니다.", sorted(toolsets), len(specs))
 
     async def _run() -> None:
         try:
