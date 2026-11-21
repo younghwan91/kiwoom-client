@@ -59,7 +59,7 @@ jobs:
           NO_MKDOCS_2_WARNING: "1"
         run: mkdocs build --strict
 
-      - name: Check SEO meta (OG·Twitter·JSON-LD)
+      - name: Check SEO meta (OG·Twitter·JSON-LD·hreflang·sitemap)
         run: python scripts/check_site_seo.py site
 
   test:

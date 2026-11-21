@@ -117,3 +117,34 @@ def test_mkdocs_uses_the_overrides_dir_and_ci_runs_the_checker():
         assert "scripts/check_site_seo.py site" in (_ROOT / ".github" / "workflows" / wf).read_text(
             encoding="utf-8"
         )
+
+
+def test_hreflang_must_be_absolute_and_complete():
+    mod = _load()
+    rel = (
+        '<link rel="alternate" hreflang="ko" href="./">'
+        '<link rel="alternate" hreflang="en" href="../en/x/">'
+    )
+    problems = mod.check_page("x/index.html", _page(_GOOD_META + rel))
+    assert any("x-default" in p or "세트" in p for p in problems)
+    assert any("절대 URL" in p for p in problems)
+    good = (
+        '<link rel="alternate" hreflang="ko" href="https://example.org/x/">'
+        '<link rel="alternate" hreflang="en" href="https://example.org/en/x/">'
+        '<link rel="alternate" hreflang="x-default" href="https://example.org/x/">'
+    )
+    assert mod.check_page("x/index.html", _page(_GOOD_META + good)) == []
+
+
+def test_sitemap_must_not_list_pages_canonicalised_elsewhere():
+    mod = _load()
+    root = "https://example.org/"
+    canonicals = {"index.html": root, "x/index.html": root + "x/", "en/x/index.html": root + "x/"}
+    ok = f"<urlset><url><loc>{root}</loc></url><url><loc>{root}x/</loc></url></urlset>"
+    assert mod.check_sitemap(ok, root, canonicals) == []
+    bad = ok.replace(
+        "</urlset>", f"<url><loc>{root}en/x/</loc></url><url><loc>{root}x/</loc></url></urlset>"
+    )
+    problems = mod.check_sitemap(bad, root, canonicals)
+    assert any("두 번" in p for p in problems)
+    assert any("canonical" in p for p in problems)
