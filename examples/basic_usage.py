@@ -32,10 +32,9 @@ def main() -> None:
     print(f"Stock info response: {stock_info}")
 
     # 3. Query account evaluation status
-    # Replace with your actual account number
-    account_no = os.environ.get("KIWOOM_ACCOUNT_NO", "1234567890")
-    print(f"\nFetching account evaluation for account {account_no}...")
-    eval_status = api.account.account_evaluation(acnt_no=account_no, qry_tp="1")
+    # The account is the one the app key was issued for — there is no account-number field.
+    print("\nFetching account evaluation...")
+    eval_status = api.account.account_evaluation(qry_tp="0", dmst_stex_tp="KRX")
     print(f"Account evaluation response: {eval_status}")
 
     # 4. Logout - revoke access token

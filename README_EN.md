@@ -37,7 +37,7 @@ api = KiwoomAPI.from_env(is_mock=True)  # KIWOOM_APP_KEY / KIWOOM_APP_SECRET env
 # or explicitly: KiwoomAPI(app_key="YOUR_APP_KEY", app_secret="YOUR_APP_SECRET", is_mock=True)
 
 info = api.stock_info.basic_stock_info(stk_cd=api.stock_code("삼성전자"))  # name -> 005930
-chart = api.chart.stock_daily_chart(stk_cd="005930", base_dt="20260326")   # daily chart
+chart = api.chart.stock_daily_chart(stk_cd="005930", base_dt="20260326", upd_stkpc_tp="1")  # daily chart
 print(info["stk_nm"])
 ```
 
@@ -103,10 +103,10 @@ uv add kiwoom-client                 # if you use uv
 ### Account and orders
 
 ```python
-evaluation = api.account.account_evaluation()   # account valuation
-deposit = api.account.deposit_detail()          # cash balance
-position = api.account.filled_position()        # holdings
-unfilled = api.account.unfilled_orders()        # open orders
+evaluation = api.account.account_evaluation(qry_tp="0", dmst_stex_tp="KRX")  # account valuation
+deposit = api.account.deposit_detail(qry_tp="3")  # cash balance
+position = api.account.filled_position(dmst_stex_tp="KRX")  # holdings
+unfilled = api.account.unfilled_orders(all_stk_tp="0", trde_tp="0", stex_tp="0")  # open orders
 
 # Buy 10 shares of Samsung Electronics at limit
 result = api.order.buy_order(   # values per Kiwoom's official spec (strings)
@@ -155,7 +155,7 @@ async def main():
     async with AsyncKiwoomAPI(app_key="...", app_secret="...", is_mock=True) as api:
         info, chart = await asyncio.gather(
             api.stock_info.basic_stock_info(stk_cd="005930"),
-            api.chart.stock_daily_chart(stk_cd="005930", base_dt="20260326"),
+            api.chart.stock_daily_chart(stk_cd="005930", base_dt="20260326", upd_stkpc_tp="1"),
         )
         print(info["stk_nm"])
 

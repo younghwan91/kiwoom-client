@@ -27,12 +27,15 @@ def main() -> None:
     # 1. 당일 거래량 상위 종목 조회 → DataFrame 변환
     print("거래량 상위 종목을 DataFrame으로 변환합니다...")
     result = api.ranking.top_volume_today(
-        mrkt_tp="0",      # 코스피
-        stk_cnd="0",      # 전체
-        trde_qty_tp="0",  # 전체
-        prc_tp="0",       # 전체
-        trde_amt_tp="0",  # 전체
-        updn_tp="0",      # 전체
+        mrkt_tp="000",       # 전체 (001: 코스피, 101: 코스닥)
+        sort_tp="1",         # 거래량순
+        mang_stk_incls="0",  # 관리종목 포함
+        crd_tp="0",          # 전체
+        trde_qty_tp="0",     # 전체
+        pric_tp="0",         # 전체
+        trde_prica_tp="0",   # 전체
+        mrkt_open_tp="0",    # 전체
+        stex_tp="3",         # 통합 (1: KRX, 2: NXT)
     )
 
     # 응답 키는 엔드포인트마다 다르다. to_dataframe() 이 알아서 찾아주고,
@@ -48,7 +51,7 @@ def main() -> None:
 
     # 2. 일봉 차트 데이터 → DataFrame 변환
     print("\n\n삼성전자 일봉 차트를 DataFrame으로 변환합니다...")
-    chart = api.chart.stock_daily_chart(stk_cd="005930", base_dt="20260326")
+    chart = api.chart.stock_daily_chart(stk_cd="005930", base_dt="20260326", upd_stkpc_tp="1")
     chart_df = to_dataframe(chart)
 
     print(f"\n일봉 데이터 ({len(chart_df)}행):")

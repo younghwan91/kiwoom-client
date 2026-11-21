@@ -34,25 +34,28 @@ def main() -> None:
     daily_chart = api.chart.stock_daily_chart(
         stk_cd="005930",
         base_dt="20240101",
-        updn_tp="0",  # 0: 수정주가 미반영, 1: 수정주가 반영
+        upd_stkpc_tp="1",  # 수정주가구분 — 0: 미반영, 1: 반영
     )
     print(f"Daily chart response: {daily_chart}\n")
 
     # 3. Top volume ranking (거래량 상위)
     print("Fetching top volume ranking...")
     top_volume = api.ranking.top_volume_today(
-        mrkt_tp="0",   # 0: 코스피, 1: 코스닥, 2: 코스피200
-        stk_cnd="0",   # 0: 전체
-        trde_qty_tp="5",  # 5: 거래량 5만주 이상
-        prc_tp="0",    # 0: 전체
-        trde_amt_tp="0",  # 0: 전체
-        updn_tp="0",   # 0: 전체
+        mrkt_tp="000",       # 000: 전체, 001: 코스피, 101: 코스닥
+        sort_tp="1",         # 1: 거래량, 2: 거래회전율, 3: 거래대금
+        mang_stk_incls="0",  # 0: 관리종목 포함
+        crd_tp="0",          # 0: 전체조회
+        trde_qty_tp="5",     # 5: 5천주 이상
+        pric_tp="0",         # 0: 전체조회
+        trde_prica_tp="0",   # 0: 전체조회
+        mrkt_open_tp="0",    # 0: 전체조회
+        stex_tp="3",         # 1: KRX, 2: NXT, 3: 통합
     )
     print(f"Top volume ranking response: {top_volume}\n")
 
     # 4. All sector index (전업종지수)
     print("Fetching all sector index...")
-    sector_index = api.sector.all_industry_index(idx_tp="0")
+    sector_index = api.sector.all_industry_index(inds_cd="001")  # 001: 종합(KOSPI)
     print(f"Sector index response: {sector_index}\n")
 
     api.logout()

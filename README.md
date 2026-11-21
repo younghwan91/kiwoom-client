@@ -37,7 +37,7 @@ api = KiwoomAPI.from_env(is_mock=True)  # KIWOOM_APP_KEY·KIWOOM_APP_SECRET 환�
 # 또는 직접: KiwoomAPI(app_key="발급받은_앱키", app_secret="발급받은_시크릿키", is_mock=True)
 
 info = api.stock_info.basic_stock_info(stk_cd=api.stock_code("삼성전자"))  # 종목명 → 005930
-chart = api.chart.stock_daily_chart(stk_cd="005930", base_dt="20260326")   # 일봉
+chart = api.chart.stock_daily_chart(stk_cd="005930", base_dt="20260326", upd_stkpc_tp="1")  # 일봉
 print(info["stk_nm"])
 ```
 
@@ -116,10 +116,10 @@ uv add kiwoom-client                 # uv 를 쓴다면
 ### 계좌와 주문
 
 ```python
-evaluation = api.account.account_evaluation()   # 계좌 평가 현황
-deposit = api.account.deposit_detail()          # 예수금 상세
-position = api.account.filled_position()        # 체결 잔고
-unfilled = api.account.unfilled_orders()        # 미체결 주문
+evaluation = api.account.account_evaluation(qry_tp="0", dmst_stex_tp="KRX")  # 계좌 평가 현황
+deposit = api.account.deposit_detail(qry_tp="3")  # 예수금 상세
+position = api.account.filled_position(dmst_stex_tp="KRX")  # 체결 잔고
+unfilled = api.account.unfilled_orders(all_stk_tp="0", trde_tp="0", stex_tp="0")  # 미체결 주문
 
 # 삼성전자 10주 지정가 매수 — 값은 키움 공식 스펙 기준 (문자열)
 result = api.order.buy_order(
@@ -169,7 +169,7 @@ async def main():
         # 서로 다른 TR은 동시에 나간다 — 직렬로 돌리면 3배 걸린다
         info, chart, ranking = await asyncio.gather(
             api.stock_info.basic_stock_info(stk_cd="005930"),
-            api.chart.stock_daily_chart(stk_cd="005930", base_dt="20260326"),
+            api.chart.stock_daily_chart(stk_cd="005930", base_dt="20260326", upd_stkpc_tp="1"),
             api.ranking.top_volume_today(  # ka10030 — 필드는 api.describe("ka10030")
                 mrkt_tp="000", sort_tp="1", mang_stk_incls="0", crd_tp="0", trde_qty_tp="0",
                 pric_tp="0", trde_prica_tp="0", mrkt_open_tp="0", stex_tp="3",
