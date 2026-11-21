@@ -23,7 +23,7 @@ Moving to REST lets you run on a Linux server or a Mac without anyone clicking a
 not exist in REST yet, so look up the TRs you rely on in the
 [Kiwoom REST API guide](https://openapi.kiwoom.com/guide/apiguide) first. What kiwoom-client wraps is listed in the
 [endpoint reference](endpoints.md); the OpenAPI+ TR and function mapping is in
-[Moving from OpenAPI+ (OCX) and pykiwoom](migration-from-openapi-plus.md) (Korean).
+[Moving from OpenAPI+ (OCX) and pykiwoom](migration-from-openapi-plus.md).
 
 ## Python libraries at a glance
 

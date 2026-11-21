@@ -20,6 +20,8 @@
 - 문서: "맥·리눅스에서 키움증권 API 쓰기"(한/영) — OCX 없이 설치부터 첫 조회·일봉 DataFrame·실시간 체결·서버 실행까지
 - README(한/영) 첫 문단에 OpenAPI+(OCX) 대체·자동매매 용도를 밝힌다
 - PyPI 요약·키워드에 "OCX 없이 macOS·Linux" (`openapi-plus`·`macos`·`linux`)
+- 문서(영어): "Migrating from OpenAPI+ (OCX) / pykiwoom" — TR·함수·주문 코드·실시간 타입 대응표 영어판.
+  영어판 링크의 "(Korean)" 표시가 번역이 생긴 페이지에 남지 않게 검사(`tests/test_docs_en.py`)
 
 ## [0.5.0] - 2026-11-21
 

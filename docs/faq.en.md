@@ -34,7 +34,7 @@ runs on servers and in containers. Step by step: [macOS and Linux](macos-linux.m
 
 **Q. How do I port OpenAPI+ (KOA Studio) / pykiwoom code?**
 What `opt10081`-style TRs, `SendOrder` and `SetRealReg` become in REST is in
-[Migrating from OpenAPI+ (Korean)](migration-from-openapi-plus.md).
+[Migrating from OpenAPI+](migration-from-openapi-plus.md).
 
 ## Usage
 
