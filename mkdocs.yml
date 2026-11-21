@@ -72,6 +72,8 @@ plugins:
           build: true
           site_description: The Kiwoom Securities REST API from Python and AI agents (MCP) — an unofficial open-source client
           copyright: An unofficial open-source project, not affiliated with Kiwoom Securities · MIT License
+          nav_translations:
+            홈: Home
 
 markdown_extensions:
   - admonition
