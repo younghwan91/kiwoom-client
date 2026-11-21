@@ -346,6 +346,9 @@ LLMS_LINKS: list[tuple[str, str, str, str]] = [
      "rules for AI agents using or working on this library: safety, lookups, tests"),
     ("Docs", "docs/migration-from-openapi-plus.md", "Migrating from OpenAPI+ (OCX) / pykiwoom",
      "OpenAPI+ functions, SendOrder codes, real-time types and TR codes mapped to REST"),
+    ("Docs", "docs/cookbook/index.md", "Cookbook (한국어)",
+     "runnable paper-trading recipes: daily candles to DataFrame, pagination, balances, asyncio, "
+     "tick-aligned limit orders, WebSocket trades, real-time condition search, rate limits"),
     ("Docs", "docs/ai-tools.en.md", "Using it from AI coding tools",
      "llms.txt, AGENTS.md, the Claude Code skill/plugin and how to install them"),
     ("Optional", "skills/kiwoom-client/SKILL.md", "Agent Skill",
