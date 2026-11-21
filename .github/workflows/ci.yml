@@ -58,3 +58,18 @@ jobs:
 
       - name: Run tests
         run: uv run --extra dev --extra mcp pytest tests/ -v
+
+  # 배포물(sdist·wheel)이 실제로 쓸 만한지 본다 — 레포 체크아웃이 아니라 설치한 wheel 로.
+  # 키·네트워크(키움 서버) 없이 끝난다. 무엇을 보는지는 scripts/check_dist.sh 주석에.
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d  # v10.4.0
+        with:
+          python-version: "3.12"
+
+      - name: sdist·wheel 빌드 + 설치 스모크
+        run: bash scripts/check_dist.sh
