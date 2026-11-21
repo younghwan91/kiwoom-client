@@ -1,4 +1,4 @@
-# 브랜드 가이드 (초안)
+# 브랜드 가이드
 
 README·문서 사이트·이미지·홍보 문구를 같은 목소리로 쓰기 위한 기준입니다. 새 페이지나 그림을 만들 때 먼저 읽고,
 여기와 어긋나는 결정을 하면 이 문서부터 고칩니다.
@@ -131,6 +131,8 @@ README 두 벌, 문서 사이트 푸터, PyPI 설명에 같은 뜻으로 들어�
 - 그림은 전부 스크립트로 다시 만들 수 있어야 합니다(`scripts/`). 라이트·다크 두 벌을 만들고 README 에서 `<picture>` 로 바꿔 끼웁니다.
 - 숫자가 든 그림은 코드에서 센 값으로 그리고, 생성 날짜를 스크립트에 남깁니다.
 - 실서버를 부르지 않고 만든 터미널·대화 그림에는 "예시" 표시를 넣습니다.
+  예: README 의 MCP 대화 그림 `docs/images/demo-mcp-{ko,en}-{light,dark}.png` — `scripts/make_demo.py`
+  (`uv run --no-project --with cairosvg python scripts/make_demo.py`).
 - PyPI 에서도 보이게 README 의 이미지는 `raw.githubusercontent.com` 절대 URL 로 겁니다.
 
 ## 이름과 표기
