@@ -1,8 +1,12 @@
-# 사이트 내비게이션 (mkdocs-awesome-nav). "*" 는 아래에 따로 적지 않은 페이지·폴더 전부 — 새 문서는 자동으로 들어간다.
+# 사이트 내비게이션 (mkdocs-awesome-nav). glob "*" 는 여기 따로 적지 않은 페이지·폴더 전부 — 새 문서는 자동으로 들어간다.
 # 순서를 정하고 싶은 페이지만 위쪽에 적는다. 폴더 안 순서는 그 폴더에 .nav.yml 을 두면 된다.
 nav:
   - 홈: index.md
   - why.md
-  - "*"
+  - 엔드포인트 전체 목록: endpoints.md
+  # 아래 glob 이 나머지 페이지·폴더 전부를 이 자리에 넣는다. 남는 게 없어도 경고하지 않는다.
+  - glob: "*"
+    ignore_no_matches: true
+  - showcase.md
   - resources.md
   - brand.md

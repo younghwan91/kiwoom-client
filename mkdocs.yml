@@ -3,7 +3,7 @@
 # 검사(CI 와 같음):
 #   uv run --extra docs mkdocs build --strict
 #
-# 내비게이션은 docs/.nav.yml (mkdocs-awesome-nav) 이 정한다. docs/ 에 새 .md 를 넣으면 "*" 자리에 저절로 들어가므로
+# 내비게이션은 docs/.nav.yml (mkdocs-awesome-nav) 이 정한다. docs/ 에 새 .md 를 넣으면 glob "*" 자리에 저절로 들어가므로
 # 여기를 고칠 필요가 없다. 영어판은 같은 이름에 .en.md 를 붙인 파일(예: why.en.md) — 없으면 한국어 본문으로 대체된다.
 site_name: kiwoom-client
 site_description: 키움증권 REST API 를 파이썬과 AI 에이전트(MCP)에서 — 비공식 오픈소스 클라이언트
@@ -74,6 +74,7 @@ plugins:
           copyright: An unofficial open-source project, not affiliated with Kiwoom Securities · MIT License
           nav_translations:
             홈: Home
+            엔드포인트 전체 목록: Endpoint reference
 
 markdown_extensions:
   - admonition
