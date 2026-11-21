@@ -118,6 +118,14 @@ README 두 벌, 문서 사이트 푸터, PyPI 설명에 같은 뜻으로 들어�
 다시 만들기: `uv run --no-project --with fonttools --with cairosvg python scripts/make_logo.py`.
 워드마크 글자는 글꼴 윤곽선을 path 로 박아 넣으므로 보는 쪽 글꼴과 상관없이 같게 보입니다.
 
+## 소셜 프리뷰
+
+`docs/images/social-preview.png` (1280×640) — 다크 배경에 워드마크, 추천 태그라인(영·한), 코드에서 센 숫자,
+설치 명령, 비공식 고지. 링크를 공유할 때 GitHub 가 보여 주는 카드입니다.
+
+- 다시 만들기: `uv run --extra mcp --with cairosvg --with fonttools python scripts/make_social.py`
+- 올리기: 레포 Settings → General → Social preview → Edit → Upload (API 가 없어 사람이 올립니다).
+
 ## 시각물 원칙
 
 - 그림은 전부 스크립트로 다시 만들 수 있어야 합니다(`scripts/`). 라이트·다크 두 벌을 만들고 README 에서 `<picture>` 로 바꿔 끼웁니다.
