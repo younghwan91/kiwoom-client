@@ -22,6 +22,7 @@
 - PyPI 요약·키워드에 "OCX 없이 macOS·Linux" (`openapi-plus`·`macos`·`linux`)
 - 문서(영어): "Migrating from OpenAPI+ (OCX) / pykiwoom" — TR·함수·주문 코드·실시간 타입 대응표 영어판.
   영어판 링크의 "(Korean)" 표시가 번역이 생긴 페이지에 남지 않게 검사(`tests/test_docs_en.py`)
+- 문서(영어): 쿡북 첫 페이지·일봉 DataFrame·연속조회(pagination) 영어판 — 예제는 한국어판처럼 테스트가 가짜 응답에 대고 실행한다
 
 ## [0.5.0] - 2026-11-21
 

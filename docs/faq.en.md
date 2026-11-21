@@ -63,7 +63,7 @@ Sync for simple scripts. Async when calling different TRs concurrently or alongs
 
 **Q. What about continuation (next page)?**
 If the response's `"cont-yn"` is `"Y"`, call again with `cont_yn="Y", next_key=resp["next-key"]`, or use
-`request_all()` — [pagination recipe (Korean)](cookbook/pagination.md).
+`request_all()` — [pagination recipe](cookbook/pagination.md).
 
 **Q. Do I need to manage the token?**
 No. It is issued on the first call, refreshed before it expires, and reissued (with one retry) if rejected. Measured on the
