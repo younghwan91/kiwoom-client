@@ -94,3 +94,38 @@ def test_llms_txt_follows_llmstxt_format():
 def test_llms_full_signatures_do_not_leak_typevars():
     text = (ROOT / "llms-full.txt").read_text(encoding="utf-8")
     assert "_SyncT" not in text and "_AsyncT" not in text
+
+
+def _frontmatter(path):
+    text = path.read_text(encoding="utf-8")
+    assert text.startswith("---\n"), f"{path}: 첫 줄이 YAML 프론트매터가 아닙니다"
+    front = text.split("---\n", 2)[1]
+    out = {}
+    for line in front.splitlines():
+        key, _, value = line.partition(":")
+        out[key.strip()] = value.strip()
+    return out
+
+
+def test_skill_frontmatter_follows_agent_skills_spec():
+    """agentskills 규격: name 은 디렉터리 이름과 같은 소문자·숫자·하이픈 64자 이내,
+    description 은 1024자 이내. 본문은 500줄 아래로(긴 표는 endpoints.md 로)."""
+    skill = ROOT / "skills" / "kiwoom-client" / "SKILL.md"
+    meta = _frontmatter(skill)
+    assert meta["name"] == skill.parent.name
+    name = meta["name"]
+    assert len(name) <= 64 and all(c.islower() or c.isdigit() or c == "-" for c in name)
+    assert 0 < len(meta["description"]) <= 1024
+    assert len(skill.read_text(encoding="utf-8").splitlines()) < 500
+
+
+def test_plugin_manifests_point_at_the_skill():
+    import json
+
+    market = json.loads((ROOT / ".claude-plugin" / "marketplace.json").read_text(encoding="utf-8"))
+    plugin = json.loads((ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
+    assert market["name"] and market["owner"]["name"]
+    entry = next(p for p in market["plugins"] if p["name"] == plugin["name"])
+    assert entry["source"] == "./"  # 레포 루트가 플러그인 — skills/ 를 자동으로 찾는다
+    assert (ROOT / "skills" / plugin["name"] / "SKILL.md").exists()
+    assert "version" not in plugin  # 버전을 적으면 설치한 사람이 그 버전에 묶인다

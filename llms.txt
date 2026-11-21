@@ -25,9 +25,11 @@ Rules for writing code against this library:
 - [README (한국어)](https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/README.md): the same, in Korean
 - [AGENTS.md](https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/AGENTS.md): rules for AI agents using or working on this library: safety, lookups, tests
 - [Migrating from OpenAPI+ (OCX) / pykiwoom](https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/migration-from-openapi-plus.md): OpenAPI+ functions, SendOrder codes, real-time types and TR codes mapped to REST
+- [Using it from AI coding tools](https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/ai-tools.en.md): llms.txt, AGENTS.md, the Claude Code skill/plugin and how to install them
 
 ## Optional
 
+- [Agent Skill](https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/skills/kiwoom-client/SKILL.md): the same rules as a Claude Code / Agent Skills skill, with examples
 - [llms-full.txt](https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/llms-full.txt): public API signatures and docstrings plus the full endpoint list in one file
 - [Changelog](https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/CHANGELOG.md): release history
 - [Kiwoom REST API guide (official)](https://openapi.kiwoom.com/guide/apiguide): request/response field definitions for each api_id

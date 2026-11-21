@@ -1,0 +1,14 @@
+{
+  "name": "kiwoom-client",
+  "owner": {
+    "name": "younghwan91"
+  },
+  "description": "Agent Skill for kiwoom-client, the Python client for the Kiwoom Securities (키움증권) REST API and WebSocket",
+  "plugins": [
+    {
+      "name": "kiwoom-client",
+      "source": "./",
+      "description": "Write and debug kiwoom-client code safely: paper-trading first, real-order warnings, endpoint and field lookup, examples"
+    }
+  ]
+}
