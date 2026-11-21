@@ -1,0 +1,355 @@
+"""코드에서 문서를 생성한다 — 엔드포인트 표처럼 손으로 쓰면 코드와 어긋나는 파일들.
+
+실행 (레포 루트):
+    python scripts/gen_docs.py           # 생성 파일을 다시 쓴다
+    python scripts/gen_docs.py --check   # 어긋난 파일이 있으면 목록을 찍고 1 로 끝난다
+
+목록은 네트워크 없이 코드에서만 뽑는다:
+- REST: ``kiwoom_client._registry.MODULE_NAMES`` 의 각 모듈 메서드를 기록용 가짜 클라이언트로
+  불러 ``(resource_url, api_id)`` 를 받아 적는다. 이름은 docstring 첫 줄
+  ``"한글명 (English Name)"`` 에서 나눈다.
+- 조건검색: ``ConditionSearch`` 메서드가 만드는 페이로드의 ``trnm``
+- 실시간: ``kiwoom_client.websocket.REALTIME_TYPES``
+
+``tests/test_generated_docs.py`` 가 생성 결과와 커밋된 파일이 같은지 본다 — 엔드포인트를 더하거나
+이름을 바꾸면 이 스크립트를 다시 돌려 같이 커밋한다.
+"""
+
+from __future__ import annotations
+
+import argparse
+import inspect
+import re
+import sys
+from collections.abc import Callable
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "src"))
+
+from kiwoom_client._registry import MODULE_NAMES, ModuleRegistry  # noqa: E402
+from kiwoom_client.domestic.condition_search import ConditionSearch  # noqa: E402
+from kiwoom_client.websocket import REALTIME_TYPES  # noqa: E402
+
+REPO_URL = "https://github.com/younghwan91/kiwoom-client"
+OFFICIAL_GUIDE = "https://openapi.kiwoom.com/guide/apiguide"
+
+#: WebSocket 으로 가는 모듈 — REST 표에서 빼고 따로 적는다.
+WS_MODULES = frozenset({"condition_search"})
+
+#: 실주문 모듈. MCP 서버는 실전 계좌에서 opt-in 없이는 이 도구들을 등록하지 않는다
+#: (``kiwoom_client.mcp.tools.GUARDED_MODULES`` 와 같아야 한다 — 테스트가 본다).
+ORDER_MODULES = frozenset({"order", "credit_order"})
+
+#: 모듈 제목 (한글, English). 표의 순서는 MODULE_NAMES 를 따른다.
+MODULE_TITLES: dict[str, tuple[str, str]] = {
+    "account": ("계좌", "Account"),
+    "stock_info": ("종목정보", "Stock info"),
+    "market": ("시세", "Market"),
+    "chart": ("차트", "Chart"),
+    "order": ("주문", "Order"),
+    "credit_order": ("신용주문", "Credit order"),
+    "ranking": ("순위정보", "Ranking"),
+    "sector": ("업종", "Sector"),
+    "foreign_institution": ("기관/외국인", "Foreign / institution"),
+    "short_selling": ("공매도", "Short selling"),
+    "slb": ("대차거래", "Stock lending & borrowing"),
+    "theme": ("테마", "Theme"),
+    "condition_search": ("조건검색", "Condition search"),
+    "elw": ("ELW", "ELW"),
+    "etf": ("ETF", "ETF"),
+}
+
+_DOC_NAME = re.compile(r"^(?P<ko>.*?)\s*\((?P<en>[^()]*(?:\([^()]*\)[^()]*)*)\)\s*\.?$")
+
+
+@dataclass(frozen=True)
+class Endpoint:
+    """REST 엔드포인트 하나 = 모듈 메서드 하나."""
+
+    module: str
+    method: str
+    api_id: str
+    url: str
+    name_ko: str
+    name_en: str
+
+    @property
+    def call(self) -> str:
+        return f"api.{self.module}.{self.method}"
+
+    @property
+    def tool(self) -> str:
+        """MCP 도구 이름 (``kiwoom_client.mcp.tools`` 와 같은 규칙)."""
+        return f"{self.module}_{self.method}"
+
+    @property
+    def is_order(self) -> bool:
+        return self.module in ORDER_MODULES
+
+
+@dataclass(frozen=True)
+class WsCall:
+    """조건검색처럼 WebSocket 으로 보내는 페이로드 빌더 하나."""
+
+    module: str
+    method: str
+    trnm: str
+    name_ko: str
+    name_en: str
+
+    @property
+    def call(self) -> str:
+        return f"api.{self.module}.{self.method}"
+
+
+class _Recorder:
+    """``ClientProtocol`` 자리에 끼워 요청을 보내는 대신 (url, api_id) 를 돌려준다."""
+
+    def request(
+        self,
+        resource_url: str,
+        api_id: str,
+        body: dict[str, Any] | None = None,
+        cont_yn: str = "N",
+        next_key: str = "",
+        extra_headers: dict[str, str] | None = None,
+    ) -> tuple[str, str]:
+        return resource_url, api_id
+
+
+def split_doc_name(method: Callable[..., Any]) -> tuple[str, str]:
+    """docstring 첫 줄 ``"한글명 (English)"`` → ``("한글명", "English")``."""
+    first = (inspect.getdoc(method) or "").strip().splitlines()
+    line = first[0].strip() if first else ""
+    m = _DOC_NAME.match(line)
+    if not m:
+        return line, ""
+    return m.group("ko").strip(), m.group("en").strip()
+
+
+def _public_methods(obj: object) -> list[tuple[str, Callable[..., Any]]]:
+    return [
+        (name, fn)
+        for name, fn in inspect.getmembers(obj, inspect.ismethod)
+        if not name.startswith("_")
+    ]
+
+
+def _registry() -> ModuleRegistry[Any]:
+    registry: ModuleRegistry[Any] = ModuleRegistry()
+    registry._client = _Recorder()  # type: ignore[assignment]
+    registry._init_modules()
+    return registry
+
+
+def rest_endpoints() -> list[Endpoint]:
+    """REST 엔드포인트 전부, MODULE_NAMES 순서·모듈 안에서는 api_id 순."""
+    registry = _registry()
+    out: list[Endpoint] = []
+    for module in MODULE_NAMES:
+        if module in WS_MODULES:
+            continue
+        found = []
+        for name, fn in _public_methods(getattr(registry, module)):
+            url, api_id = fn()
+            ko, en = split_doc_name(fn)
+            found.append(Endpoint(module, name, api_id, url, ko, en))
+        out.extend(sorted(found, key=lambda e: (e.api_id, e.method)))
+    return out
+
+
+def ws_calls() -> list[WsCall]:
+    """조건검색 페이로드 빌더 전부 (``seq`` 는 아무 값이나 넣어 trnm 만 본다)."""
+    cs = ConditionSearch()
+    out = []
+    for name, fn in _public_methods(cs):
+        params = inspect.signature(fn).parameters
+        payload = fn(seq="1") if "seq" in params else fn()
+        ko, en = split_doc_name(fn)
+        out.append(WsCall("condition_search", name, payload["trnm"], ko, en))
+    order = {"CNSRLST": 0, "CNSRREQ": 1, "CNSRCLR": 2}
+    return sorted(out, key=lambda c: (order.get(c.trnm, 9), c.method))
+
+
+def _md_escape(text: str) -> str:
+    return text.replace("|", "\\|")
+
+
+def module_title(module: str) -> str:
+    """``"계좌 (Account)"`` — 한글과 영어가 같으면 한 번만."""
+    ko, en = MODULE_TITLES.get(module, (module, module))
+    return ko if ko == en else f"{ko} ({en})"
+
+
+# --------------------------------------------------------------------------- endpoints.md
+
+ENDPOINTS_PATH = "docs/endpoints.md"
+GENERATED_NOTE = (
+    "<!-- 자동 생성 파일 — 손으로 고치지 마세요. "
+    "`python scripts/gen_docs.py` 로 다시 만듭니다. -->"
+)
+
+
+def render_endpoints() -> str:
+    eps = rest_endpoints()
+    calls = ws_calls()
+    by_module: dict[str, list[Endpoint]] = {}
+    for ep in eps:
+        by_module.setdefault(ep.module, []).append(ep)
+
+    lines: list[str] = [
+        GENERATED_NOTE,
+        "",
+        "# 엔드포인트 전체 목록 (Endpoint reference)",
+        "",
+        f"kiwoom-client 가 감싼 키움 REST API **{len(eps)}개**, 조건검색 **{len(calls)}종**, "
+        f"실시간 시세 **{len(REALTIME_TYPES)}종**을 코드에서 그대로 뽑은 표입니다.",
+        "",
+        "- **api_id** 는 키움 공식 가이드의 TR 코드(`ka10001` 등)와 같습니다. 이 페이지에서 "
+        "`Ctrl+F` 로 api_id·한글 TR 이름·메서드 이름 어느 것으로든 찾을 수 있습니다.",
+        "- 모든 REST 메서드는 시그니처가 같습니다: `(cont_yn=\"N\", next_key=\"\", **요청필드)`. "
+        "요청 필드는 키워드 인자로 그대로 넘기면 본문(JSON)이 됩니다 — 필드 목록은 "
+        f"[키움 REST API 가이드]({OFFICIAL_GUIDE})에서 api_id 로 찾으세요.",
+        "- **MCP 도구 이름**은 `<모듈>_<메서드>` 입니다 (예: `stock_info_basic_stock_info`).",
+        "- ⚠️ 표시는 **실주문**입니다. `is_mock=False`(기본값) 로 부르면 실계좌에서 체결됩니다.",
+        "",
+        "```python",
+        "from kiwoom_client import KiwoomAPI",
+        "",
+        'api = KiwoomAPI(app_key="...", app_secret="...", is_mock=True)',
+        'info = api.stock_info.basic_stock_info(stk_cd="005930")  # ka10001',
+        "```",
+        "",
+        "## 모듈 요약",
+        "",
+        "| 모듈 | 이름 | 개수 | URL |",
+        "|---|---|---:|---|",
+    ]
+    for module in MODULE_NAMES:
+        title = module_title(module)
+        if module in WS_MODULES:
+            lines.append(
+                f"| [`api.{module}`](#{module}) | {title} | {len(calls)} | WebSocket (`trnm`) |"
+            )
+            continue
+        group = by_module.get(module, [])
+        urls = sorted({ep.url for ep in group})
+        lines.append(
+            f"| [`api.{module}`](#{module}) | {title} | {len(group)} | "
+            + ", ".join(f"`{u}`" for u in urls)
+            + " |"
+        )
+    lines.append(
+        f"| [`api.create_websocket()`](#realtime) | 실시간 시세 (Real-time) | "
+        f"{len(REALTIME_TYPES)} | WebSocket (`REG`) |"
+    )
+    lines.append("")
+
+    for module in MODULE_NAMES:
+        lines += [f'<a id="{module}"></a>', "", f"## `api.{module}` — {module_title(module)}", ""]
+        if module in WS_MODULES:
+            lines += [
+                "REST 가 아니라 WebSocket 으로 보냅니다. 메서드는 요청 페이로드(dict)만 만들고, "
+                "`ws.send()` 로 보낸 뒤 `ws.on_trnm()` 으로 응답을 받습니다.",
+                "",
+                "| 메서드 | trnm | 이름 | English |",
+                "|---|---|---|---|",
+            ]
+            for c in calls:
+                lines.append(
+                    f"| `{c.call}()` | `{c.trnm}` | {_md_escape(c.name_ko)} | "
+                    f"{_md_escape(c.name_en)} |"
+                )
+            lines.append("")
+            continue
+        group = by_module.get(module, [])
+        urls = sorted({ep.url for ep in group})
+        lines.append("URL: " + ", ".join(f"`POST {u}`" for u in urls))
+        if module in ORDER_MODULES:
+            lines += [
+                "",
+                "> ⚠️ **실주문 모듈입니다.** `is_mock=False`(기본값)면 실계좌에 주문이 나갑니다. "
+                "MCP 서버는 실전 계좌에서 `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true` 가 아니면 "
+                "이 도구들을 등록하지 않지만, 파이썬에서 직접 부르는 호출은 막지 않습니다.",
+            ]
+        lines += ["", "| api_id | 메서드 | 이름 | English |", "|---|---|---|---|"]
+        for ep in group:
+            mark = "⚠️ " if ep.is_order else ""
+            lines.append(
+                f"| `{ep.api_id}` | {mark}`{ep.call}()` | {_md_escape(ep.name_ko)} | "
+                f"{_md_escape(ep.name_en)} |"
+            )
+        lines.append("")
+
+    lines += [
+        '<a id="realtime"></a>',
+        "",
+        "## 실시간 시세 — `api.create_websocket()`",
+        "",
+        "`ws.subscribe(<타입>, <종목코드>)` 로 등록하고 `ws.on(<타입>, 콜백)` 으로 받습니다. "
+        "콜백이 받는 `values` 의 키는 키움 FID 번호입니다.",
+        "",
+        "| 타입 | 이름 |",
+        "|---|---|",
+    ]
+    for code, name in REALTIME_TYPES.items():
+        lines.append(f"| `{code}` | {_md_escape(name)} |")
+    lines.append("")
+
+    lines += [
+        "## api_id 색인",
+        "",
+        "api_id 순으로 정렬한 같은 목록입니다.",
+        "",
+        "| api_id | 메서드 | 이름 |",
+        "|---|---|---|",
+    ]
+    for ep in sorted(eps, key=lambda e: (e.api_id, e.module, e.method)):
+        mark = "⚠️ " if ep.is_order else ""
+        lines.append(f"| `{ep.api_id}` | {mark}`{ep.call}()` | {_md_escape(ep.name_ko)} |")
+    lines.append("")
+    return "\n".join(lines)
+
+
+# --------------------------------------------------------------------------- 진입점
+
+#: 생성 파일 경로(레포 루트 기준) → 렌더 함수.
+TARGETS: dict[str, Callable[[], str]] = {
+    ENDPOINTS_PATH: render_endpoints,
+}
+
+
+def stale_targets() -> list[str]:
+    """커밋된 내용이 생성 결과와 다른 파일 목록."""
+    stale = []
+    for rel, render in TARGETS.items():
+        path = ROOT / rel
+        if not path.exists() or path.read_text(encoding="utf-8") != render():
+            stale.append(rel)
+    return stale
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--check", action="store_true", help="쓰지 않고 어긋난 파일만 알린다")
+    args = parser.parse_args(argv)
+
+    if args.check:
+        stale = stale_targets()
+        for rel in stale:
+            print(f"stale: {rel}  (python scripts/gen_docs.py 로 다시 생성)")
+        return 1 if stale else 0
+
+    for rel, render in TARGETS.items():
+        path = ROOT / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(render(), encoding="utf-8")
+        print(f"wrote {rel}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

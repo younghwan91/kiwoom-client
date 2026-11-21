@@ -366,7 +366,7 @@ api.logout()     # 접근토큰 폐기
 | `api.short_selling` | 1 | 공매도 추이 |
 | `api.create_websocket()` | 19종 | 실시간 시세 — 체결·호가·잔고·VI 등 |
 
-메서드 이름과 파라미터 전체 목록은 [`src/kiwoom_client/domestic/`](src/kiwoom_client/domestic/) 소스나 IDE 자동완성으로 확인할 수 있습니다. API ID(`ka10001` 등)는 키움 공식 가이드의 TR 코드와 같습니다.
+182개 메서드의 api_id·한글 TR 이름 전체 표는 [`docs/endpoints.md`](https://github.com/younghwan91/kiwoom-client/blob/main/docs/endpoints.md)에 있습니다(코드에서 생성). API ID(`ka10001` 등)는 키움 공식 가이드의 TR 코드와 같습니다.
 
 ## 자주 묻는 질문 (FAQ)
 
