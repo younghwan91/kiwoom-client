@@ -1,0 +1,32 @@
+{#-
+  없는 주소(GitHub Pages 가 모든 경로에 이 파일을 준다). 검색엔진엔 noindex, 사람에겐 갈 곳을.
+  링크는 절대 URL — 어떤 깊이의 경로에서 열려도 맞게.
+-#}
+{% extends "main.html" %}
+
+{% block htmltitle %}
+  <title>404 - {{ config.site_name }}</title>
+{% endblock %}
+
+{% block extrahead %}
+  {{ super() }}
+  <meta name="robots" content="noindex">
+{% endblock %}
+
+{% block content %}
+  {% set root = config.site_url %}
+  <h1>404 — 페이지를 찾을 수 없습니다</h1>
+  <p>주소가 바뀌었거나 없는 페이지입니다. 위쪽 검색창에 api_id(<code>ka10001</code>)·TR 이름·메서드 이름을 넣어 보거나, 아래에서 고르세요.</p>
+  <ul>
+    <li><a href="{{ root }}">홈</a> · <a href="{{ root }}#빠른-시작">빠른 시작</a></li>
+    <li><a href="{{ root }}endpoints/">엔드포인트 전체 목록</a> — TR 을 api_id·이름으로 찾기</li>
+    <li><a href="{{ root }}mcp/">MCP 서버</a> — Claude·Cursor 에서 쓰기</li>
+    <li><a href="{{ root }}cookbook/">쿡북</a> · <a href="{{ root }}troubleshooting/">문제 해결</a> · <a href="{{ root }}faq/">FAQ</a></li>
+    <li><a href="{{ root }}migration-from-openapi-plus/">OpenAPI+ · pykiwoom 에서 옮겨 오기</a></li>
+  </ul>
+  <h2 lang="en">Page not found</h2>
+  <p lang="en">This page does not exist or has moved. Try the search box above, or go to the
+    <a href="{{ root }}en/">English home</a>, <a href="{{ root }}en/mcp/">MCP server</a> or
+    <a href="{{ root }}en/troubleshooting/">troubleshooting</a>.</p>
+  <p>링크가 깨져 있었다면 <a href="{{ config.repo_url }}/issues">이슈</a>로 알려 주세요.</p>
+{% endblock %}

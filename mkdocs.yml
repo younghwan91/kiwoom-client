@@ -8,6 +8,7 @@
 site_name: kiwoom-client
 site_description: 키움증권 REST API 를 파이썬과 AI 에이전트(MCP)에서 — 비공식 오픈소스 클라이언트
 site_url: https://younghwan91.github.io/kiwoom-client/
+site_author: younghwan91
 repo_url: https://github.com/younghwan91/kiwoom-client
 repo_name: younghwan91/kiwoom-client
 edit_uri: edit/main/docs/
@@ -56,6 +57,16 @@ theme:
     - content.code.copy
     - content.action.edit
     - toc.follow
+
+# 바닥글 아이콘 링크. 검색·SNS 메타(OG·Twitter·JSON-LD)는 overrides/main.html, 404 는 overrides/404.html.
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/younghwan91/kiwoom-client
+      name: GitHub
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/kiwoom-client/
+      name: PyPI
 
 extra_css:
   - stylesheets/brand.css

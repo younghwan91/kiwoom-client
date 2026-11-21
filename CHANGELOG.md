@@ -16,6 +16,7 @@
 - 문서 사이트: 생성 페이지(엔드포인트 목록·필드 레퍼런스 15쪽)도 `scripts/gen_docs.py` 가 검색 제목·설명을 함께 만든다
 - 문서 배포 뒤 바뀐 페이지 URL 을 IndexNow(Bing·Naver 등)에 알린다 — `scripts/indexnow.py`, 키 파일 `docs/<키>.txt`.
   실패해도 배포는 성공으로 둔다
+- 문서 사이트: 쓸모 있는 링크를 단 404 페이지(noindex), 바닥글 GitHub·PyPI 링크, `site_author`
 
 ## [0.5.0] - 2026-11-21
 
