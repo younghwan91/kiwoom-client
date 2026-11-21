@@ -71,7 +71,7 @@ kiwoom-client-mcp = "kiwoom_client.mcp.cli:main"
 [project.urls]
 Homepage = "https://github.com/younghwan91/kiwoom-client"
 Repository = "https://github.com/younghwan91/kiwoom-client"
-Documentation = "https://github.com/younghwan91/kiwoom-client#readme"
+Documentation = "https://younghwan91.github.io/kiwoom-client/"
 Issues = "https://github.com/younghwan91/kiwoom-client/issues"
 Changelog = "https://github.com/younghwan91/kiwoom-client/blob/main/CHANGELOG.md"
 

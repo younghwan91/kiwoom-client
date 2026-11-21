@@ -14,6 +14,7 @@
 [![Downloads](https://img.shields.io/pypi/dm/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
 [![CI](https://github.com/younghwan91/kiwoom-client/actions/workflows/ci.yml/badge.svg)](https://github.com/younghwan91/kiwoom-client/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/github/license/younghwan91/kiwoom-client)](https://github.com/younghwan91/kiwoom-client/blob/main/LICENSE)
+[![Docs](https://img.shields.io/badge/docs-%EB%AC%B8%EC%84%9C%20%EC%82%AC%EC%9D%B4%ED%8A%B8-blue)](https://younghwan91.github.io/kiwoom-client/)
 
 - **REST 182개 + 조건검색 4종 + 실시간 19종**을 모듈 15개로 감쌌습니다. 아래 그림은 코드에서 센 것이라 타일 하나가 엔드포인트 하나입니다.
 - **MCP 서버 내장** — Claude Code · Cursor 가 `stock_info_basic_stock_info` 같은 도구로 시세·계좌·주문을 직접 부릅니다. 실전 계좌에서는 `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true` 를 켜기 전까지 주문 도구가 **등록조차 되지 않습니다**.
@@ -62,7 +63,7 @@ claude mcp add --transport stdio \
 
 <sub>실서버를 호출하지 않고 만든 예시 화면입니다(시세 값은 가상). 실전투자 서버에서는 `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true` 를 켜기 전까지 주문 도구가 등록되지 않아, 에이전트가 주문할 방법 자체가 없습니다.</sub>
 
-더 읽을거리: [왜 kiwoom-client 인가 — OpenAPI+·pykiwoom·다른 REST 래퍼와 비교](https://github.com/younghwan91/kiwoom-client/blob/main/docs/why.md) · [엔드포인트 전체 목록](https://github.com/younghwan91/kiwoom-client/blob/main/docs/endpoints.md)
+더 읽을거리: [왜 kiwoom-client 인가 — OpenAPI+·pykiwoom·다른 REST 래퍼와 비교](https://younghwan91.github.io/kiwoom-client/why/) · [엔드포인트 전체 목록](https://younghwan91.github.io/kiwoom-client/endpoints/)
 
 ## 무엇을 하나
 
@@ -90,7 +91,7 @@ claude mcp add --transport stdio \
 | 실시간 데이터 | 이벤트 콜백 | 이벤트 콜백 | **async WebSocket** |
 | 설치 | 별도 모듈 설치 | OCX + 모듈 | **`pip install` 한 줄** |
 
-키움 공식 저장소·다른 REST 래퍼까지 넣은 비교는 [왜 kiwoom-client 인가](https://github.com/younghwan91/kiwoom-client/blob/main/docs/why.md), OpenAPI+ TR·함수를 REST 로 옮기는 대응표는 [옮겨 오기](https://github.com/younghwan91/kiwoom-client/blob/main/docs/migration-from-openapi-plus.md).
+키움 공식 저장소·다른 REST 래퍼까지 넣은 비교는 [왜 kiwoom-client 인가](https://younghwan91.github.io/kiwoom-client/why/), OpenAPI+ TR·함수를 REST 로 옮기는 대응표는 [옮겨 오기](https://younghwan91.github.io/kiwoom-client/migration-from-openapi-plus/).
 
 ## 설치와 사전 준비
 
@@ -313,7 +314,7 @@ except KiwoomAPIError as e:
 ### 편의 기능
 
 종목명 검색(`api.find_stock`), 코드값 상수(`OrderType.LIMIT`, `Exchange.KRX`), 조회 전용 CLI(`kiwoom quote 005930 --mock`),
-마스킹된 `repr`·DEBUG 로그·`timeout=` 은 [편의 기능 문서](https://github.com/younghwan91/kiwoom-client/blob/main/docs/convenience.md)에 모아 두었습니다.
+마스킹된 `repr`·DEBUG 로그·`timeout=` 은 [편의 기능 문서](https://younghwan91.github.io/kiwoom-client/convenience/)에 모아 두었습니다.
 
 ## MCP 서버로 사용하기
 
@@ -335,7 +336,7 @@ uvx --from 'kiwoom-client[mcp]' kiwoom-client-mcp config claude-code   # 붙여�
 
 **실주문 가드**: `KIWOOM_IS_MOCK=false`(실전투자)이고 `KIWOOM_MCP_ALLOW_LIVE_ORDERS` 가 `true` 가 아니면 주문 관련 도구는 서버 시작 시점에 아예 등록되지 않습니다. 도구 목록·toolset 필터·discovery 모드 어디로도 AI 에이전트가 그 도구에 닿지 못합니다. 모의투자(`KIWOOM_IS_MOCK=true`)는 이 가드 없이 항상 사용 가능합니다. 가드는 MCP 서버 경로에만 적용되며, 파이썬 코드에서 `KiwoomAPI`/`AsyncKiwoomAPI` 를 직접 쓰는 방식에는 영향이 없습니다.
 
-클라이언트별 설정, 옵션 전체(`--toolsets`·`--discovery`·`--max-rows`), 도구·resources·prompts, 문제 해결은 [MCP 서버 문서](https://github.com/younghwan91/kiwoom-client/blob/main/docs/mcp.md)에 있습니다.
+클라이언트별 설정, 옵션 전체(`--toolsets`·`--discovery`·`--max-rows`), 도구·resources·prompts, 문제 해결은 [MCP 서버 문서](https://younghwan91.github.io/kiwoom-client/mcp/)에 있습니다.
 
 ## 아키텍처
 
@@ -387,7 +388,7 @@ api.logout()     # 접근토큰 폐기
 | `api.short_selling` | 1 | 공매도 추이 |
 | `api.create_websocket()` | 19종 | 실시간 시세 — 체결·호가·잔고·VI 등 |
 
-182개 메서드의 api_id·한글 TR 이름 전체 표는 [`docs/endpoints.md`](https://github.com/younghwan91/kiwoom-client/blob/main/docs/endpoints.md)에 있습니다(코드에서 생성). API ID(`ka10001` 등)는 키움 공식 가이드의 TR 코드와 같습니다.
+182개 메서드의 api_id·한글 TR 이름 전체 표는 [엔드포인트 목록](https://younghwan91.github.io/kiwoom-client/endpoints/)에 있습니다(코드에서 생성). API ID(`ka10001` 등)는 키움 공식 가이드의 TR 코드와 같습니다.
 
 ## 자주 묻는 질문 (FAQ)
 
@@ -409,7 +410,7 @@ api.logout()     # 접근토큰 폐기
 **Q. 연속조회를 직접 관리하지 않고 한 번에 다 받고 싶어요.**
 `request_all()` 을 쓰세요. `cont-yn`/`next-key` 를 자동으로 순회합니다. [연속 조회](#연속-조회-페이지네이션) 참고.
 
-더 많은 질문은 [FAQ](https://github.com/younghwan91/kiwoom-client/blob/main/docs/faq.md), 에러 코드별 해결은 [문제 해결](https://github.com/younghwan91/kiwoom-client/blob/main/docs/troubleshooting.md)에 있습니다. 그래도 궁금한 점은 [Issues](https://github.com/younghwan91/kiwoom-client/issues)에 남겨주세요.
+더 많은 질문은 [FAQ](https://younghwan91.github.io/kiwoom-client/faq/), 에러 코드별 해결은 [문제 해결](https://younghwan91.github.io/kiwoom-client/troubleshooting/)에 있습니다. 그래도 궁금한 점은 [Issues](https://github.com/younghwan91/kiwoom-client/issues)에 남겨주세요.
 
 ## 어디서 쓰이나
 

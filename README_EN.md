@@ -14,6 +14,7 @@
 [![Downloads](https://img.shields.io/pypi/dm/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
 [![CI](https://github.com/younghwan91/kiwoom-client/actions/workflows/ci.yml/badge.svg)](https://github.com/younghwan91/kiwoom-client/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/github/license/younghwan91/kiwoom-client)](https://github.com/younghwan91/kiwoom-client/blob/main/LICENSE)
+[![Docs](https://img.shields.io/badge/docs-site-blue)](https://younghwan91.github.io/kiwoom-client/en/)
 
 - **182 REST endpoints + 4 condition-search calls + 19 real-time types** across 15 modules. The figure below is counted from the code: one tile, one endpoint.
 - **MCP server built in**: Claude Code and Cursor call quotes, account and orders through tools like `stock_info_basic_stock_info`. Against a live account the order tools are **not even registered** until you set `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true`.
@@ -62,7 +63,7 @@ Now ask Claude Code "What's Samsung Electronics trading at?". Other clients such
 
 <sub>Illustration made without calling the live server (prices are made up). On a live account the order tools are not registered until `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true`, so the agent has no way to place an order.</sub>
 
-Further reading: [Why kiwoom-client — compared with OpenAPI+, pykiwoom and other REST wrappers](https://github.com/younghwan91/kiwoom-client/blob/main/docs/why.en.md) · [Endpoint reference](https://github.com/younghwan91/kiwoom-client/blob/main/docs/endpoints.md)
+Further reading: [Why kiwoom-client — compared with OpenAPI+, pykiwoom and other REST wrappers](https://younghwan91.github.io/kiwoom-client/en/why/) · [Endpoint reference](https://younghwan91.github.io/kiwoom-client/en/endpoints/)
 
 ## What it does
 
@@ -77,7 +78,7 @@ Further reading: [Why kiwoom-client — compared with OpenAPI+, pykiwoom and oth
 - **MCP server**: every REST endpoint in the 15 modules plus the 4 condition-search calls, exposed as MCP tools.
 
 Unlike the legacy Kiwoom OpenAPI+ (OCX/COM) or `pykiwoom`, there is no 32-bit/Windows-only constraint, no GUI dependency, and installation is one `pip install`.
-For a comparison that includes Kiwoom's official repository and other REST wrappers, see [Why kiwoom-client](https://github.com/younghwan91/kiwoom-client/blob/main/docs/why.en.md); to port OpenAPI+ code, see the [migration table](https://github.com/younghwan91/kiwoom-client/blob/main/docs/migration-from-openapi-plus.md) (Korean).
+For a comparison that includes Kiwoom's official repository and other REST wrappers, see [Why kiwoom-client](https://younghwan91.github.io/kiwoom-client/en/why/); to port OpenAPI+ code, see the [migration table](https://younghwan91.github.io/kiwoom-client/en/migration-from-openapi-plus/) (Korean).
 
 ## Installation and prerequisites
 
@@ -268,7 +269,7 @@ are all `KiwoomAPIError`, so the block above still catches them. Known causes ca
 
 Stock search by name (`api.find_stock`), named codes (`OrderType.LIMIT`, `Exchange.KRX`), a read-only CLI
 (`kiwoom quote 005930 --mock`), masked `repr`, DEBUG request tracing and `timeout=` are covered in
-[docs/convenience.md](https://github.com/younghwan91/kiwoom-client/blob/main/docs/convenience.md) (Korean).
+[the convenience docs](https://younghwan91.github.io/kiwoom-client/en/convenience/) (Korean).
 
 ## Using as an MCP server
 
@@ -288,7 +289,7 @@ uvx --from 'kiwoom-client[mcp]' kiwoom-client-mcp config claude-code   # prints 
 
 **Live-order guard**: when `KIWOOM_IS_MOCK=false` (live account) and `KIWOOM_MCP_ALLOW_LIVE_ORDERS` is not `true`, order-related tools are not registered at server startup at all. No path (tool list, toolset filter, discovery mode) lets the agent reach them. Mock trading (`KIWOOM_IS_MOCK=true`) always has them available. The guard applies only to the MCP path; direct use of `KiwoomAPI`/`AsyncKiwoomAPI` from Python is unaffected.
 
-Per-client setup, every option (`--toolsets`, `--discovery`, `--max-rows`), tools, resources, prompts and troubleshooting are in the [MCP server docs](https://github.com/younghwan91/kiwoom-client/blob/main/docs/mcp.en.md).
+Per-client setup, every option (`--toolsets`, `--discovery`, `--max-rows`), tools, resources, prompts and troubleshooting are in the [MCP server docs](https://younghwan91.github.io/kiwoom-client/en/mcp/).
 
 ## Architecture
 
@@ -335,7 +336,7 @@ flowchart LR
 | Short Selling | `api.short_selling` | 1 |
 | Real-time WebSocket | `api.create_websocket()` | 19 types |
 
-Every method with its api_id and Korean/English TR name: [`docs/endpoints.md`](https://github.com/younghwan91/kiwoom-client/blob/main/docs/endpoints.md) (generated from the code). API IDs (`ka10001` etc.) match the TR codes in Kiwoom's official guide.
+Every method with its api_id and Korean/English TR name: [the endpoint list](https://younghwan91.github.io/kiwoom-client/en/endpoints/) (generated from the code). API IDs (`ka10001` etc.) match the TR codes in Kiwoom's official guide.
 
 ## FAQ
 
@@ -354,7 +355,7 @@ The built-in limiter (1 req/s per TR, burst of 2) can still be exceeded if multi
 **Do I need pandas?**
 Only for `to_dataframe()`. The base install returns plain dicts/lists.
 
-More in the [FAQ](https://github.com/younghwan91/kiwoom-client/blob/main/docs/faq.en.md) and, by error code, in [Troubleshooting](https://github.com/younghwan91/kiwoom-client/blob/main/docs/troubleshooting.en.md). Still stuck? Open an [issue](https://github.com/younghwan91/kiwoom-client/issues).
+More in the [FAQ](https://younghwan91.github.io/kiwoom-client/en/faq/) and, by error code, in [Troubleshooting](https://younghwan91.github.io/kiwoom-client/en/troubleshooting/). Still stuck? Open an [issue](https://github.com/younghwan91/kiwoom-client/issues).
 
 ## Where it runs
 
