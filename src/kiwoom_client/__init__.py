@@ -46,7 +46,15 @@ from kiwoom_client.errors import (
     KiwoomUnsupportedError,
 )
 from kiwoom_client.parsing import extract_records, normalize, to_dataframe, to_number
-from kiwoom_client.tick_size import round_to_tick, tick_size, ticks_in
+from kiwoom_client.tick_size import (
+    add_ticks,
+    is_on_tick,
+    round_to_tick,
+    round_up_to_tick,
+    tick_size,
+    ticks_between,
+    ticks_in,
+)
 from kiwoom_client.websocket import KiwoomWebSocket, KiwoomWebSocketError
 
 try:
@@ -72,10 +80,14 @@ __all__ = [
     "KiwoomWebSocketError",
     "OrderType",
     "__version__",
+    "add_ticks",
     "extract_records",
+    "is_on_tick",
     "normalize",
     "round_to_tick",
+    "round_up_to_tick",
     "tick_size",
+    "ticks_between",
     "ticks_in",
     "to_dataframe",
     "to_number",
