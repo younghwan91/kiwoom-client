@@ -611,6 +611,36 @@ def endpoint_list_lines(level: int) -> list[str]:
     return lines
 
 
+# --------------------------------------------------------------------------- Cursor · Copilot
+
+CURSOR_RULES_PATH = ".cursor/rules/kiwoom-client.mdc"
+COPILOT_PATH = ".github/copilot-instructions.md"
+_EDITOR_NOTE = (
+    "<!-- 자동 생성 파일 — scripts/templates/editor-rules.md (와 usage-rules.md) 를 고치고 "
+    "`python scripts/gen_docs.py` 로 다시 만듭니다. -->"
+)
+
+
+def _editor_rules() -> str:
+    return template("editor-rules.md", usage_rules=usage_rules())
+
+
+def render_cursor_rules() -> str:
+    """Cursor 프로젝트 규칙(.mdc): 프론트매터가 첫 줄이어야 한다. 파이썬 파일을 열 때 붙는다."""
+    front = (
+        "---\n"
+        "description: Rules for writing code that uses kiwoom-client (Kiwoom Securities REST API)\n"
+        "globs: **/*.py\n"
+        "alwaysApply: false\n"
+        "---\n"
+    )
+    return f"{front}\n{_EDITOR_NOTE}\n\n{_editor_rules()}\n"
+
+
+def render_copilot() -> str:
+    return f"{_EDITOR_NOTE}\n\n{_editor_rules()}\n"
+
+
 # --------------------------------------------------------------------------- Agent Skill
 
 SKILL_PATH = "skills/kiwoom-client/SKILL.md"
@@ -650,6 +680,8 @@ TARGETS: dict[str, Callable[[], str]] = {
     LLMS_PATH: render_llms_txt,
     LLMS_FULL_PATH: render_llms_full,
     AGENTS_PATH: render_agents,
+    CURSOR_RULES_PATH: render_cursor_rules,
+    COPILOT_PATH: render_copilot,
     SKILL_PATH: render_skill,
     SKILL_ENDPOINTS_PATH: render_skill_endpoints,
     **gen_reference.targets(),

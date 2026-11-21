@@ -1,7 +1,7 @@
 """문서 속 코드 블록이 최소한 '맞는 코드' 인지 본다 — 서버에는 아무것도 보내지 않는다.
 
 검사 대상: README(한·영), CONTRIBUTING, examples/README, AGENTS.md, llms*.txt, docs/**/*.md,
-skills/**/*.md. (docs/superpowers/ 는 작업 기록이라 뺀다.)
+skills/**/*.md, Copilot·Cursor 규칙. (docs/superpowers/ 는 작업 기록이라 뺀다.)
 
 1. ```python 블록은 문법이 맞아야 한다 (최상위 ``await`` 허용 — 노트북·REPL 조각이 많다).
 2. ```json 블록은 JSON 으로 읽혀야 한다.
@@ -60,6 +60,8 @@ def doc_files() -> list[Path]:
         ROOT / "AGENTS.md",
         ROOT / "examples" / "README.md",
         *sorted(ROOT.glob("llms*.txt")),
+        ROOT / ".github" / "copilot-instructions.md",
+        *sorted((ROOT / ".cursor" / "rules").glob("*.mdc")),
         *sorted((ROOT / "docs").rglob("*.md")),
         *sorted((ROOT / "skills").rglob("*.md")),
     ]

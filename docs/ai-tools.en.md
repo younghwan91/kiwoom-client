@@ -10,6 +10,8 @@ drift from the real code.
 | [`llms-full.txt`](https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/llms-full.txt) | pasting into a context window | every public signature and docstring + the full endpoint list |
 | [`AGENTS.md`](https://github.com/younghwan91/kiwoom-client/blob/main/AGENTS.md) | agents that open this repository (Codex, …) | usage rules + rules for working on this repository |
 | [`skills/kiwoom-client/`](https://github.com/younghwan91/kiwoom-client/tree/main/skills/kiwoom-client) | Claude Code · Agent Skills | rules, workflow, examples + endpoint list |
+| [`.cursor/rules/kiwoom-client.mdc`](https://github.com/younghwan91/kiwoom-client/blob/main/.cursor/rules/kiwoom-client.mdc) | Cursor | the same rules (attached when a Python file is open) |
+| [`.github/copilot-instructions.md`](https://github.com/younghwan91/kiwoom-client/blob/main/.github/copilot-instructions.md) | GitHub Copilot | the same rules |
 | MCP server (`kiwoom-client-mcp`) | MCP clients | call the endpoints as tools — [README, MCP server](https://github.com/younghwan91/kiwoom-client/blob/main/README_EN.md) |
 
 Every rule set starts the same way: **`is_mock` defaults to `False`, the live server, and `api.order.*` /
@@ -43,6 +45,19 @@ done
 
 A copied skill is invoked as `/kiwoom-client`. After upgrading the library, run the same command again to refresh the
 endpoint list.
+
+## Cursor · GitHub Copilot
+
+They apply as soon as you open this repository. For your own project, download them to the same paths (append to an
+existing `copilot-instructions.md`):
+
+```bash
+mkdir -p .cursor/rules .github
+curl -fsSL -o .cursor/rules/kiwoom-client.mdc \
+  https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/.cursor/rules/kiwoom-client.mdc
+curl -fsSL https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/.github/copilot-instructions.md \
+  >> .github/copilot-instructions.md
+```
 
 ## Other tools
 
