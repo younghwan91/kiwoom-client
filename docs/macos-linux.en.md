@@ -94,7 +94,7 @@ async def main():
 asyncio.run(main())
 ```
 
-More in the [real-time recipe](cookbook/realtime-trades.md) (Korean).
+More in the [real-time recipe](cookbook/realtime-trades.md).
 
 ## 6. Running on a server (cron, systemd, Docker)
 

@@ -20,8 +20,8 @@ export KIWOOM_APP_KEY=...  KIWOOM_APP_SECRET=...   # a mock-trading key
 | [Account balance and valuation summary](account-summary.md) | `kt00018`, `kt00001` |
 | [Concurrent queries with asyncio (Korean)](async-concurrency.md) | `AsyncKiwoomAPI`, `asyncio.gather` |
 | [Tick-aligned limit orders, mock trading](limit-order.md) | `round_to_tick()`·`add_ticks()`, `kt10000`–`kt10003` |
-| [Real-time trades and order book over WebSocket (Korean)](realtime-trades.md) | `0B`·`0D`, `ws.on()`·`ws.subscribe()` |
-| [Condition search results in real time (Korean)](condition-search-realtime.md) | `CNSRLST`·`CNSRREQ`·`CNSRCLR` |
+| [Real-time trades and order book over WebSocket](realtime-trades.md) | `0B`·`0D`, `ws.on()`·`ws.subscribe()` |
+| [Condition search results in real time](condition-search-realtime.md) | `CNSRLST`·`CNSRREQ`·`CNSRCLR` |
 | [Handling rate limits (429) (Korean)](rate-limits.md) | `rate_limit`·`max_retries`, `KiwoomRateLimitError` |
 
 To find the TR you need, see the [endpoint reference](../endpoints.md); for fields, the
