@@ -65,6 +65,7 @@ dev = [
 ]
 
 [project.scripts]
+kiwoom = "kiwoom_client.cli:main"
 kiwoom-client-mcp = "kiwoom_client.mcp.cli:main"
 
 [project.urls]
