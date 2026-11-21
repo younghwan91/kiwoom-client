@@ -9,6 +9,7 @@
 |---|---|
 | [키움 REST API 포털](https://openapi.kiwoom.com) | API 사용신청, 앱키·시크릿키 발급, 공지 |
 | [REST API 가이드](https://openapi.kiwoom.com/guide/apiguide) | api_id(`ka10001` 등)별 요청·응답 필드 정의. 이 라이브러리의 메서드 인자 이름은 여기와 같습니다 |
+| [Kiwoom-REST-API (GitHub)](https://github.com/Kiwoom-Securities/Kiwoom-REST-API) | 키움증권 공식 저장소 — API 스펙, 예제 코드, Postman 컬렉션, MCP 서버. CLI 는 PyPI `kwcli` |
 
 - 실전투자 키와 모의투자 키는 따로 발급되고 서로의 서버에서 인증되지 않습니다(`is_mock` 과 짝을 맞추세요).
 - 모의투자 서버는 KRX 만 지원합니다.

@@ -10,12 +10,16 @@ README·문서 사이트·이미지·홍보 문구를 같은 목소리로 쓰기
 
 | | 문장 |
 |---|---|
-| 한국어 | 키움증권 REST API 를 파이썬과 AI 에이전트에서 쓰는 가장 빠른 길 — 비공식 오픈소스 클라이언트. |
-| English | The shortest path from Python and AI agents to the Kiwoom Securities REST API — an unofficial open-source client. |
+| 한국어 | 키움증권 REST API 를 파이썬과 AI 에이전트에서 — `pip install` 한 줄로 쓰는 비공식 오픈소스 클라이언트. |
+| English | The Kiwoom Securities REST API from Python and AI agents, one `pip install` away — an unofficial open-source client. |
 
 누구를 위한 것인가: 키움 계좌로 자동매매·데이터 수집·리서치를 하려는 파이썬 개발자, 그리고 Claude Code·Cursor 같은
 MCP 클라이언트로 시세·계좌를 다루려는 사람. OpenAPI+(OCX) 를 쓰던 사람이 Linux 서버나 맥으로 옮겨 올 때 처음 도착하는 곳이
 되는 것이 목표입니다.
+
+키움증권도 공식 저장소([Kiwoom-REST-API](https://github.com/Kiwoom-Securities/Kiwoom-REST-API), CLI `kwcli`, MCP 서버)를
+냅니다. 우리는 그것과 경쟁한다고 말하지 않고, MIT 라이선스의 파이썬 라이브러리·sync/async 같은 표면·한 패키지의 MCP 서버라는
+차이만 사실대로 말합니다. 공식 도구를 깎아내리는 비교는 하지 않습니다.
 
 ## 태그라인
 

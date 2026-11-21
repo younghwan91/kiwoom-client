@@ -4,12 +4,13 @@ Links you keep coming back to when using the Kiwoom REST API from Python or AI a
 Kiwoom Securities; everything else is labelled with its source. Report a broken link or suggest one in
 [Issues](https://github.com/younghwan91/kiwoom-client/issues).
 
-## Kiwoom Securities (official, Korean)
+## Kiwoom Securities (official)
 
 | Resource | What you find there |
 |---|---|
 | [Kiwoom REST API portal](https://openapi.kiwoom.com) | Apply for API access, issue the app key and secret, notices |
 | [REST API guide](https://openapi.kiwoom.com/guide/apiguide) | Request and response fields per api_id (`ka10001`, ...). This library's keyword arguments use the same names |
+| [Kiwoom-REST-API (GitHub)](https://github.com/Kiwoom-Securities/Kiwoom-REST-API) | Kiwoom's official repository: API specs, example code, Postman collection, MCP servers. The CLI is `kwcli` on PyPI |
 
 - Live (실전투자) and mock (모의투자) keys are issued separately and are rejected by the other server; match `is_mock`.
 - The mock server supports KRX only.
