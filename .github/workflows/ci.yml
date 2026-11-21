@@ -6,47 +6,55 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
+# 같은 PR 에 새 커밋이 오면 앞선 실행을 취소한다. main 푸시는 끝까지 돌린다.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
 
-      - name: Set up Python
-        uses: actions/setup-python@v7
+      # 로컬 명령(CLAUDE.md·CONTRIBUTING.md)과 같은 `uv run --extra ...` 로 돌린다.
+      # uv.lock 을 커밋하지 않으므로 매번 최신 해상도 — ruff 새 규칙이 CI 에서 먼저 걸릴 수 있다.
+      - name: Set up uv
+        uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d  # v10.4.0
         with:
           python-version: "3.12"
-
-      - name: Install dependencies
-        run: pip install -e ".[dev,mcp]"
+          enable-cache: true
+          cache-dependency-glob: pyproject.toml
 
       - name: Ruff
-        run: ruff check src tests examples
+        run: uv run --extra dev --extra mcp ruff check src tests examples
 
       - name: Ruff format check
-        run: ruff format --check src tests examples
+        run: uv run --extra dev --extra mcp ruff format --check src tests examples
         continue-on-error: true  # 포매팅은 아직 강제하지 않는다
 
       - name: Mypy
-        run: mypy
+        run: uv run --extra dev --extra mcp mypy
 
   test:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
 
     steps:
       - uses: actions/checkout@v7
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v7
+      - name: Set up uv (Python ${{ matrix.python-version }})
+        uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d  # v10.4.0
         with:
           python-version: ${{ matrix.python-version }}
-
-      - name: Install dependencies
-        run: pip install -e ".[dev,mcp]"
+          enable-cache: true
+          cache-dependency-glob: pyproject.toml
 
       - name: Run tests
-        run: pytest tests/ -v
+        run: uv run --extra dev --extra mcp pytest tests/ -v
