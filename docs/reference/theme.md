@@ -1,3 +1,8 @@
+---
+seo_title: "키움 REST API 테마 TR 요청·응답 필드 — api.theme"
+description: "키움증권 REST API 테마 TR 2개(ka90001·ka90002)의 요청·응답 필드 ID·한글명·필수·길이와 kiwoom-client 파이썬 호출 예."
+---
+
 <!-- 자동 생성 파일 — 손으로 고치지 마세요. `python scripts/gen_docs.py` 가 TR 카탈로그(kiwoom_client.spec)로 다시 만듭니다. -->
 
 # `api.theme` — 테마 (Theme)

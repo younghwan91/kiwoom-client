@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import inspect
+import json
 import sys
 from collections.abc import Callable
 from pathlib import Path
@@ -50,6 +51,20 @@ def anchor_link(module: str, api_id: str, *, from_dir: str = "docs") -> str:
     return f"{rel.as_posix()}#{api_id.lower()}"
 
 
+def front_matter(seo_title: str, description: str) -> list[str]:
+    """검색 결과용 제목·설명 front matter (overrides/main.html 이 <title>·meta description 에 쓴다).
+
+    값은 JSON 문자열로 — 콜론·따옴표가 들어가도 YAML 이 깨지지 않는다.
+    """
+    return [
+        "---",
+        f"seo_title: {json.dumps(seo_title, ensure_ascii=False)}",
+        f"description: {json.dumps(description, ensure_ascii=False)}",
+        "---",
+        "",
+    ]
+
+
 def _cell(text: str) -> str:
     return " ".join(text.split()).replace("|", "\\|") or " "
 
@@ -89,7 +104,16 @@ def _field_rows(fields: tuple[spec.Field, ...], *, request: bool) -> list[str]:
 
 def render_module(module: str) -> str:
     title = module_title(module)
+    short = title.split(" (")[0]  # "차트 (Chart)" → "차트"
+    methods = _methods(module)
+    ids = "·".join(tr.api_id for _name, _first, tr in methods[:3])
+    more = " 등" if len(methods) > 3 else ""
     lines = [
+        *front_matter(
+            f"키움 REST API {short} TR 요청·응답 필드 — api.{module}",
+            f"키움증권 REST API {short} TR {len(methods)}개({ids}{more})의 "
+            "요청·응답 필드 ID·한글명·필수·길이와 kiwoom-client 파이썬 호출 예.",
+        ),
         GENERATED_NOTE,
         "",
         f"# `api.{module}` — {title}",
@@ -108,7 +132,6 @@ def render_module(module: str) -> str:
             "> ⚠️ **실주문 모듈입니다.** `is_mock=False`(기본값)면 실계좌에 주문이 나갑니다.",
             "",
         ]
-    methods = _methods(module)
     lines += ["| api_id | 메서드 | 이름 |", "|---|---|---|"]
     for name, _first, tr in methods:
         lines.append(f"| [`{tr.api_id}`](#{tr.api_id.lower()}) | `{name}()` | {_cell(tr.name)} |")
@@ -140,7 +163,13 @@ def render_module(module: str) -> str:
 
 def render_index() -> str:
     source = spec.catalog_source()
+    total = sum(len(_methods(m)) for m in rest_modules())
     lines = [
+        *front_matter(
+            "키움 REST API 필드 레퍼런스 — TR별 요청·응답 필드",
+            f"키움증권 REST API TR {total}개의 요청·응답 필드(필드 ID·한글명·필수·길이)를 "
+            "모듈별로 모은 레퍼런스. 키움 공식 명세에서 만든 TR 카탈로그 기준입니다.",
+        ),
         GENERATED_NOTE,
         "",
         "# 필드 레퍼런스 (Field reference)",

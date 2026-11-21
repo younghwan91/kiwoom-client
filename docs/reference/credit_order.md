@@ -1,3 +1,8 @@
+---
+seo_title: "키움 REST API 신용주문 TR 요청·응답 필드 — api.credit_order"
+description: "키움증권 REST API 신용주문 TR 4개(kt10006·kt10007·kt10008 등)의 요청·응답 필드 ID·한글명·필수·길이와 kiwoom-client 파이썬 호출 예."
+---
+
 <!-- 자동 생성 파일 — 손으로 고치지 마세요. `python scripts/gen_docs.py` 가 TR 카탈로그(kiwoom_client.spec)로 다시 만듭니다. -->
 
 # `api.credit_order` — 신용주문 (Credit Order)

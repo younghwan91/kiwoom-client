@@ -208,3 +208,13 @@ def test_english_pages_have_english_meta():
         if path.name.endswith(".en.md"):
             fm = _front_matter(path)
             assert not re.search(r"[가-힣]", fm["seo_title"] + fm["description"]), path.name
+
+
+def test_generated_pages_have_search_title_and_description():
+    """endpoints.md·reference/*.md 는 scripts/gen_docs.py 가 front matter 까지 만든다."""
+    docs = _ROOT / "docs"
+    for path in [docs / "endpoints.md", *sorted((docs / "reference").glob("*.md"))]:
+        fm = _front_matter(path)
+        rel = path.relative_to(_ROOT)
+        assert 20 <= len(fm.get("seo_title", "")) <= 80, f"{rel}: seo_title 20~80자"
+        assert 50 <= len(fm.get("description", "")) <= 180, f"{rel}: description 50~180자"

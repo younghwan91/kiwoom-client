@@ -212,6 +212,12 @@ def render_endpoints() -> str:
         by_module.setdefault(ep.module, []).append(ep)
 
     lines: list[str] = [
+        *gen_reference.front_matter(
+            f"키움 REST API 엔드포인트 전체 목록 — TR {len(eps)}개·조건검색·실시간",
+            f"kiwoom-client 가 감싼 키움증권 REST API {len(eps)}개"
+            "(api_id·한글 TR 이름·파이썬 메서드·MCP 도구 이름), "
+            f"조건검색 {len(calls)}종, 실시간 시세 {len(REALTIME_TYPES)}종을 코드에서 뽑은 표.",
+        ),
         "# 엔드포인트 전체 목록 (Endpoint reference)",
         "",
         GENERATED_NOTE,

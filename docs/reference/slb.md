@@ -1,3 +1,8 @@
+---
+seo_title: "키움 REST API 대차거래 TR 요청·응답 필드 — api.slb"
+description: "키움증권 REST API 대차거래 TR 4개(ka10068·ka10069·ka20068 등)의 요청·응답 필드 ID·한글명·필수·길이와 kiwoom-client 파이썬 호출 예."
+---
+
 <!-- 자동 생성 파일 — 손으로 고치지 마세요. `python scripts/gen_docs.py` 가 TR 카탈로그(kiwoom_client.spec)로 다시 만듭니다. -->
 
 # `api.slb` — 대차거래 (Stock Lending & Borrowing)
