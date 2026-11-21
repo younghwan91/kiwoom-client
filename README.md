@@ -7,7 +7,7 @@
 
 # kiwoom-client — 키움증권 REST API 파이썬 클라이언트
 
-**키움 REST API, 파이썬과 AI 에이전트로.** 182개 엔드포인트, 실시간 WebSocket, 그리고 MCP 서버로 AI 에이전트까지 — COM/OCX 없이 Windows · macOS · Linux 어디서나 돌아갑니다. 키움증권과 무관한 비공식 오픈소스입니다.
+**키움 REST API, 파이썬과 AI 에이전트로.** 182개 엔드포인트, 실시간 WebSocket, 그리고 MCP 서버로 AI 에이전트까지 — OpenAPI+ 의 COM/OCX 없이 Windows · macOS · Linux 어디서나 자동매매·데이터 수집 코드가 돌아갑니다. 키움증권과 무관한 비공식 오픈소스입니다.
 
 [![PyPI version](https://img.shields.io/pypi/v/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
 [![Python](https://img.shields.io/pypi/pyversions/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
