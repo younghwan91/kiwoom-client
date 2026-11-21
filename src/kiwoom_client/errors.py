@@ -5,6 +5,7 @@
     KiwoomError
     ├── KiwoomAuthError              토큰 발급·폐기 실패 (/oauth2/*)
     ├── KiwoomWebSocketError         WebSocket 로그인·프로토콜 실패
+    ├── KiwoomParamError             요청 필드 불일치 (validate_params="error", 보내기 전)
     └── KiwoomAPIError               return_code != 0
         ├── KiwoomTokenError         토큰 거부 (return_code 3; 8003/8005/8010/8103)
         │   └── KiwoomServerMismatchError  모의/실전 키·토큰 불일치 (8030/8031)
@@ -39,12 +40,15 @@ from kiwoom_client.base import (
     KiwoomUnsupportedError,
     api_error_class,
 )
+from kiwoom_client.spec.validation import KiwoomParamError, KiwoomParamWarning
 from kiwoom_client.websocket import KiwoomWebSocketError
 
 __all__ = [
     "KiwoomAPIError",
     "KiwoomAuthError",
     "KiwoomError",
+    "KiwoomParamError",
+    "KiwoomParamWarning",
     "KiwoomRateLimitError",
     "KiwoomRequestError",
     "KiwoomServerMismatchError",
