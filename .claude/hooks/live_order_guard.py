@@ -33,6 +33,7 @@ EXECS = re.compile(r"\b(?:python3?|ipython|uv\s+run|uvx|pytest|kiwoom-client-mcp
 MCP_LIVE = re.compile(r"(?:^|[;&|\n(]\s*|\bexport\s+|\benv\s+)(?:[A-Za-z_]\w*=\S*\s+)*KIWOOM_MCP_ALLOW_LIVE_ORDERS=['\"]?true", re.I)
 HEREDOC = re.compile(r"<<-?\s*(['\"]?)(\w+)\1[^\n]*\n(.*?)\n\2(?:\n|$)", re.S)
 PYFILE = re.compile(r"(?:^|[\s'\"=])([\w./~-]+\.py)\b")
+CD = re.compile(r"\bcd\s+([^\s;&|]+)")
 
 HOW = (
     " 실주문·토큰 폐기는 사용자만 한다 — 명령을 보여주고 사용자가 직접 `! <명령>` 으로 실행하게 하라."
@@ -52,15 +53,35 @@ def deny(reason: str) -> None:
 def strip_docs(cmd: str) -> str:
     """따옴표 안 글자와 파일에 쓰는 heredoc 본문을 지운다 — 명령이 아니라 글이다."""
     cmd = HEREDOC.sub(lambda m: "" if not re.search(r"\b(?:bash|sh|python3?|uv\s+run)\b[^\n]*$", cmd[: m.start()].split("\n")[-1]) else m.group(0), cmd)
-    return re.sub(r"'[^']*'|\"[^\"]*\"", "''", cmd)
+    # `VAR='true'` 처럼 대입 값을 감싼 따옴표는 남긴다 — 지우면 opt-in 검사를 빠져나간다.
+    return re.sub(r"(?<!=)'[^']*'|(?<!=)\"[^\"]*\"", "''", cmd)
+
+
+def _cd_dirs(cmd: str, cwd: str) -> list[tuple[int, str]]:
+    """명령 안 `cd <dir>` 마다 (끝 위치, 그 뒤 작업 디렉터리). 연속 cd 는 앞 cd 기준."""
+    out, here = [], cwd
+    for m in CD.finditer(cmd):
+        here = os.path.normpath(os.path.join(here, os.path.expanduser(m.group(1).strip("'\""))))
+        out.append((m.end(), here))
+    return out
 
 
 def script_text(cmd: str, cwd: str) -> str:
-    """명령이 가리키는 .py 파일 내용. 상대 경로는 cwd 와 명령 안의 `cd <dir>` 기준 둘 다로 푼다."""
-    bases = [cwd] + [os.path.join(cwd, os.path.expanduser(d)) for d in re.findall(r"\bcd\s+([^\s;&|]+)", cmd)]
+    """명령이 가리키는 .py 파일 내용.
+
+    상대 경로는 그 경로 앞에 나온 마지막 `cd <dir>` 기준으로 먼저 푼다 — 실제로 실행될 파일이다
+    (`cd <worktree> && uv run pytest tests/x.py` 가 세션 cwd 의 옛 파일로 막히지 않게).
+    그 자리에 파일이 없으면 예전처럼 cwd 와 다른 `cd` 대상들에서도 찾는다.
+    """
+    cds = _cd_dirs(cmd, cwd)
+    fallback = [cwd] + [d for _, d in cds] + [
+        os.path.join(cwd, os.path.expanduser(m.group(1))) for m in CD.finditer(cmd)
+    ]
     out = []
     for m in PYFILE.finditer(cmd):
         rel = os.path.expanduser(m.group(1))
+        here = next((d for end, d in reversed(cds) if end <= m.start(1)), None)
+        bases = ([here] if here else []) + [b for b in fallback if b != here]
         for base in ([""] if os.path.isabs(rel) else bases):
             p = os.path.join(base, rel)
             try:
