@@ -28,6 +28,7 @@ from kiwoom_client.mcp.condition_search_session import (
 )
 from kiwoom_client.mcp.discovery import CatalogEntry, discovery_tools
 from kiwoom_client.mcp.guard import live_orders_allowed
+from kiwoom_client.mcp.helpers import helper_tools
 from kiwoom_client.mcp.local_tools import LocalTool
 from kiwoom_client.mcp.order_preview import order_preview_tool
 from kiwoom_client.mcp.response_size import ARGUMENT as MAX_ROWS_ARGUMENT
@@ -186,7 +187,7 @@ def build_server(
 
 def _local_tools(*, allow_live_orders: bool) -> list[LocalTool]:
     """Hand-written helper tools. None of them can place an order."""
-    return [order_preview_tool(order_tools_enabled=allow_live_orders)]
+    return [order_preview_tool(order_tools_enabled=allow_live_orders), *helper_tools()]
 
 
 async def dispatch_tool(
