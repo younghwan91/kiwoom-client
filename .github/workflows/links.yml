@@ -16,9 +16,11 @@ on:
 permissions:
   contents: read
 
+# PR 은 새 커밋이 오면 앞선 실행을 취소한다. main 푸시·스케줄은 커밋(sha)마다 따로 묶어 끝까지 돌린다 —
+# ref 로 묶으면 연달아 머지될 때 대기 중이던 main 실행이 "cancelled" 로 밀려 그 커밋이 검사 없이 남는다.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   # docs/superpowers/ 는 작업 기록이라 뺀다.
