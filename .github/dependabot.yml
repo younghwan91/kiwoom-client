@@ -1,0 +1,32 @@
+# Dependabot 버전 업데이트 — 주 1회, 생태계별로 한 PR 에 묶는다.
+version: 2
+updates:
+  # 워크플로의 actions/* 와 SHA 고정한 서드파티 액션(astral-sh/setup-uv 등).
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Asia/Seoul
+    groups:
+      github-actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: ci
+
+  # pyproject.toml 의 의존성. 이 패키지는 소비자(실매매 데몬 포함)가 `>=` 로 받는 라이브러리라
+  # 하한을 함부로 올리면 안 된다 — increase-if-necessary 는 새 버전이 기존 범위 밖일 때만 고친다
+  # (지금처럼 하한만 건 범위에서는 사실상 상한을 걸었을 때만 PR 이 온다).
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Asia/Seoul
+    versioning-strategy: increase-if-necessary
+    groups:
+      python-deps:
+        patterns: ["*"]
+    commit-message:
+      prefix: chore
+      include: scope
