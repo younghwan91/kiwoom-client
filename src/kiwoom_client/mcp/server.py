@@ -11,8 +11,6 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-import os
-import sys
 from collections.abc import Collection
 from typing import Any
 
@@ -30,7 +28,6 @@ from kiwoom_client.mcp.condition_search_session import (
 )
 from kiwoom_client.mcp.guard import live_orders_allowed
 from kiwoom_client.mcp.tools import RestToolSpec, discover_rest_tools
-from kiwoom_client.mcp.toolsets import toolsets_from_env
 
 logger = logging.getLogger(__name__)
 
@@ -228,24 +225,15 @@ def _input_schema(spec: RestToolSpec) -> dict[str, Any]:
     return _rest_input_schema()
 
 
-def main() -> None:
-    """Entry point for the ``kiwoom-client-mcp`` console script."""
+def run_server(
+    *,
+    app_key: str,
+    app_secret: str,
+    is_mock: bool,
+    toolsets: Collection[str] | None = None,
+) -> None:
+    """Start the stdio MCP server and block until the client disconnects."""
     logging.basicConfig(level=logging.INFO)
-
-    app_key = os.environ.get("KIWOOM_APP_KEY")
-    app_secret = os.environ.get("KIWOOM_APP_SECRET")
-    if not app_key or not app_secret:
-        print(
-            "Error: KIWOOM_APP_KEY and KIWOOM_APP_SECRET environment variables must be set.",
-            file=sys.stderr,
-        )
-        sys.exit(1)
-    is_mock = os.environ.get("KIWOOM_IS_MOCK", "false").strip().lower() == "true"
-    try:
-        toolsets = toolsets_from_env()
-    except ValueError as exc:
-        print(f"Error: {exc}", file=sys.stderr)
-        sys.exit(1)
 
     api = AsyncKiwoomAPI(app_key, app_secret, is_mock=is_mock)
     allow_live_orders = live_orders_allowed(is_mock=is_mock)
@@ -268,6 +256,13 @@ def main() -> None:
             await api.close()
 
     asyncio.run(_run())
+
+
+def main() -> None:
+    """Backward-compatible entry point — the CLI lives in :mod:`.cli`."""
+    from kiwoom_client.mcp.cli import main as cli_main
+
+    cli_main()
 
 
 async def _connect_condition_search(api: AsyncKiwoomAPI):

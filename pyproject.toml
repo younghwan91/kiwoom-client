@@ -57,7 +57,7 @@ dev = [
 ]
 
 [project.scripts]
-kiwoom-client-mcp = "kiwoom_client.mcp.server:main"
+kiwoom-client-mcp = "kiwoom_client.mcp.cli:main"
 
 [project.urls]
 Homepage = "https://pypi.org/project/kiwoom-client/"
