@@ -7,7 +7,7 @@
 
 # kiwoom-client — Python client for the Kiwoom Securities REST API
 
-**The Kiwoom REST API, from Python and AI agents.** 182 endpoints, real-time WebSocket, and an MCP server so AI agents can trade Korean stocks too. No COM/OCX, so it runs on Windows, macOS and Linux. An unofficial open-source project, not affiliated with Kiwoom Securities.
+**The Kiwoom REST API, from Python and AI agents.** 182 endpoints, real-time WebSocket, and an MCP server so AI agents can trade Korean stocks too. No OpenAPI+ COM/OCX, so trading bots and data jobs run on Windows, macOS and Linux. An unofficial open-source project, not affiliated with Kiwoom Securities.
 
 [![PyPI version](https://img.shields.io/pypi/v/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
 [![Python](https://img.shields.io/pypi/pyversions/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
