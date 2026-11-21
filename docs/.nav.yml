@@ -4,4 +4,5 @@ nav:
   - 홈: index.md
   - why.md
   - "*"
+  - resources.md
   - brand.md
