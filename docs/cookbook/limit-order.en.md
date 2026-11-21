@@ -73,4 +73,4 @@ print(open_orders.get("oso"))
 - Order types and hours the mock-trading server does not accept come back as `KiwoomAPIError`. Kiwoom puts the reason
   in the message (`e.message`).
 - Order TRs have per-TR rate limits too. When placing many orders quickly, see
-  [handling rate limits](rate-limits.md) (Korean).
+  [handling rate limits](rate-limits.md).
