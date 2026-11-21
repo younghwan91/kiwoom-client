@@ -354,7 +354,7 @@ The built-in limiter (1 req/s per TR, burst of 2) can still be exceeded if multi
 **Do I need pandas?**
 Only for `to_dataframe()`. The base install returns plain dicts/lists.
 
-More questions? Open an [issue](https://github.com/younghwan91/kiwoom-client/issues).
+More in the [FAQ](https://github.com/younghwan91/kiwoom-client/blob/main/docs/faq.en.md) and, by error code, in [Troubleshooting](https://github.com/younghwan91/kiwoom-client/blob/main/docs/troubleshooting.en.md). Still stuck? Open an [issue](https://github.com/younghwan91/kiwoom-client/issues).
 
 ## Where it runs
 
