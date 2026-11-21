@@ -125,3 +125,38 @@ def test_search():
     ids = [tr.api_id for tr in spec.search("주식기본정보")]
     assert "ka10001" in ids
     assert [tr.api_id for tr in spec.search("KA10001")] == ["ka10001"]
+
+
+class TestDescribe:
+    def test_resolve_forms(self):
+        from kiwoom_client import KiwoomAPI
+
+        api = KiwoomAPI("k", "s", is_mock=True)
+        assert spec.resolve("ka10001").api_id == "ka10001"
+        assert spec.resolve("stock_info.basic_stock_info").api_id == "ka10001"
+        assert spec.resolve("api.stock_info.basic_stock_info()").api_id == "ka10001"
+        assert spec.resolve(api.stock_info.basic_stock_info).api_id == "ka10001"
+        with pytest.raises(KeyError):
+            spec.resolve(len)
+
+    def test_method_for(self):
+        assert spec.method_for("ka10001") == ("stock_info", "basic_stock_info")
+        assert spec.method_for("0B") is None
+
+    def test_describe_text(self):
+        text = spec.describe("ka10030")
+        assert text.splitlines()[0] == "ka10030 당일거래량상위요청 — POST /api/dostk/rkinfo"
+        assert 'api.ranking.top_volume_today(mrkt_tp="...",' in text
+        assert " *sort_tp" in text
+        assert "코드: 1=거래량, 2=거래회전율, 3=거래대금" in text
+        assert "tdy_trde_qty_upper[].stk_cd" in text
+
+    def test_describe_on_both_facades_needs_no_network(self, httpx_mock):
+        from kiwoom_client import AsyncKiwoomAPI, KiwoomAPI
+
+        sync = KiwoomAPI("k", "s", is_mock=True)
+        assert sync.describe("ka10001") == spec.describe("ka10001")
+        assert AsyncKiwoomAPI("k", "s", is_mock=True).describe(sync.order.buy_order).startswith(
+            "kt10000"
+        )
+        assert httpx_mock.get_requests() == []

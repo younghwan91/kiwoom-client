@@ -1015,6 +1015,16 @@ def catalog_source() -> dict[str, Any]
 
 카탈로그를 만든 원천 (저장소·경로·고정 커밋).
 
+### `spec.describe`
+
+```
+def describe(target: Any) -> str
+```
+
+TR 하나의 사람이 읽을 도움말 — 호출 예, 요청 필드(필수·코드값), 응답 필드.
+
+``target`` 은 :func:`resolve` 가 받는 것 무엇이든. ``print(spec.describe("ka10001"))``.
+
 ### `spec.endpoint_index`
 
 ```
@@ -1041,6 +1051,23 @@ def get(api_id: str) -> TRSpec
 ```
 
 api_id 로 TR 명세를 얻는다. 없으면 ``KeyError``.
+
+### `spec.method_for`
+
+```
+def method_for(api_id: str) -> tuple[str, str] | None
+```
+
+api_id 를 부르는 ``(모듈 이름, 메서드 이름)`` — 감싼 메서드가 없으면 ``None``.
+
+### `spec.resolve`
+
+```
+def resolve(target: Any) -> TRSpec
+```
+
+api_id(``"ka10001"``), ``"stock_info.basic_stock_info"``, 또는 바운드 메서드
+(``api.stock_info.basic_stock_info``) → TR 명세.
 
 ### `spec.search`
 
