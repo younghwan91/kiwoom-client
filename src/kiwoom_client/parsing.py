@@ -15,7 +15,7 @@ import re
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any
 
-__all__ = ["extract_records", "normalize", "to_dataframe", "to_number"]
+__all__ = ["extract_records", "normalize", "to_dataframe", "to_number", "to_ohlcv"]
 
 _NUMERIC = re.compile(r"^[+-]?\d+(\.\d+)?$")
 
@@ -187,6 +187,129 @@ def to_dataframe(
     if numeric:
         records = [normalize(record) for record in records]
     return pd.DataFrame(records)
+
+
+# Field names across Kiwoom's chart TRs (stock ka10079-ka10094, sector
+# ka20004-ka20019, gold spot ka50079-ka50092), per the official spec.
+_TIME_FIELDS = ("cntr_tm", "dt")
+_OHLCV_FIELDS: dict[str, tuple[str, ...]] = {
+    "open": ("open_pric",),
+    "high": ("high_pric",),
+    "low": ("low_pric",),
+    "close": ("cur_prc", "cntr_pric"),
+    "volume": ("trde_qty", "acc_trde_qty"),
+}
+_TIME_FORMATS = {8: "%Y%m%d", 12: "%Y%m%d%H%M", 14: "%Y%m%d%H%M%S"}
+
+
+def _unsigned_number(value: Any) -> Any:
+    """Parse a chart price/volume, dropping the direction sign.
+
+    Minute/tick charts send ``"-70000"`` for a price that is *down*, not
+    negative; an OHLC price or a volume is never below zero. Zero-padded
+    values (``"000070000"``) are numbers here, unlike in :func:`to_number`.
+    """
+    if not isinstance(value, str):
+        return value
+    text = value.strip().replace(",", "").lstrip("+-")
+    if not text:
+        return None
+    try:
+        return int(text)
+    except ValueError:
+        try:
+            return float(text)
+        except ValueError:
+            return None
+
+
+def _pick(record: Mapping[str, Any], names: tuple[str, ...]) -> str | None:
+    for name in names:
+        if name in record:
+            return name
+    return None
+
+
+def to_ohlcv(
+    response: Any,
+    key: str | None = None,
+    keep: Iterable[str] = (),
+) -> Any:
+    """Turn a chart response into an OHLCV DataFrame indexed by time.
+
+    Works for the stock, sector and gold-spot chart TRs (tick, minute, daily,
+    weekly, monthly, yearly), single page or the list from ``request_all()``.
+
+    The result has columns ``open``, ``high``, ``low``, ``close``, ``volume``
+    and a ``DatetimeIndex`` named ``date`` (daily and longer) or ``datetime``
+    (intraday), sorted oldest first — Kiwoom sends newest first.
+
+    Notes:
+        - Prices lose their direction sign (``"-70000"`` -> ``70000``).
+        - Sector (업종) index values come as Kiwoom sends them, i.e. with the
+          decimal point removed (``"265012"`` for 2650.12).
+        - :func:`to_dataframe` is unchanged and still returns every raw field.
+
+    Args:
+        response: A chart response dict, or the list from ``request_all()``.
+        key: Payload key (e.g. ``"stk_dt_pole_chart_qry"``). Auto-detected
+            when omitted.
+        keep: Extra fields to carry over as columns, numeric-converted with
+            :func:`to_number` (e.g. ``["trde_prica"]`` for 거래대금 — its unit
+            differs per TR: 백만원 for daily, 원 for weekly/monthly).
+
+    Returns:
+        A pandas DataFrame; empty (with the OHLCV columns) for no records.
+
+    Raises:
+        ImportError: If pandas is not installed.
+        KeyError: If the records have no time or price fields, i.e. the
+            response is not a chart.
+    """
+    pd = _import_pandas()
+    _, records = extract_records(response, key)
+    columns = list(_OHLCV_FIELDS)
+    extra = list(keep)
+    if not records:
+        empty = pd.DataFrame(columns=columns + extra)
+        empty.index = pd.DatetimeIndex([], name="datetime")
+        return empty
+
+    first = records[0]
+    time_field = _pick(first, _TIME_FIELDS)
+    if time_field is None:
+        raise KeyError(
+            f"차트 응답이 아닙니다: 시간 필드({', '.join(_TIME_FIELDS)})가 없습니다. "
+            f"필드: {sorted(first)}"
+        )
+    source = {}
+    for column, names in _OHLCV_FIELDS.items():
+        name = _pick(first, names)
+        if name is None:
+            raise KeyError(
+                f"차트 응답이 아닙니다: {column} 필드({', '.join(names)})가 없습니다. "
+                f"필드: {sorted(first)}"
+            )
+        source[column] = name
+
+    stamps = [str(record.get(time_field, "")).strip() for record in records]
+    widths = {len(stamp) for stamp in stamps}
+    fmt = _TIME_FORMATS.get(widths.pop()) if len(widths) == 1 else None
+    if fmt is None:
+        raise ValueError(f"{time_field} 형식을 알 수 없습니다: {stamps[:3]}")
+
+    data = {
+        column: [_unsigned_number(record.get(name)) for record in records]
+        for column, name in source.items()
+    }
+    for name in extra:
+        data[name] = [to_number(record.get(name)) for record in records]
+
+    index = pd.DatetimeIndex(
+        pd.to_datetime(stamps, format=fmt), name="date" if fmt == "%Y%m%d" else "datetime"
+    )
+    frame = pd.DataFrame(data, index=index, columns=columns + extra)
+    return frame.sort_index(kind="stable")
 
 
 def _import_pandas() -> Any:

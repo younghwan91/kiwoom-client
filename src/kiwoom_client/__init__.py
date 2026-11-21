@@ -45,7 +45,13 @@ from kiwoom_client.errors import (
     KiwoomTokenError,
     KiwoomUnsupportedError,
 )
-from kiwoom_client.parsing import extract_records, normalize, to_dataframe, to_number
+from kiwoom_client.parsing import (
+    extract_records,
+    normalize,
+    to_dataframe,
+    to_number,
+    to_ohlcv,
+)
 from kiwoom_client.tick_size import (
     add_ticks,
     is_on_tick,
@@ -91,6 +97,7 @@ __all__ = [
     "ticks_in",
     "to_dataframe",
     "to_number",
+    "to_ohlcv",
 ]
 
 _SyncT = TypeVar("_SyncT", bound="KiwoomAPI")
