@@ -7,8 +7,8 @@ contact_links:
     url: https://github.com/younghwan91/kiwoom-client/discussions
     about: 쓰는 법이 궁금하거나 아이디어를 나누려면 Issues 대신 Discussions 로. 앱키·계좌번호는 지우고 올려 주세요.
   - name: 사용법 · 문서
-    url: https://github.com/younghwan91/kiwoom-client#readme
-    about: 설치·인증·예제·MCP 서버 설정은 README 에 있습니다.
+    url: https://younghwan91.github.io/kiwoom-client/
+    about: 설치·인증·예제·MCP 서버 설정·필드 레퍼런스는 문서 사이트에 있습니다.
   - name: 키움 OpenAPI 자체 문의
     url: https://openapi.kiwoom.com/
     about: 앱키 발급·서버 장애·API 스펙 자체는 키움증권 쪽 문의입니다.
