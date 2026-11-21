@@ -75,6 +75,7 @@ Get an app key and secret at the [Kiwoom REST API portal](https://openapi.kiwoom
 | Read the full usage guide (sync/async, WebSocket, errors) | [README](https://github.com/younghwan91/kiwoom-client/blob/main/README_EN.md) |
 | Look up an api_id or TR name among the 182 methods | [Endpoint reference](endpoints.md) |
 | Connect it to Claude Code or Cursor | [README — MCP server](https://github.com/younghwan91/kiwoom-client/blob/main/README_EN.md#using-as-an-mcp-server) |
+| Compare with OpenAPI+, pykiwoom and other REST wrappers | [Why kiwoom-client](why.md) |
 | Report a bug or ask for a feature | [GitHub Issues](https://github.com/younghwan91/kiwoom-client/issues) |
 
 ---
