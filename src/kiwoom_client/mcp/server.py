@@ -27,6 +27,8 @@ from kiwoom_client.mcp.condition_search_session import (
     ConditionSearchTimeout,
 )
 from kiwoom_client.mcp.guard import live_orders_allowed
+from kiwoom_client.mcp.local_tools import LocalTool
+from kiwoom_client.mcp.order_preview import order_preview_tool
 from kiwoom_client.mcp.tools import RestToolSpec, discover_rest_tools
 
 logger = logging.getLogger(__name__)
@@ -92,6 +94,12 @@ def build_server(
     if toolsets is not None:
         all_specs = [spec for spec in all_specs if spec.module_name in toolsets]
     spec_by_name = {spec.tool_name: spec for spec in all_specs}
+    local_tools = [
+        tool
+        for tool in _local_tools(allow_live_orders=allow_live_orders)
+        if toolsets is None or tool.toolset in toolsets
+    ]
+    local_by_name = {tool.name: tool for tool in local_tools}
     app: Server = Server("kiwoom-client")
 
     async def on_list_tools(
@@ -108,16 +116,20 @@ def build_server(
                 )
                 for spec in all_specs
             ]
+            + [tool.to_mcp() for tool in local_tools]
         )
 
     async def on_call_tool(
         _ctx: ServerRequestContext[Any], params: types.CallToolRequestParams
     ) -> types.CallToolResult:
-        assert api is not None
+        arguments = params.arguments or {}
         try:
-            result = await dispatch_tool(
-                api, session, spec_by_name, params.name, params.arguments or {}
-            )
+            local = local_by_name.get(params.name)
+            if local is not None:
+                result = await local.handler(api, arguments)
+            else:
+                assert api is not None
+                result = await dispatch_tool(api, session, spec_by_name, params.name, arguments)
         except (KiwoomAPIError, ConditionSearchTimeout, ValueError) as exc:
             return types.CallToolResult(
                 content=[types.TextContent(type="text", text=str(exc))],
@@ -131,6 +143,11 @@ def build_server(
     app.add_request_handler("tools/call", types.CallToolRequestParams, on_call_tool)
 
     return app, all_specs
+
+
+def _local_tools(*, allow_live_orders: bool) -> list[LocalTool]:
+    """Hand-written helper tools. None of them can place an order."""
+    return [order_preview_tool(order_tools_enabled=allow_live_orders)]
 
 
 async def dispatch_tool(
