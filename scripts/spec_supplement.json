@@ -1,0 +1,20 @@
+{
+  "_comment": "공식 명세(kiwoom_api_spec.json)에 없는데 라이브러리가 감싸는 TR. source=repo: 레포 코드·스모크 표에서 확인한 필드만 적는다.",
+  "trs": {
+    "ka10009": {
+      "api_id": "ka10009",
+      "name": "주식기관요청",
+      "menu": ["국내주식", "기관/외국인"],
+      "method": "POST",
+      "url": "/api/dostk/frgnistt",
+      "transport": "rest",
+      "source": "repo",
+      "note": "현재 공식 명세(SOURCE_COMMIT)에 없다. 요청 필드는 tests/integration_api_smoke.py 표 기준이고 응답 필드는 미확인.",
+      "request": [
+        {"id": "stk_cd", "name": "종목코드", "type": "string", "length": 20, "required": true,
+         "desc": "거래소별 종목코드\n(KRX:039490,NXT:039490_NX,SOR:039490_AL)"}
+      ],
+      "response": []
+    }
+  }
+}
