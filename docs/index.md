@@ -57,7 +57,7 @@ from kiwoom_client import KiwoomAPI
 api = KiwoomAPI(app_key="발급받은_앱키", app_secret="발급받은_시크릿키", is_mock=True)  # True=모의투자
 
 info = api.stock_info.basic_stock_info(stk_cd="005930")                   # 삼성전자 기본 정보
-chart = api.chart.stock_daily_chart(stk_cd="005930", base_dt="20260326")  # 일봉
+chart = api.chart.stock_daily_chart(stk_cd="005930", base_dt="20260326", upd_stkpc_tp="1")  # 일봉
 print(info["stk_nm"])
 ```
 

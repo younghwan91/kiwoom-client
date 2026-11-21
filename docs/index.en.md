@@ -57,7 +57,7 @@ from kiwoom_client import KiwoomAPI
 api = KiwoomAPI(app_key="YOUR_APP_KEY", app_secret="YOUR_APP_SECRET", is_mock=True)  # True = mock trading
 
 info = api.stock_info.basic_stock_info(stk_cd="005930")                   # Samsung Electronics
-chart = api.chart.stock_daily_chart(stk_cd="005930", base_dt="20260326")  # daily chart
+chart = api.chart.stock_daily_chart(stk_cd="005930", base_dt="20260326", upd_stkpc_tp="1")  # daily chart
 print(info["stk_nm"])
 ```
 
