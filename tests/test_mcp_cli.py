@@ -21,7 +21,8 @@ from kiwoom_client.mcp.guard import ENV_VAR as LIVE_ORDERS_ENV_VAR
 
 @pytest.fixture
 def no_keys(monkeypatch):
-    for name in ("KIWOOM_APP_KEY", "KIWOOM_APP_SECRET", "KIWOOM_IS_MOCK", "KIWOOM_MCP_TOOLSETS"):
+    for name in ("KIWOOM_APP_KEY", "KIWOOM_APP_SECRET", "KIWOOM_IS_MOCK", "KIWOOM_MCP_TOOLSETS",
+                 "KIWOOM_MCP_MODE"):
         monkeypatch.delenv(name, raising=False)
 
 
@@ -100,7 +101,13 @@ class TestServe:
         monkeypatch.setenv("KIWOOM_APP_SECRET", "s")
         cli.main([])
         assert captured_run == [
-            {"app_key": "k", "app_secret": "s", "is_mock": False, "toolsets": None}
+            {
+                "app_key": "k",
+                "app_secret": "s",
+                "is_mock": False,
+                "toolsets": None,
+                "discovery": False,
+            }
         ]
 
     def test_mock_flag_and_toolsets_flag(self, monkeypatch, no_keys, captured_run):

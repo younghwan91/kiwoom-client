@@ -22,6 +22,8 @@ from collections.abc import Sequence
 from kiwoom_client import __version__
 from kiwoom_client.mcp.client_config import CLIENTS, LAUNCHERS, render
 from kiwoom_client.mcp.guard import ENV_VAR as LIVE_ORDERS_ENV_VAR
+from kiwoom_client.mcp.modes import ENV_VAR as MODE_ENV_VAR
+from kiwoom_client.mcp.modes import discovery_from_env
 from kiwoom_client.mcp.toolsets import ENV_VAR as TOOLSETS_ENV_VAR
 from kiwoom_client.mcp.toolsets import TOOLSET_NAMES, parse_toolsets, toolsets_from_env
 
@@ -30,6 +32,7 @@ _EPILOG = f"""\
   KIWOOM_APP_KEY / KIWOOM_APP_SECRET   앱키·시크릿 (서버 실행 시 필수)
   KIWOOM_IS_MOCK=true                  모의투자 서버 (--mock 과 같음, 기본 false = 실전)
   {TOOLSETS_ENV_VAR}=market,chart     노출할 모듈 (--toolsets 와 같음, 기본 전부)
+  {MODE_ENV_VAR}=discovery            메타 도구 3개만 노출 (--discovery 와 같음)
   {LIVE_ORDERS_ENV_VAR}=true  실전 계좌에서 주문 도구 노출 (기본 false)
 
 toolset 이름: {", ".join(TOOLSET_NAMES)}
@@ -69,6 +72,15 @@ def build_parser() -> argparse.ArgumentParser:
         help=f"노출할 모듈, 쉼표 구분 ({TOOLSETS_ENV_VAR} 보다 우선). 예: market,chart,account",
     )
 
+    parser.add_argument(
+        "--discovery",
+        action="store_true",
+        help=(
+            "도구 ~180개 대신 search_tools/describe_tool/call_tool 3개만 노출 "
+            f"({MODE_ENV_VAR}=discovery 와 같음). 컨텍스트 절약"
+        ),
+    )
+
     sub = parser.add_subparsers(dest="command", metavar="{config}")
     config = sub.add_parser(
         "config",
@@ -101,6 +113,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="KIWOOM_MCP_TOOLSETS 값으로 넣을 모듈 목록",
     )
     config.add_argument(
+        "--discovery",
+        dest="config_discovery",
+        action="store_true",
+        help=f"{MODE_ENV_VAR}=discovery 를 넣는다",
+    )
+    config.add_argument(
         "--launcher",
         choices=LAUNCHERS,
         default="uvx",
@@ -112,7 +130,13 @@ def build_parser() -> argparse.ArgumentParser:
 def _print_config(args: argparse.Namespace) -> None:
     chosen = args.config_toolsets
     toolsets = None if chosen is None or chosen == set(TOOLSET_NAMES) else sorted(chosen)
-    snippet = render(args.client, mock=args.config_mock, toolsets=toolsets, launcher=args.launcher)
+    snippet = render(
+        args.client,
+        mock=args.config_mock,
+        toolsets=toolsets,
+        launcher=args.launcher,
+        discovery=args.config_discovery,
+    )
     print(snippet.note, file=sys.stderr)
     sys.stdout.write(snippet.body)
 
@@ -157,4 +181,10 @@ def main(argv: Sequence[str] | None = None) -> None:
         )
         sys.exit(1)
 
-    run_server(app_key=app_key, app_secret=app_secret, is_mock=is_mock, toolsets=toolsets)
+    run_server(
+        app_key=app_key,
+        app_secret=app_secret,
+        is_mock=is_mock,
+        toolsets=toolsets,
+        discovery=args.discovery or discovery_from_env(),
+    )

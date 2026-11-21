@@ -26,6 +26,7 @@ from kiwoom_client.mcp.condition_search_session import (
     ConditionSearchSession,
     ConditionSearchTimeout,
 )
+from kiwoom_client.mcp.discovery import CatalogEntry, discovery_tools
 from kiwoom_client.mcp.guard import live_orders_allowed
 from kiwoom_client.mcp.local_tools import LocalTool
 from kiwoom_client.mcp.order_preview import order_preview_tool
@@ -75,6 +76,7 @@ def build_server(
     allow_live_orders: bool,
     session: ConditionSearchSession | None = None,
     toolsets: Collection[str] | None = None,
+    discovery: bool = False,
 ) -> tuple[Server, list[RestToolSpec]]:
     """Assemble the MCP Server, wired with its ``tools/list``/``tools/call``
     handlers, and the filtered list of tool specs.
@@ -86,6 +88,9 @@ def build_server(
 
     ``toolsets`` (module names, ``None`` = all) narrows the list further. It
     is applied after the live-order guard and can only remove tools.
+
+    ``discovery=True`` lists only the meta tools of :mod:`.discovery`, which
+    search and call into that same filtered catalog — never beyond it.
     """
     rest_specs = [
         spec for spec in discover_rest_tools() if not spec.guarded or allow_live_orders
@@ -102,34 +107,52 @@ def build_server(
     local_by_name = {tool.name: tool for tool in local_tools}
     app: Server = Server("kiwoom-client")
 
+    catalog = [
+        CatalogEntry(
+            tool=types.Tool(
+                name=spec.tool_name,
+                title=tool_title(spec),
+                description=spec.description,
+                input_schema=_input_schema(spec),
+                annotations=tool_annotations(spec),
+            ),
+            toolset=spec.module_name,
+        )
+        for spec in all_specs
+    ] + [CatalogEntry(tool=tool.to_mcp(), toolset=tool.toolset) for tool in local_tools]
+
+    async def call_catalog_tool(name: str, arguments: dict[str, Any]) -> Any:
+        local = local_by_name.get(name)
+        if local is not None:
+            return await local.handler(api, arguments)
+        assert api is not None
+        return await dispatch_tool(api, session, spec_by_name, name, arguments)
+
+    if discovery:
+        meta_tools = discovery_tools(catalog, call_catalog_tool)
+        meta_by_name = {tool.name: tool for tool in meta_tools}
+        listed = [tool.to_mcp() for tool in meta_tools]
+    else:
+        listed = [entry.tool for entry in catalog]
+
+    async def call_listed_tool(name: str, arguments: dict[str, Any]) -> Any:
+        if discovery:
+            meta = meta_by_name.get(name)
+            if meta is None:
+                raise ValueError(f"Unknown tool: {name} — discovery 모드에서는 call_tool 로 부른다")
+            return await meta.handler(api, arguments)
+        return await call_catalog_tool(name, arguments)
+
     async def on_list_tools(
         _ctx: ServerRequestContext[Any], _params: types.PaginatedRequestParams | None
     ) -> types.ListToolsResult:
-        return types.ListToolsResult(
-            tools=[
-                types.Tool(
-                    name=spec.tool_name,
-                    title=tool_title(spec),
-                    description=spec.description,
-                    input_schema=_input_schema(spec),
-                    annotations=tool_annotations(spec),
-                )
-                for spec in all_specs
-            ]
-            + [tool.to_mcp() for tool in local_tools]
-        )
+        return types.ListToolsResult(tools=listed)
 
     async def on_call_tool(
         _ctx: ServerRequestContext[Any], params: types.CallToolRequestParams
     ) -> types.CallToolResult:
-        arguments = params.arguments or {}
         try:
-            local = local_by_name.get(params.name)
-            if local is not None:
-                result = await local.handler(api, arguments)
-            else:
-                assert api is not None
-                result = await dispatch_tool(api, session, spec_by_name, params.name, arguments)
+            result = await call_listed_tool(params.name, params.arguments or {})
         except (KiwoomAPIError, ConditionSearchTimeout, ValueError) as exc:
             return types.CallToolResult(
                 content=[types.TextContent(type="text", text=str(exc))],
@@ -248,6 +271,7 @@ def run_server(
     app_secret: str,
     is_mock: bool,
     toolsets: Collection[str] | None = None,
+    discovery: bool = False,
 ) -> None:
     """Start the stdio MCP server and block until the client disconnects."""
     logging.basicConfig(level=logging.INFO)
@@ -256,13 +280,19 @@ def run_server(
     allow_live_orders = live_orders_allowed(is_mock=is_mock)
     session = ConditionSearchSession(connect=lambda: _connect_condition_search(api))
     app, specs = build_server(
-        api, allow_live_orders=allow_live_orders, session=session, toolsets=toolsets
+        api,
+        allow_live_orders=allow_live_orders,
+        session=session,
+        toolsets=toolsets,
+        discovery=discovery,
     )
     if not allow_live_orders:
         excluded = sum(1 for s in discover_rest_tools() if s.guarded)
         logger.info("실주문 opt-in 미설정 — 주문 도구 %d개를 등록하지 않았습니다.", excluded)
     if toolsets is not None:
         logger.info("toolset 필터 %s — 도구 %d개를 등록했습니다.", sorted(toolsets), len(specs))
+    if discovery:
+        logger.info("discovery 모드 — search_tools/describe_tool/call_tool 만 노출합니다.")
 
     async def _run() -> None:
         try:

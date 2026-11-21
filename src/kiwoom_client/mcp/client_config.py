@@ -38,7 +38,9 @@ def launch_command(launcher: str) -> list[str]:
     raise ValueError(f"unknown launcher: {launcher!r} (choose from {', '.join(LAUNCHERS)})")
 
 
-def server_env(*, mock: bool, toolsets: Sequence[str] | None = None) -> dict[str, str]:
+def server_env(
+    *, mock: bool, toolsets: Sequence[str] | None = None, discovery: bool = False
+) -> dict[str, str]:
     """Environment block for the snippet — placeholders only."""
     env = {
         "KIWOOM_APP_KEY": APP_KEY_PLACEHOLDER,
@@ -47,6 +49,8 @@ def server_env(*, mock: bool, toolsets: Sequence[str] | None = None) -> dict[str
     }
     if toolsets:
         env["KIWOOM_MCP_TOOLSETS"] = ",".join(toolsets)
+    if discovery:
+        env["KIWOOM_MCP_MODE"] = "discovery"
     return env
 
 
@@ -84,10 +88,11 @@ def render(
     mock: bool = True,
     toolsets: Sequence[str] | None = None,
     launcher: str = "uvx",
+    discovery: bool = False,
 ) -> Snippet:
     """Return the snippet for ``client`` (one of :data:`CLIENTS`)."""
     argv = launch_command(launcher)
-    env = server_env(mock=mock, toolsets=toolsets)
+    env = server_env(mock=mock, toolsets=toolsets, discovery=discovery)
 
     if client == "claude-code":
         env_flags = " ".join(f"-e {shlex.quote(f'{k}={v}')}" for k, v in env.items())
