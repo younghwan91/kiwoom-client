@@ -1,3 +1,8 @@
+---
+seo_title: "키움 REST API 필드 레퍼런스 — TR별 요청·응답 필드"
+description: "키움증권 REST API TR 182개의 요청·응답 필드(필드 ID·한글명·필수·길이)를 모듈별로 모은 레퍼런스. 키움 공식 명세에서 만든 TR 카탈로그 기준입니다."
+---
+
 <!-- 자동 생성 파일 — 손으로 고치지 마세요. `python scripts/gen_docs.py` 가 TR 카탈로그(kiwoom_client.spec)로 다시 만듭니다. -->
 
 # 필드 레퍼런스 (Field reference)

@@ -13,6 +13,7 @@
   canonical 을 한국어판으로 돌리고 hreflang·sitemap 에서 뺀다(중복 문서 정리)
 - 문서 사이트: 주요 페이지(홈·why·migration·MCP·FAQ·문제 해결·쿡북 등, 한/영)에 검색 결과용 제목(`seo_title`)과
   설명(`description`) — 내비게이션 이름은 그대로
+- 문서 사이트: 생성 페이지(엔드포인트 목록·필드 레퍼런스 15쪽)도 `scripts/gen_docs.py` 가 검색 제목·설명을 함께 만든다
 
 ## [0.5.0] - 2026-11-21
 

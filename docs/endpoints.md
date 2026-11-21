@@ -1,3 +1,8 @@
+---
+seo_title: "키움 REST API 엔드포인트 전체 목록 — TR 182개·조건검색·실시간"
+description: "kiwoom-client 가 감싼 키움증권 REST API 182개(api_id·한글 TR 이름·파이썬 메서드·MCP 도구 이름), 조건검색 4종, 실시간 시세 19종을 코드에서 뽑은 표."
+---
+
 # 엔드포인트 전체 목록 (Endpoint reference)
 
 <!-- 자동 생성 파일 — 손으로 고치지 마세요. `python scripts/gen_docs.py` 로 다시 만듭니다. -->
