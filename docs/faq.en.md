@@ -109,4 +109,5 @@ On a live account (`KIWOOM_IS_MOCK=false`) the order tools are **not even regist
 Yes. Only `to_dataframe()` needs pandas (`pip install 'kiwoom-client[pandas]'`).
 
 **Q. Where do bugs and requests go?**
-[GitHub Issues](https://github.com/younghwan91/kiwoom-client/issues). Remove keys and account numbers first.
+[GitHub Issues](https://github.com/younghwan91/kiwoom-client/issues). Usage questions go to
+[Discussions](https://github.com/younghwan91/kiwoom-client/discussions). Remove keys and account numbers first.
