@@ -94,3 +94,45 @@ def split_arguments(arguments: dict[str, Any]) -> tuple[dict[str, Any], str, str
     flat = {k: v for k, v in arguments.items() if k not in RESERVED_ARGUMENTS}
     body = {**flat, **nested}
     return body, arguments.get("cont_yn", "N"), arguments.get("next_key", "")
+
+
+#: 설명에 싣는 응답 필드 수 (최상위·목록마다). 도구 182개의 설명이 모두 에이전트 컨텍스트에
+#: 들어가므로 핵심만 — 전체는 docs/reference 와 ``kiwoom_client.spec`` 에 있다.
+_RESPONSE_PREVIEW = 6
+
+
+def _preview(fields: list[spec.Field]) -> str:
+    shown = ", ".join(f"{f.id}({f.name})" if f.name else f.id for f in fields[:_RESPONSE_PREVIEW])
+    rest = len(fields) - _RESPONSE_PREVIEW
+    return f"{shown} 외 {rest}개" if rest > 0 else shown
+
+
+def response_summary(tr: spec.TRSpec) -> list[str]:
+    """응답에서 무엇이 돌아오는지 — 최상위 필드와 목록(list) 필드별 핵심 항목."""
+    top = [f for f in tr.response if f.parent is None and f.type != "list"]
+    lists = [f for f in tr.response if f.type == "list"]
+    lines = []
+    if top:
+        lines.append(f"응답: {_preview(top)}")
+    for lst in lists:
+        children = [f for f in tr.response if f.parent == lst.id]
+        label = f"{lst.id}[]" + (f"({lst.name})" if lst.name else "")
+        lines.append(f"응답 목록 {label}: {_preview(children)}")
+    return lines
+
+
+def rest_tool_description(module_name: str, method_name: str, docstring: str) -> str:
+    """REST 도구 설명 — 독스트링 첫 줄 + 공식 TR 이름·api_id·URL·응답 핵심 필드 (카탈로그에서)."""
+    first = docstring.strip().splitlines()[0] if docstring.strip() else method_name
+    try:
+        tr = spec.for_method(module_name, method_name)
+    except KeyError:
+        return docstring.strip()
+    # 요청 필드·필수 여부는 입력 스키마에 있으니 여기엔 응답(무엇이 돌아오나)만 싣는다.
+    lines = [first, f"{tr.api_id} · {tr.name} · {tr.method} {tr.url}"]
+    lines += response_summary(tr)
+    if any(f.type == "list" for f in tr.response):
+        lines.append("연속조회: 응답 cont_yn=Y 면 cont_yn=Y·next_key 로 다음 페이지")
+    if tr.source != "official":
+        lines.append(f"(카탈로그 출처 {tr.source}: {tr.note})")
+    return "\n".join(lines)

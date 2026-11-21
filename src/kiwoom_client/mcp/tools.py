@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from kiwoom_client._registry import MODULE_NAMES, ModuleRegistry
+from kiwoom_client.mcp.schema import rest_tool_description
 
 #: Modules whose methods place live orders. Gated by the opt-in guard in
 #: :mod:`kiwoom_client.mcp.guard` when the client is not in mock mode.
@@ -63,7 +64,9 @@ def discover_rest_tools() -> list[RestToolSpec]:
             if method_name.startswith("_"):
                 continue
             guarded = module_name in GUARDED_MODULES
-            description = (inspect.getdoc(method) or "").strip()
+            description = rest_tool_description(
+                module_name, method_name, inspect.getdoc(method) or ""
+            )
             if guarded:
                 description += _LIVE_ORDER_WARNING
             specs.append(

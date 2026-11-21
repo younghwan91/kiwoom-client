@@ -11,6 +11,7 @@ from kiwoom_client import AsyncKiwoomAPI, spec
 from kiwoom_client.mcp.schema import (
     generic_rest_input_schema,
     rest_input_schema,
+    rest_tool_description,
     split_arguments,
 )
 from kiwoom_client.mcp.server import build_server, dispatch_tool
@@ -100,3 +101,40 @@ async def test_flat_fields_are_forwarded(httpx_mock, api):
         api, None, specs, "stock_info_basic_stock_info", {"stk_cd": "005930"}
     )
     assert result is not None and result["stk_cd"] == "005930"
+
+
+def test_description_names_the_tr_and_what_comes_back():
+    tools = {t.tool_name: t for t in discover_rest_tools()}
+    desc = tools["ranking_top_volume_today"].description
+    lines = desc.splitlines()
+    assert lines[0] == "당일거래량상위요청 (Top Volume Today)"  # 독스트링 첫 줄 그대로
+    assert lines[1] == "ka10030 · 당일거래량상위요청 · POST /api/dostk/rkinfo"
+    assert "응답 목록 tdy_trde_qty_upper[](당일거래량상위): stk_cd(종목코드)" in desc
+    assert "외 " in desc  # 응답 필드는 앞 몇 개만
+    assert "연속조회" in desc
+
+
+def test_description_of_scalar_response_has_no_paging_hint():
+    desc = rest_tool_description("stock_info", "basic_stock_info", "종목기본정보요청")
+    assert "응답: stk_cd(종목코드), stk_nm(종목명)" in desc
+    assert "연속조회" not in desc
+
+
+def test_every_rest_tool_description_has_its_api_id():
+    for tool in discover_rest_tools():
+        api_id = spec.endpoint_index()[(tool.module_name, tool.method_name)]
+        assert f"{api_id} · " in tool.description, tool.tool_name
+
+
+def test_guard_warning_still_ends_order_descriptions():
+    tools = {t.tool_name: t for t in discover_rest_tools()}
+    assert tools["order_buy_order"].description.rstrip().endswith("되돌릴 수 없는 주문입니다.")
+
+
+def test_repo_sourced_tr_says_so():
+    desc = rest_tool_description("foreign_institution", "institutional_stock", "주식기관요청")
+    assert "카탈로그 출처 repo" in desc
+
+
+def test_unknown_method_keeps_docstring():
+    assert rest_tool_description("stock_info", "nope", "  그대로  ") == "그대로"
