@@ -30,6 +30,8 @@ from kiwoom_client.mcp.discovery import CatalogEntry, discovery_tools
 from kiwoom_client.mcp.guard import live_orders_allowed
 from kiwoom_client.mcp.local_tools import LocalTool
 from kiwoom_client.mcp.order_preview import order_preview_tool
+from kiwoom_client.mcp.response_size import ARGUMENT as MAX_ROWS_ARGUMENT
+from kiwoom_client.mcp.response_size import limit_rows, parse_max_rows, with_max_rows_argument
 from kiwoom_client.mcp.schema import rest_input_schema, split_arguments
 from kiwoom_client.mcp.tools import RestToolSpec, discover_rest_tools
 
@@ -78,6 +80,7 @@ def build_server(
     session: ConditionSearchSession | None = None,
     toolsets: Collection[str] | None = None,
     discovery: bool = False,
+    max_rows: int | None = None,
 ) -> tuple[Server, list[RestToolSpec]]:
     """Assemble the MCP Server, wired with its ``tools/list``/``tools/call``
     handlers, and the filtered list of tool specs.
@@ -92,6 +95,9 @@ def build_server(
 
     ``discovery=True`` lists only the meta tools of :mod:`.discovery`, which
     search and call into that same filtered catalog — never beyond it.
+
+    ``max_rows`` is the default row limit for lookup tools' list responses
+    (``None`` = no limit); a call can override it with its own ``max_rows``.
     """
     rest_specs = [
         spec for spec in discover_rest_tools() if not spec.guarded or allow_live_orders
@@ -114,7 +120,11 @@ def build_server(
                 name=spec.tool_name,
                 title=tool_title(spec),
                 description=spec.description,
-                input_schema=_input_schema(spec),
+                input_schema=(
+                    _input_schema(spec)
+                    if spec.guarded
+                    else with_max_rows_argument(_input_schema(spec))
+                ),
                 annotations=tool_annotations(spec),
             ),
             toolset=spec.module_name,
@@ -126,8 +136,12 @@ def build_server(
         local = local_by_name.get(name)
         if local is not None:
             return await local.handler(api, arguments)
+        arguments = dict(arguments)
+        requested = arguments.pop(MAX_ROWS_ARGUMENT, None)
+        limit = max_rows if requested is None else parse_max_rows(requested)
         assert api is not None
-        return await dispatch_tool(api, session, spec_by_name, name, arguments)
+        result = await dispatch_tool(api, session, spec_by_name, name, arguments)
+        return limit_rows(result, limit)
 
     if discovery:
         meta_tools = discovery_tools(catalog, call_catalog_tool)
@@ -260,6 +274,7 @@ def run_server(
     is_mock: bool,
     toolsets: Collection[str] | None = None,
     discovery: bool = False,
+    max_rows: int | None = None,
 ) -> None:
     """Start the stdio MCP server and block until the client disconnects."""
     logging.basicConfig(level=logging.INFO)
@@ -273,6 +288,7 @@ def run_server(
         session=session,
         toolsets=toolsets,
         discovery=discovery,
+        max_rows=max_rows,
     )
     if not allow_live_orders:
         excluded = sum(1 for s in discover_rest_tools() if s.guarded)
@@ -281,6 +297,8 @@ def run_server(
         logger.info("toolset 필터 %s — 도구 %d개를 등록했습니다.", sorted(toolsets), len(specs))
     if discovery:
         logger.info("discovery 모드 — search_tools/describe_tool/call_tool 만 노출합니다.")
+    if max_rows is not None:
+        logger.info("리스트 응답을 기본 %d행으로 자릅니다 (호출별 max_rows 로 변경).", max_rows)
 
     async def _run() -> None:
         try:
