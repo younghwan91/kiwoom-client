@@ -103,5 +103,6 @@ uv run python scripts/build_stubs.py     # src/kiwoom_client/domestic/*.pyi
 ## 이슈 · 보안
 
 - 버그·기능·엔드포인트 요청: [Issues](https://github.com/younghwan91/kiwoom-client/issues/new/choose)
+- 사용법 질문·아이디어: [Discussions](https://github.com/younghwan91/kiwoom-client/discussions)
 - 보안 문제(실주문 가드 우회, 키 유출 등)는 공개 이슈 대신 [SECURITY.md](SECURITY.md) 의 비공개 경로로.
 - 행동 강령: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)

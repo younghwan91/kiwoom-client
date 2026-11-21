@@ -98,4 +98,5 @@ print(spec.get("ka10081").required_fields)  # 필수 요청 필드
 네. `to_dataframe()` 만 pandas 가 필요합니다(`pip install 'kiwoom-client[pandas]'`).
 
 **Q. 버그·요청은 어디에?**
-[GitHub Issues](https://github.com/younghwan91/kiwoom-client/issues). 앱키·계좌번호는 지우고 올려 주세요.
+[GitHub Issues](https://github.com/younghwan91/kiwoom-client/issues). 사용법 질문은 [Discussions](https://github.com/younghwan91/kiwoom-client/discussions) 로.
+앱키·계좌번호는 지우고 올려 주세요.
