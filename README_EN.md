@@ -272,39 +272,23 @@ Stock search by name (`api.find_stock`), named codes (`OrderType.LIMIT`, `Exchan
 
 ## Using as an MCP server
 
-Call this library directly from MCP (Model Context Protocol) clients such as Claude Code and Cursor. Every REST endpoint across all 15 modules, plus the 4 condition-search calls, is exposed as an MCP tool.
+MCP clients such as Claude Code, Claude Desktop, Cursor and Codex call this library as tools. Every REST endpoint across all 15 modules, the 4 condition-search calls, and helper tools (`stock_search` name→code, `stock_snapshot`, `account_summary`, and `order_preview`, which never sends) are exposed.
 
 ```bash
-pip install 'kiwoom-client[mcp]'
-```
-
-Add to your MCP client config (e.g. Claude Code `.mcp.json`):
-
-```json
-{
-  "mcpServers": {
-    "kiwoom-client": {
-      "command": "kiwoom-client-mcp",
-      "env": {
-        "KIWOOM_APP_KEY": "your_app_key",
-        "KIWOOM_APP_SECRET": "your_app_secret",
-        "KIWOOM_IS_MOCK": "true"
-      }
-    }
-  }
-}
+uvx --from 'kiwoom-client[mcp]' kiwoom-client-mcp config claude-code   # prints a snippet to paste (also claude-desktop, cursor, codex)
 ```
 
 | Env var | Description | Default |
 |---|---|---|
-| `KIWOOM_APP_KEY` | App key (required) | — |
-| `KIWOOM_APP_SECRET` | App secret (required) | — |
-| `KIWOOM_IS_MOCK` | Use the mock trading server | `false` |
-| `KIWOOM_MCP_ALLOW_LIVE_ORDERS` | Expose order tools (buy/sell/modify/cancel, credit orders) against a live account | `false` |
+| `KIWOOM_APP_KEY` / `KIWOOM_APP_SECRET` | App key and secret (required) | — |
+| `KIWOOM_IS_MOCK` | Use the mock trading server (true/false) | `false` |
+| `KIWOOM_MCP_TOOLSETS` | Modules to expose (e.g. `market,chart,account`) | all |
+| `KIWOOM_MCP_MODE` | `discovery` exposes only three meta tools to save context | — |
+| `KIWOOM_MCP_ALLOW_LIVE_ORDERS` | Expose order tools against a live account | `false` |
 
-**Live-order guard**: when `KIWOOM_IS_MOCK=false` (live account) and `KIWOOM_MCP_ALLOW_LIVE_ORDERS` is not `true`, order-related tools are not registered at server startup at all; the AI agent never sees they exist. Mock trading (`KIWOOM_IS_MOCK=true`) always has them available. The guard applies only to the MCP path; direct use of `KiwoomAPI`/`AsyncKiwoomAPI` from Python is unaffected.
+**Live-order guard**: when `KIWOOM_IS_MOCK=false` (live account) and `KIWOOM_MCP_ALLOW_LIVE_ORDERS` is not `true`, order-related tools are not registered at server startup at all. No path (tool list, toolset filter, discovery mode) lets the agent reach them. Mock trading (`KIWOOM_IS_MOCK=true`) always has them available. The guard applies only to the MCP path; direct use of `KiwoomAPI`/`AsyncKiwoomAPI` from Python is unaffected.
 
-Query-style tools take `{"params": {...}}`, passed straight through as the TR request body (field names in the [Kiwoom REST API guide](https://openapi.kiwoom.com)). Example: `stock_info_basic_stock_info` with `{"params": {"stk_cd": "005930"}}`.
+Per-client setup, every option (`--toolsets`, `--discovery`, `--max-rows`), tools, resources, prompts and troubleshooting are in the [MCP server docs](https://github.com/younghwan91/kiwoom-client/blob/main/docs/mcp.en.md).
 
 ## Architecture
 
