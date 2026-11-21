@@ -26,7 +26,7 @@ Asyncio:
 from __future__ import annotations
 
 import os
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Sequence
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _package_version
 from typing import Any, TypeVar
@@ -35,7 +35,7 @@ from kiwoom_client._env import resolve_credentials
 from kiwoom_client._registry import ModuleRegistry
 from kiwoom_client.auth import AsyncKiwoomAuth, KiwoomAuth, KiwoomAuthError
 from kiwoom_client.base import AsyncBaseClient, BaseClient, KiwoomAPIError
-from kiwoom_client.codes import Exchange, OrderType
+from kiwoom_client.codes import Exchange, OrderType, StockListMarket
 from kiwoom_client.errors import (
     KiwoomError,
     KiwoomRateLimitError,
@@ -51,6 +51,15 @@ from kiwoom_client.parsing import (
     to_dataframe,
     to_number,
     to_ohlcv,
+)
+from kiwoom_client.stocks import (
+    DEFAULT_MARKETS,
+    STOCK_LIST_API_ID,
+    STOCK_LIST_KEY,
+    STOCK_LIST_URL,
+    StockCache,
+    pick_stock_code,
+    search_stocks,
 )
 from kiwoom_client.tick_size import (
     add_ticks,
@@ -150,6 +159,7 @@ class KiwoomAPI(ModuleRegistry[dict[str, Any]]):
         # Token lifecycle is delegated to the auth object from the start.
         self._base_client.token_provider = self._auth
         self._is_mock = is_mock
+        self._stock_cache = StockCache()
         self._init_modules()
 
     @classmethod
@@ -229,6 +239,64 @@ class KiwoomAPI(ModuleRegistry[dict[str, Any]]):
         """
         return KiwoomWebSocket(self._auth.get_valid_token(), self._is_mock)
 
+    # --- 종목 검색 (ka10099 종목정보 리스트, cached) ---
+
+    def stock_list(
+        self,
+        markets: Sequence[StockListMarket | str] = DEFAULT_MARKETS,
+        *,
+        refresh: bool = False,
+        cache_ttl: float | None = None,
+    ) -> list[dict[str, Any]]:
+        """All listed stocks in ``markets`` (default 코스피+코스닥), cached.
+
+        Fetched once per market with 종목정보 리스트 (ka10099, all pages) and
+        kept on this client. ``refresh=True`` refetches; ``cache_ttl`` (s)
+        refetches entries older than that. Records are the raw ka10099
+        ``list`` items (``code``, ``name``, ``marketName``, ``state``, ...).
+        """
+        for market in self._stock_cache.stale(markets, refresh, cache_ttl):
+            records = self._base_client.request_all(
+                STOCK_LIST_URL, STOCK_LIST_API_ID, {"mrkt_tp": market}, data_key=STOCK_LIST_KEY
+            )
+            self._stock_cache.store(market, records)
+        return self._stock_cache.records(markets)
+
+    def find_stock(
+        self,
+        query: str,
+        *,
+        markets: Sequence[StockListMarket | str] = DEFAULT_MARKETS,
+        limit: int | None = 10,
+        refresh: bool = False,
+        cache_ttl: float | None = None,
+    ) -> list[dict[str, Any]]:
+        """Search stocks by (part of) name or code: ``api.find_stock("삼성전자")``.
+
+        Best match first — exact code, exact name, name prefix, code prefix,
+        then substring; case and spaces are ignored. See :meth:`stock_list`
+        for caching.
+        """
+        records = self.stock_list(markets, refresh=refresh, cache_ttl=cache_ttl)
+        return search_stocks(records, query, limit)
+
+    def stock_code(
+        self,
+        name: str,
+        *,
+        markets: Sequence[StockListMarket | str] = DEFAULT_MARKETS,
+        refresh: bool = False,
+        cache_ttl: float | None = None,
+    ) -> str:
+        """The code of the stock named exactly ``name`` (``"삼성전자"`` -> ``"005930"``).
+
+        Raises:
+            LookupError: If no stock or several stocks have that exact name;
+                the message lists close candidates.
+        """
+        records = self.stock_list(markets, refresh=refresh, cache_ttl=cache_ttl)
+        return pick_stock_code(records, name)
+
 
 class AsyncKiwoomAPI(ModuleRegistry[Awaitable[dict[str, Any]]]):
     """Asyncio facade for all Kiwoom REST API endpoints.
@@ -272,6 +340,7 @@ class AsyncKiwoomAPI(ModuleRegistry[Awaitable[dict[str, Any]]]):
         )
         self._base_client.token_provider = self._auth
         self._is_mock = is_mock
+        self._stock_cache = StockCache()
         self._init_modules()
 
     @classmethod
@@ -323,3 +392,45 @@ class AsyncKiwoomAPI(ModuleRegistry[Awaitable[dict[str, Any]]]):
             KiwoomWebSocket instance configured with current auth.
         """
         return KiwoomWebSocket(await self._auth.get_valid_token(), self._is_mock)
+
+    # --- 종목 검색 (ka10099 종목정보 리스트, cached) — see KiwoomAPI ---
+
+    async def stock_list(
+        self,
+        markets: Sequence[StockListMarket | str] = DEFAULT_MARKETS,
+        *,
+        refresh: bool = False,
+        cache_ttl: float | None = None,
+    ) -> list[dict[str, Any]]:
+        """All listed stocks in ``markets``, cached — see :meth:`KiwoomAPI.stock_list`."""
+        for market in self._stock_cache.stale(markets, refresh, cache_ttl):
+            records = await self._base_client.request_all(
+                STOCK_LIST_URL, STOCK_LIST_API_ID, {"mrkt_tp": market}, data_key=STOCK_LIST_KEY
+            )
+            self._stock_cache.store(market, records)
+        return self._stock_cache.records(markets)
+
+    async def find_stock(
+        self,
+        query: str,
+        *,
+        markets: Sequence[StockListMarket | str] = DEFAULT_MARKETS,
+        limit: int | None = 10,
+        refresh: bool = False,
+        cache_ttl: float | None = None,
+    ) -> list[dict[str, Any]]:
+        """Search stocks by name or code — see :meth:`KiwoomAPI.find_stock`."""
+        records = await self.stock_list(markets, refresh=refresh, cache_ttl=cache_ttl)
+        return search_stocks(records, query, limit)
+
+    async def stock_code(
+        self,
+        name: str,
+        *,
+        markets: Sequence[StockListMarket | str] = DEFAULT_MARKETS,
+        refresh: bool = False,
+        cache_ttl: float | None = None,
+    ) -> str:
+        """Exact name -> code — see :meth:`KiwoomAPI.stock_code`."""
+        records = await self.stock_list(markets, refresh=refresh, cache_ttl=cache_ttl)
+        return pick_stock_code(records, name)

@@ -66,6 +66,18 @@ Create a WebSocket client for real-time data.
 Returns:
     KiwoomWebSocket instance configured with current auth.
 
+### `KiwoomAPI.find_stock`
+
+```
+def find_stock(query: str, *, markets: Sequence[StockListMarket | str] = (<StockListMarket.KOSPI: '0'>, <StockListMarket.KOSDAQ: '10'>), limit: int | None = 10, refresh: bool = False, cache_ttl: float | None = None) -> list[dict[str, Any]]
+```
+
+Search stocks by (part of) name or code: ``api.find_stock("삼성전자")``.
+
+Best match first — exact code, exact name, name prefix, code prefix,
+then substring; case and spaces are ignored. See :meth:`stock_list`
+for caching.
+
 ### `KiwoomAPI.from_env`
 
 ```
@@ -119,6 +131,31 @@ def logout() -> dict[str, Any]
 
 Revoke the current access token.
 
+### `KiwoomAPI.stock_code`
+
+```
+def stock_code(name: str, *, markets: Sequence[StockListMarket | str] = (<StockListMarket.KOSPI: '0'>, <StockListMarket.KOSDAQ: '10'>), refresh: bool = False, cache_ttl: float | None = None) -> str
+```
+
+The code of the stock named exactly ``name`` (``"삼성전자"`` -> ``"005930"``).
+
+Raises:
+    LookupError: If no stock or several stocks have that exact name;
+        the message lists close candidates.
+
+### `KiwoomAPI.stock_list`
+
+```
+def stock_list(markets: Sequence[StockListMarket | str] = (<StockListMarket.KOSPI: '0'>, <StockListMarket.KOSDAQ: '10'>), *, refresh: bool = False, cache_ttl: float | None = None) -> list[dict[str, Any]]
+```
+
+All listed stocks in ``markets`` (default 코스피+코스닥), cached.
+
+Fetched once per market with 종목정보 리스트 (ka10099, all pages) and
+kept on this client. ``refresh=True`` refetches; ``cache_ttl`` (s)
+refetches entries older than that. Records are the raw ka10099
+``list`` items (``code``, ``name``, ``marketName``, ``state``, ...).
+
 ## AsyncKiwoomAPI (asyncio facade)
 
 Same endpoints as `KiwoomAPI`; every call is awaited.
@@ -165,6 +202,14 @@ Create a WebSocket client for real-time data.
 Returns:
     KiwoomWebSocket instance configured with current auth.
 
+### `AsyncKiwoomAPI.find_stock`
+
+```
+async def find_stock(query: str, *, markets: Sequence[StockListMarket | str] = (<StockListMarket.KOSPI: '0'>, <StockListMarket.KOSDAQ: '10'>), limit: int | None = 10, refresh: bool = False, cache_ttl: float | None = None) -> list[dict[str, Any]]
+```
+
+Search stocks by name or code — see :meth:`KiwoomAPI.find_stock`.
+
 ### `AsyncKiwoomAPI.from_env`
 
 ```
@@ -191,6 +236,22 @@ async def logout() -> dict[str, Any]
 ```
 
 Revoke the current access token.
+
+### `AsyncKiwoomAPI.stock_code`
+
+```
+async def stock_code(name: str, *, markets: Sequence[StockListMarket | str] = (<StockListMarket.KOSPI: '0'>, <StockListMarket.KOSDAQ: '10'>), refresh: bool = False, cache_ttl: float | None = None) -> str
+```
+
+Exact name -> code — see :meth:`KiwoomAPI.stock_code`.
+
+### `AsyncKiwoomAPI.stock_list`
+
+```
+async def stock_list(markets: Sequence[StockListMarket | str] = (<StockListMarket.KOSPI: '0'>, <StockListMarket.KOSDAQ: '10'>), *, refresh: bool = False, cache_ttl: float | None = None) -> list[dict[str, Any]]
+```
+
+All listed stocks in ``markets``, cached — see :meth:`KiwoomAPI.stock_list`.
 
 ## Low-level client (`api._client`)
 
