@@ -65,6 +65,9 @@ Only things you can check in the code and tests.
   token bucket tuned to the measured limit (about 1 req/s, burst 2) and backs off and retries on 429.
 - **Agents never see live orders by default.** On the live server the built-in MCP server does **not register** its 12
   order tools until `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true`. On the mock server they are always available.
+  If you use Kiwoom's official MCP server or plugin and also want the order *content* checked (amount and quantity caps,
+  market buys, repeated submits, daily counts), pair it with the same author's Claude Code hook
+  [kiwoom-order-guard](https://github.com/younghwan91/kiwoom-order-guard).
 - **Responses you can compute with.** `to_dataframe()` and `to_number()` turn `"+70000"` and `"1,234,567"` into numbers
   and keep codes with meaningful leading zeros as strings. `round_to_tick()` snaps limit prices to KRX ticks.
 - **Typed.** Ships `py.typed`; CI runs mypy.
