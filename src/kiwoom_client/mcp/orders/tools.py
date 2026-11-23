@@ -128,7 +128,7 @@ def order_tools(gate: OrderGate) -> list[LocalTool]:
             async def sender() -> Any:
                 return await getattr(getattr(api, module), method)(**call.params)
 
-            response = await gate.send(call, token, require_token=True, sender=sender)
+            response = await gate.send(call, token, require_token=True, sender=sender, via=tool)
             params = dict(call.params)
             return {"sent": True, "tool": call.tool, "params": params, "response": response}
 

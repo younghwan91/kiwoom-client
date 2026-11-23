@@ -466,6 +466,8 @@ async def build_preview(
         )
     elif order_tools_enabled and gate is not None:
         result.update(gate.issue(OrderCall(result["would_call"], result["params"])))
+    if gate is not None:
+        gate.audit_preview(result)
     return result
 
 

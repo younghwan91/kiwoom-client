@@ -367,6 +367,8 @@ def run_server(
         logger.info("실주문 opt-in 미설정 — 주문 도구 %d개를 등록하지 않았습니다.", excluded)
     elif order_policy.require_confirm:
         logger.info("주문 도구는 order_preview 의 confirm_token 이 있어야 전송합니다.")
+    if allow_live_orders and order_policy.audit_log:
+        logger.info("주문 시도를 감사 로그에 남깁니다: %s", order_policy.audit_log)
     if toolsets is not None:
         logger.info("toolset 필터 %s — 도구 %d개를 등록했습니다.", sorted(toolsets), len(specs))
     if mode == DISCOVERY:

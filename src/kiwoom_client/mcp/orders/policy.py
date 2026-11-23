@@ -31,6 +31,11 @@ DAILY_ORDER_LIMIT_ENV = "KIWOOM_MCP_DAILY_ORDER_LIMIT"
 #: Seconds within which the exact same order is refused as a duplicate. 0 = off.
 DUPLICATE_WINDOW_ENV = "KIWOOM_MCP_DUPLICATE_WINDOW"
 DEFAULT_DUPLICATE_WINDOW = 10
+#: JSONL file every order attempt is appended to. ``off`` (or false/0/no/none)
+#: turns it off.
+AUDIT_LOG_ENV = "KIWOOM_MCP_AUDIT_LOG"
+DEFAULT_AUDIT_LOG = "~/.kiwoom-client/mcp-audit.jsonl"
+_OFF = frozenset({"off", "false", "0", "no", "none"})
 
 
 def _bool(env: Mapping[str, str], name: str, default: bool) -> bool:
@@ -56,6 +61,15 @@ def _seconds(env: Mapping[str, str], name: str, default: int) -> int:
     return int(value)
 
 
+def _audit_path(env: Mapping[str, str]) -> str | None:
+    value = env.get(AUDIT_LOG_ENV, "").strip()
+    if not value:
+        return DEFAULT_AUDIT_LOG
+    if value.lower() in _OFF:
+        return None
+    return value
+
+
 def _stocks(env: Mapping[str, str], name: str) -> frozenset[str] | None:
     value = env.get(name, "")
     if not value.strip():
@@ -79,6 +93,9 @@ class OrderPolicy:
     daily_order_limit: int | None = None
     #: Refuse the exact same order again within this many seconds (0 = off).
     duplicate_window: int = DEFAULT_DUPLICATE_WINDOW
+    #: Audit log path; ``None`` = no log. (``from_env`` defaults to
+    #: :data:`DEFAULT_AUDIT_LOG`; a bare ``OrderPolicy()`` writes nothing.)
+    audit_log: str | None = None
 
     @classmethod
     def from_env(cls, *, is_mock: bool, env: Mapping[str, str] | None = None) -> OrderPolicy:
@@ -96,4 +113,5 @@ class OrderPolicy:
             allowed_stocks=_stocks(source, ALLOWED_STOCKS_ENV),
             daily_order_limit=_positive_int(source, DAILY_ORDER_LIMIT_ENV),
             duplicate_window=_seconds(source, DUPLICATE_WINDOW_ENV, DEFAULT_DUPLICATE_WINDOW),
+            audit_log=_audit_path(source),
         )

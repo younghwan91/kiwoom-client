@@ -105,6 +105,7 @@ claude mcp add kiwoom -e KIWOOM_APP_KEY=YOUR_APP_KEY -e KIWOOM_APP_SECRET=YOUR_A
 | `KIWOOM_MCP_ALLOWED_STOCKS` | (없음) | 주문할 수 있는 종목코드, 쉼표 구분 | 제한 없음 |
 | `KIWOOM_MCP_DAILY_ORDER_LIMIT` | (없음) | 이 서버 프로세스가 하루(KST)에 보낼 수 있는 주문 수 | 제한 없음 |
 | `KIWOOM_MCP_DUPLICATE_WINDOW` | (없음) | 똑같은 주문을 이 초 안에 다시 보내면 거부. `0` = 끔 | `10` |
+| `KIWOOM_MCP_AUDIT_LOG` | (없음) | 주문 감사 로그(JSONL) 경로. `off` = 끔 | `~/.kiwoom-client/mcp-audit.jsonl` |
 
 CLI 옵션이 환경변수보다 우선합니다. 실주문 opt-in 에는 일부러 CLI 옵션을 두지 않았습니다.
 
@@ -172,6 +173,19 @@ toolset 이름은 엔드포인트 모듈 이름과 같습니다: `account`, `sto
 ### 중복 방지
 
 방금 보낸 주문과 TR 도구·요청 필드가 똑같은 주문이 `KIWOOM_MCP_DUPLICATE_WINDOW`(기본 10초) 안에 다시 오면 보내지 않고 거부합니다. 새 미리보기로 받은 새 토큰이어도 마찬가지입니다. 재시도 루프나 같은 지시를 두 번 처리해 같은 주문이 두 번 나가는 것을 막습니다. 미리보기는 이 경우 경고를 붙이고, 거부된 주문은 기억하지 않습니다.
+
+### 감사 로그
+
+서버는 주문 시도를 한 줄에 하나씩 JSON 으로 `KIWOOM_MCP_AUDIT_LOG` 파일에 덧붙입니다. 기본 경로는 `~/.kiwoom-client/mcp-audit.jsonl` 이고, `off` 로 끌 수 있습니다.
+
+| `event` | 언제 | 주요 필드 |
+|---|---|---|
+| `preview` | `order_preview` 가 주문을 만들었을 때 | `tool`, `params`, `errors`, `warnings`(개수), `token_issued` |
+| `rejected` | 서버가 거부해 보내지 않았을 때 | `via`(부른 도구), `tool`, `params`, `reasons`, `token_given` |
+| `sent` | 키움에 보냈을 때 | `via`, `tool`, `params`, `result`(`return_code`·`return_msg`·`ord_no`) |
+| `failed` | 보냈는데 호출이 예외로 끝났을 때 | `via`, `tool`, `params`, `error` |
+
+앱키·시크릿·접근 토큰·`confirm_token` 은 쓰지 않고, 계좌번호 필드는 끝 4자리만 남깁니다. 파일은 `0600`, 디렉터리는 `0700` 으로 만듭니다. 로그를 쓰지 못해도 주문은 막거나 바꾸지 않고 서버 로그에 경고만 남깁니다.
 
 ## 도구
 
