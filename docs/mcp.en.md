@@ -130,6 +130,7 @@ The server makes the `confirm_token`: an HMAC, under a random secret created whe
 | | `stock_snapshot` | price, change, market cap, PER/PBR and more in one call (ka10001). Takes a stock name too |
 | | `account_summary` | account totals, P&L and holdings (kt00018) |
 | | `get_chart` | day/week/month/minute OHLCV (oldest first) + period return, high/low, average volume, 5/20 moving averages. Follows pages up to `count` (ka10081/82/83/80) |
+| | `get_quotes` | price, change, volume, trade value and market cap for up to 20 stocks in one request (ka10095). Unresolved stocks get a per-stock error |
 | | `order_preview` | preview of an order, change or cancel, never sent. Issues a `confirm_token` |
 | Orders (opt-in) | `place_order`, `modify_order`, `cancel_order` | order, change or cancel by stock name, quantity and price (or `"market"`). `confirm_token` required |
 | TR tools | `<module>_<method>` | e.g. `stock_info_basic_stock_info`, `chart_stock_daily_chart`. [Full list](endpoints.md) |
