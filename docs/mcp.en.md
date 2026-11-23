@@ -158,6 +158,10 @@ Set any of the four variables above and the server enforces it. `order_preview` 
 - The daily count is the orders (new, change, cancel) this process sent to Kiwoom. Refused attempts don't count; a restart or a new day (KST) starts from zero.
 - Unset means no limit (the previous behaviour).
 
+### Order field allowlist
+
+The order tools (`order_*`, `credit_order_*`) accept only the TR catalog's request fields in `params` (and as flat top-level fields). Any other key — even with an empty value — refuses the order, unsent, so a field slipped in by prompt injection can't change what is sent. Their input schema's `params` is `additionalProperties: false`. Lookup tools still forward fields the catalog doesn't list, as before.
+
 ### Duplicate orders
 
 An order with the same TR tool and request fields as one just sent is refused, unsent, if it arrives within `KIWOOM_MCP_DUPLICATE_WINDOW` (default 10 s) — even with a fresh token from a new preview. This stops a retry loop, or an instruction handled twice, from placing the same order twice. The preview warns in that case; refused orders are not remembered.
