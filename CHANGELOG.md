@@ -76,6 +76,9 @@
 
 ### Changed
 
+- MCP 프롬프트(`analyze_stock`·`review_account`·`market_today`·`rebalance`), `kiwoom://guide`, 서버 instructions 가
+  TR 도구 대신 의도 도구(`get_chart`·`investor_flow`·`get_portfolio`·`get_orders`·`market_movers`·`rebalance_plan`)를
+  안내합니다. smart 모드에서 `search_tools` 왕복이 줄어듭니다. 프롬프트가 다시 TR 도구를 가리키면 테스트가 실패합니다.
 - MCP 서버의 기본 모드가 `smart` 로 바뀝니다: `tools/list` 에 편의 도구(`stock_search`·`stock_snapshot`·
   `account_summary`·`order_preview` 등)와 메타 도구 3개(`search_tools`·`describe_tool`·`call_tool`)만 올리고,
   나머지 TR 도구는 메타 도구로 찾아 부릅니다. TR 도구 181개를 전부 올리면 도구 정의만 약 222 K 글자라
