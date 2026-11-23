@@ -21,7 +21,7 @@ Rules for writing code against this library:
 ## Docs
 
 - [Endpoint reference](https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/endpoints.md): every REST method with api_id, URL and Korean/English TR name; condition search; real-time types
-- [README (English)](https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/README_EN.md): install, quick start, accounts and orders, asyncio, DataFrame parsing, WebSocket, pagination, rate limits, MCP server
+- [README (English)](https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/README.en.md): install, quick start, accounts and orders, asyncio, DataFrame parsing, WebSocket, pagination, rate limits, MCP server
 - [README (한국어)](https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/README.md): the same, in Korean
 - [AGENTS.md](https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/AGENTS.md): rules for AI agents using or working on this library: safety, lookups, tests
 - [Migrating from OpenAPI+ (OCX) / pykiwoom](https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/migration-from-openapi-plus.md): OpenAPI+ functions, SendOrder codes, real-time types and TR codes mapped to REST

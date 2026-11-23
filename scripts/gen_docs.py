@@ -344,7 +344,7 @@ LLMS_LINKS: list[tuple[str, str, str, str]] = [
     ("Docs", "docs/endpoints.md", "Endpoint reference",
      "every REST method with api_id, URL and Korean/English TR name; condition search; "
      "real-time types"),
-    ("Docs", "README_EN.md", "README (English)",
+    ("Docs", "README.en.md", "README (English)",
      "install, quick start, accounts and orders, asyncio, DataFrame parsing, WebSocket, "
      "pagination, rate limits, MCP server"),
     ("Docs", "README.md", "README (한국어)", "the same, in Korean"),

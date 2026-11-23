@@ -55,7 +55,7 @@ class Block:
 def doc_files() -> list[Path]:
     files = [
         ROOT / "README.md",
-        ROOT / "README_EN.md",
+        ROOT / "README.en.md",
         ROOT / "CONTRIBUTING.md",
         ROOT / "AGENTS.md",
         ROOT / "examples" / "README.md",

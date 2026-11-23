@@ -1,6 +1,6 @@
 """영어판 문서의 "(Korean)" 표시가 실제와 맞는지 본다.
 
-영어판(``docs/**/*.en.md``, ``README_EN.md``)은 아직 번역이 없는 페이지로 링크할 때
+영어판(``docs/**/*.en.md``, ``README.en.md``)은 아직 번역이 없는 페이지로 링크할 때
 "(Korean)" 을 붙인다. 그 페이지에 ``.en.md`` 가 생기면 표시를 지워야 한다 — 남아 있으면
 영어 독자가 있는 번역을 건너뛴다.
 """
@@ -24,7 +24,7 @@ _LINK = re.compile(
 
 def _english_pages() -> list[Path]:
     pages = sorted(p for p in DOCS.rglob("*.en.md") if "superpowers" not in p.parts)
-    return [ROOT / "README_EN.md", *pages]
+    return [ROOT / "README.en.md", *pages]
 
 
 def _translated(page: Path, target: str) -> bool | None:

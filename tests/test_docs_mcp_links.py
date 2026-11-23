@@ -20,7 +20,7 @@ PAGES = [
 
 _README_MCP = re.compile(
     r"\]\(https://github\.com/younghwan91/kiwoom-client"
-    r"(?:/blob/main/README(?:_EN)?\.md)?#(?:mcp-서버로-사용하기|using-as-an-mcp-server)\)"
+    r"(?:/blob/main/README(?:\.en|_EN)?\.md)?#(?:mcp-서버로-사용하기|using-as-an-mcp-server)\)"
 )
 
 
