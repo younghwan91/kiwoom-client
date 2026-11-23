@@ -19,6 +19,7 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
+from kiwoom_client.mcp.orders.audit import AuditLog, summarize_response
 from kiwoom_client.mcp.orders.confirm import ConfirmTokens, canonical, normalize_params
 from kiwoom_client.mcp.orders.fields import unknown_fields
 from kiwoom_client.mcp.orders.policy import OrderPolicy
@@ -136,8 +137,12 @@ class OrderGate:
         quote: Quote | None = None,
         now: Callable[[], datetime] = lambda: datetime.now(_KST),
         monotonic: Callable[[], float] = time.monotonic,
+        audit: AuditLog | None = None,
     ) -> None:
         self.policy = policy
+        if audit is None and policy.audit_log is not None:
+            audit = AuditLog(policy.audit_log)
+        self.audit = audit
         self.tokens = tokens if tokens is not None else ConfirmTokens(ttl=policy.confirm_ttl)
         self._quote = quote
         self._now = now
@@ -247,8 +252,10 @@ class OrderGate:
         *,
         require_token: bool,
         sender: Callable[[], Awaitable[Any]],
+        via: str | None = None,
     ) -> Any:
         """Check ``call``; if every check passes, use up the token and send.
+        ``via`` is the tool the agent called (for the audit log).
 
         Limits are checked again here (not only in the preview), then the
         token. A token that was given is always checked, even where none is
@@ -261,20 +268,47 @@ class OrderGate:
         duplicate = self._duplicate_problem(call)
         if duplicate:
             found.append(duplicate)
-        if found:
-            raise OrderRejected("주문 거부(전송 안 함): " + "; ".join(found))
-        nonce: str | None = None
-        if token is not None or require_token:
+        if not found and (token is not None or require_token):
             try:
-                nonce = self.tokens.check(token or "", call.tool, call.body)
+                nonce: str | None = self.tokens.check(token or "", call.tool, call.body)
             except ValueError as exc:
-                raise OrderRejected(f"주문 거부(전송 안 함): {exc}") from exc
+                found.append(str(exc))
+        else:
+            nonce = None
+        if found:
+            self._audit("rejected", call, via, reasons=found, token_given=token is not None)
+            raise OrderRejected("주문 거부(전송 안 함): " + "; ".join(found))
         if nonce is not None:
             self.tokens.consume(nonce)
         self._roll_day()
         self.sent_today += 1  # an attempt that reaches Kiwoom counts, whatever it answers
         self._recent[canonical(call.tool, call.body)] = self._monotonic()
-        return await sender()
+        try:
+            response = await sender()
+        except Exception as exc:
+            self._audit("failed", call, via, error=f"{type(exc).__name__}: {exc}")
+            raise
+        self._audit("sent", call, via, result=summarize_response(response))
+        return response
+
+    def _audit(self, event: str, call: OrderCall, via: str | None, **fields: Any) -> None:
+        if self.audit is not None:
+            self.audit.record(event, via=via or call.tool, tool=call.tool,
+                              params=dict(call.params), **fields)  # fmt: skip
+
+    def audit_preview(self, preview: Mapping[str, Any]) -> None:
+        """Log one ``order_preview`` result (never its token)."""
+        if self.audit is None:
+            return
+        self.audit.record(
+            "preview",
+            via="order_preview",
+            tool=preview.get("would_call"),
+            params=preview.get("params"),
+            errors=preview.get("errors") or None,
+            warnings=len(preview.get("warnings") or []),
+            token_issued=TOKEN_ARGUMENT in preview,
+        )
 
     async def send_tr(
         self,
@@ -289,5 +323,9 @@ class OrderGate:
         clean, token = pop_token(arguments)
         call = OrderCall(tool, body_of(clean))
         return await self.send(
-            call, token, require_token=self.policy.require_confirm, sender=lambda: dispatch(clean)
+            call,
+            token,
+            require_token=self.policy.require_confirm,
+            sender=lambda: dispatch(clean),
+            via=tool,
         )

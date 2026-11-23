@@ -52,6 +52,8 @@ _EPILOG = f"""\
   KIWOOM_MCP_ALLOWED_STOCKS=005930,... 주문 가능 종목코드      │ 미리보기와 전송 직전
   KIWOOM_MCP_DAILY_ORDER_LIMIT=20      하루 주문 수(프로세스)  ┘ 둘 다에서 강제
   KIWOOM_MCP_DUPLICATE_WINDOW=10       같은 주문을 N초 안에 다시 보내면 거부 (기본 10, 0 = 끔)
+  KIWOOM_MCP_AUDIT_LOG=PATH            주문 감사 로그 JSONL (기본 ~/.kiwoom-client/mcp-audit.jsonl,
+                                       off = 끔. 키·토큰 없음, 계좌번호 마스킹)
 
 toolset 이름: {", ".join(TOOLSET_NAMES)}
 

@@ -98,6 +98,7 @@ The snippet goes to stdout and the "where to put it" note goes to stderr, so `> 
 | `KIWOOM_MCP_ALLOWED_STOCKS` | (none) | stock codes orders may name, comma-separated | no limit |
 | `KIWOOM_MCP_DAILY_ORDER_LIMIT` | (none) | orders this server process may send per day (KST) | no limit |
 | `KIWOOM_MCP_DUPLICATE_WINDOW` | (none) | refuse the exact same order sent again within this many seconds. `0` = off | `10` |
+| `KIWOOM_MCP_AUDIT_LOG` | (none) | order audit log (JSONL) path. `off` = off | `~/.kiwoom-client/mcp-audit.jsonl` |
 
 CLI options win over environment variables. The live-order opt-in deliberately has no CLI option.
 
@@ -165,6 +166,19 @@ The order tools (`order_*`, `credit_order_*`) accept only the TR catalog's reque
 ### Duplicate orders
 
 An order with the same TR tool and request fields as one just sent is refused, unsent, if it arrives within `KIWOOM_MCP_DUPLICATE_WINDOW` (default 10 s) — even with a fresh token from a new preview. This stops a retry loop, or an instruction handled twice, from placing the same order twice. The preview warns in that case; refused orders are not remembered.
+
+### Audit log
+
+The server appends every order attempt, one JSON object per line, to `KIWOOM_MCP_AUDIT_LOG` (default `~/.kiwoom-client/mcp-audit.jsonl`; `off` turns it off).
+
+| `event` | When | Main fields |
+|---|---|---|
+| `preview` | `order_preview` built an order | `tool`, `params`, `errors`, `warnings` (count), `token_issued` |
+| `rejected` | the server refused it; nothing sent | `via` (tool called), `tool`, `params`, `reasons`, `token_given` |
+| `sent` | it went to Kiwoom | `via`, `tool`, `params`, `result` (`return_code`, `return_msg`, `ord_no`) |
+| `failed` | it went to Kiwoom and the call raised | `via`, `tool`, `params`, `error` |
+
+App key, secret, access token and `confirm_token` are never written; account-number fields keep only their last 4 characters. The file is created `0600` in a `0700` directory. If the log can't be written, the order is neither blocked nor changed; the server logs a warning.
 
 ## Tools
 
