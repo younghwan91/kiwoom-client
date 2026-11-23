@@ -26,6 +26,7 @@ from kiwoom_client import __version__
 from kiwoom_client._env import ENV_IS_MOCK, parse_bool
 from kiwoom_client.mcp.client_config import CLIENTS, LAUNCHERS, render
 from kiwoom_client.mcp.guard import ENV_VAR as LIVE_ORDERS_ENV_VAR
+from kiwoom_client.mcp.guard import READ_ONLY_ENV, read_only
 from kiwoom_client.mcp.modes import DISCOVERY, FULL, mode_from_env
 from kiwoom_client.mcp.modes import ENV_VAR as MODE_ENV_VAR
 from kiwoom_client.mcp.orders.policy import REQUIRE_CONFIRM_ENV, OrderPolicy
@@ -54,6 +55,7 @@ _EPILOG = f"""\
   KIWOOM_MCP_DUPLICATE_WINDOW=10       같은 주문을 N초 안에 다시 보내면 거부 (기본 10, 0 = 끔)
   KIWOOM_MCP_AUDIT_LOG=PATH            주문 감사 로그 JSONL (기본 ~/.kiwoom-client/mcp-audit.jsonl,
                                        off = 끔. 키·토큰 없음, 계좌번호 마스킹)
+  {READ_ONLY_ENV}=true          주문 도구를 하나도 등록하지 않음 (모의투자 포함)
 
 toolset 이름: {", ".join(TOOLSET_NAMES)}
 
@@ -287,7 +289,9 @@ def main(argv: Sequence[str] | None = None) -> None:
             sys.exit(1)
 
     try:
-        OrderPolicy.from_env(is_mock=is_mock)  # run_server reads it again; fail fast here
+        # run_server reads these again; fail fast here on a bad value
+        OrderPolicy.from_env(is_mock=is_mock)
+        read_only()
     except ValueError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         sys.exit(1)

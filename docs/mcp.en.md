@@ -92,6 +92,7 @@ The snippet goes to stdout and the "where to put it" note goes to stderr, so `> 
 | `KIWOOM_MCP_MODE` | `--full`, `--discovery` | `smart`, `full` or `discovery` (see "Saving context") | `smart` |
 | `KIWOOM_MCP_MAX_ROWS` | `--max-rows` | default row limit for list responses | no limit |
 | `KIWOOM_MCP_ALLOW_LIVE_ORDERS` | (none) | expose order tools on a live account | `false` |
+| `KIWOOM_MCP_READ_ONLY` | (none) | `true` registers no order tool at all, paper trading included | `false` |
 | `KIWOOM_MCP_REQUIRE_CONFIRM` | (none) | require a `confirm_token` on the TR order tools (`order_*`, `credit_order_*`) | `true` live, `false` paper |
 | `KIWOOM_MCP_MAX_ORDER_AMOUNT` | (none) | largest amount of one new order or change, KRW | no limit |
 | `KIWOOM_MCP_MAX_ORDER_QTY` | (none) | largest quantity of one new order or change, shares | no limit |
@@ -109,6 +110,7 @@ Toolset names are the endpoint module names: `account`, `stock_info`, `market`, 
 - When `KIWOOM_IS_MOCK=false` (live) and `KIWOOM_MCP_ALLOW_LIVE_ORDERS` is not `true`, the server **does not register** the order tools (8 `order_*`, 4 `credit_order_*`, `place_order`/`modify_order`/`cancel_order`). They do not appear in the tool list, `call_tool`, `search_tools` or `kiwoom://tools`.
 - The toolset filter, the listing modes (smart, full, discovery) and the helper tools only ever see what the guard left. Picking `--toolsets order` does not bring order tools back without the opt-in. A regression test (`tests/test_mcp_live_order_regression.py`) pins this.
 - Paper trading (`KIWOOM_IS_MOCK=true`) has no real fills, so the order tools are always available there.
+- With `KIWOOM_MCP_READ_ONLY=true` no order tool (`order_*`, `credit_order_*`, `place_order` ...) is registered, on paper trading or with the opt-in alike — for agents that should only look. `order_preview` stays but issues no token.
 - The guard exists only on the MCP server path. Using `KiwoomAPI`/`AsyncKiwoomAPI` from Python is not gated.
 
 Order tools carry the `destructiveHint=true` annotation so clients can ask before running them. Lookup tools carry `readOnlyHint=true`.

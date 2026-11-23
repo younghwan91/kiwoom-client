@@ -23,7 +23,7 @@ from typing import Any
 from kiwoom_client import __version__
 from kiwoom_client._env import ENV_APP_KEY, ENV_APP_SECRET, ENV_IS_MOCK, parse_bool
 from kiwoom_client.mcp.guard import ENV_VAR as LIVE_ORDERS_ENV_VAR
-from kiwoom_client.mcp.guard import live_orders_allowed
+from kiwoom_client.mcp.guard import READ_ONLY_ENV, order_tools_allowed, read_only
 from kiwoom_client.mcp.modes import ENV_VAR as MODE_ENV_VAR
 from kiwoom_client.mcp.modes import parse_mode
 from kiwoom_client.mcp.response_size import ENV_VAR as MAX_ROWS_ENV_VAR
@@ -40,6 +40,7 @@ ENV_VARS: tuple[str, ...] = (
     TOOLSETS_ENV_VAR,
     MAX_ROWS_ENV_VAR,
     LIVE_ORDERS_ENV_VAR,
+    READ_ONLY_ENV,
 )
 
 #: The ``mcp`` major version the server is written for (pyproject ``mcp>=2.0,<3``).
@@ -191,7 +192,12 @@ def diagnose(
         return report
 
     is_mock = settings["is_mock"]
-    allow = live_orders_allowed(is_mock=is_mock, env=dict(env))
+    try:
+        locked = read_only(dict(env))
+    except ValueError as exc:
+        report.add(ERROR, str(exc))
+        return report
+    allow = order_tools_allowed(is_mock=is_mock, env=dict(env))
     server = "모의투자 (mockapi.kiwoom.com)" if is_mock else "실전 (api.kiwoom.com)"
     report.add(OK, f"서버: {server}")
     toolsets = settings["toolsets"]
@@ -199,7 +205,9 @@ def diagnose(
     report.add(OK, f"모드: {settings['mode']} · toolset: {chosen}")
     if settings["max_rows"] is not None:
         report.add(OK, f"리스트 응답 기본 {settings['max_rows']}행")
-    if is_mock:
+    if locked:
+        report.add(OK, f"주문 도구: 등록 안 됨 (읽기 전용 {READ_ONLY_ENV}=true)")
+    elif is_mock:
         report.add(OK, "주문 도구: 등록 (모의투자 — 실제 체결 없음)")
     elif allow:
         report.add(

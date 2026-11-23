@@ -2,7 +2,7 @@
 
 Tool list is generated at startup by reflection (see :mod:`.tools`) — no
 per-endpoint mapping is maintained here. Order/credit_order tools are
-registered only when :func:`kiwoom_client.mcp.guard.live_orders_allowed`
+registered only when :func:`kiwoom_client.mcp.guard.order_tools_allowed`
 says so.
 """
 
@@ -28,7 +28,7 @@ from kiwoom_client.mcp.condition_search_session import (
     ConditionSearchTimeout,
 )
 from kiwoom_client.mcp.discovery import CatalogEntry, discovery_tools
-from kiwoom_client.mcp.guard import live_orders_allowed
+from kiwoom_client.mcp.guard import order_tools_allowed, read_only
 from kiwoom_client.mcp.intents import intent_tools
 from kiwoom_client.mcp.local_tools import LocalTool
 from kiwoom_client.mcp.modes import DEFAULT_MODE, DISCOVERY, FULL, MODES, SMART
@@ -350,7 +350,7 @@ def run_server(
 
     order_policy = OrderPolicy.from_env(is_mock=is_mock)
     api = AsyncKiwoomAPI(app_key, app_secret, is_mock=is_mock)
-    allow_live_orders = live_orders_allowed(is_mock=is_mock)
+    allow_live_orders = order_tools_allowed(is_mock=is_mock)
     session = ConditionSearchSession(connect=lambda: _connect_condition_search(api))
     mode = DISCOVERY if discovery else (mode or DEFAULT_MODE)
     app, specs = build_server(
@@ -362,7 +362,9 @@ def run_server(
         mode=mode,
         order_policy=order_policy,
     )
-    if not allow_live_orders:
+    if read_only():
+        logger.info("읽기 전용 모드(KIWOOM_MCP_READ_ONLY) — 주문 도구를 등록하지 않았습니다.")
+    elif not allow_live_orders:
         excluded = sum(1 for s in discover_rest_tools() if s.guarded)
         logger.info("실주문 opt-in 미설정 — 주문 도구 %d개를 등록하지 않았습니다.", excluded)
     elif order_policy.require_confirm:
