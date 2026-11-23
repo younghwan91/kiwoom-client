@@ -18,6 +18,7 @@ from tests.mcp_order_helpers import (
     BUY,
     BUY_PARAMS,
     listed,
+    mock_lookups,
     mock_orders,
     mock_stock_lists,
     mock_token,
@@ -140,6 +141,7 @@ class TestPolicyFromEnv:
 async def api(httpx_mock):
     mock_token(httpx_mock)
     mock_orders(httpx_mock)
+    mock_lookups(httpx_mock)
     api = AsyncKiwoomAPI("key", "secret", is_mock=True)
     await api.login()
     yield api

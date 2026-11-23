@@ -29,6 +29,7 @@ from kiwoom_client.mcp.codes import (
     TRADE_TYPES,
 )
 from kiwoom_client.mcp.local_tools import LocalTool
+from kiwoom_client.mcp.orders.checks import market_checks
 from kiwoom_client.mcp.orders.confirm import normalize_params
 from kiwoom_client.mcp.orders.gate import OrderCall, OrderGate
 from kiwoom_client.mcp.tools import discover_rest_tools
@@ -439,10 +440,23 @@ async def resolve_stock(api: Any, arguments: dict[str, Any]) -> dict[str, Any]:
 async def build_preview(
     api: Any, arguments: dict[str, Any], *, order_tools_enabled: bool, gate: OrderGate | None
 ) -> dict[str, Any]:
-    """Resolve the stock, preview, and attach a token when orders are possible."""
+    """Resolve the stock, preview, run the live-data checks when there is a
+    connection (:mod:`.orders.checks`), and attach a token when orders are
+    possible and no check found an error."""
     resolved = await resolve_stock(api, arguments)
     result = preview_any(resolved, order_tools_enabled=order_tools_enabled)
-    if order_tools_enabled and gate is not None:
+    result["errors"] = []
+    if api is not None:
+        checks = await market_checks(api, result)
+        result["errors"] = checks.errors
+        result["warnings"] += checks.warnings
+        if checks.facts:
+            result["checks"] = checks.facts
+    if result["errors"]:
+        result["warnings"].append(
+            "errors 가 있어 confirm_token 을 만들지 않았습니다 — 주문을 고치세요"
+        )
+    elif order_tools_enabled and gate is not None:
         result.update(gate.issue(OrderCall(result["would_call"], result["params"])))
     return result
 

@@ -81,6 +81,16 @@ Order tools carry the `destructiveHint=true` annotation so clients can ask befor
 - the exact `params` to hand to the order tool
 - on a server with order tools, a `confirm_token` valid for that one order
 
+New orders and changes are checked once more with lookup TRs. Problems come back as `errors` (the order can't go through) and `warnings` (close to a limit, or not checked); the looked-up values are in `checks`. With any `errors`, no token is issued.
+
+| Check | Lookup TR | error | warning |
+|---|---|---|---|
+| Upper/lower price limit | ka10001 `upl_pric`, `lst_pric` | price outside the band | price within 2% of a limit |
+| Buyable quantity | kt00011, quantity at the applied margin rate (`aplc_rt`) | more than the buyable quantity | more than the cash-only quantity (`min_ord_alowq`), or 90% or more of the buyable quantity |
+| Sellable quantity | kt00018 `trde_able_qty` | more than the sellable quantity, or a stock not held | not on the first page of holdings |
+
+A market buy is sized at the upper limit price. A failed lookup is never treated as a pass: it leaves a "not checked" warning. Cancels make no lookup.
+
 The stock can be `stock` (a name or a code) or `stk_cd`; quantity and price can be `qty`/`price` (`"market"` = market order) or the TR field names (`ord_qty`/`ord_uv`). With `action="modify"` or `"cancel"` and an `order_no` it previews a change or a cancel; with `tool` (e.g. `credit_order_margin_buy_order`) and `params` it previews that TR tool.
 
 `order_tools_enabled` says whether this server has order tools at all. An agent should show the preview to the user and place an order only after explicit confirmation. The server's `instructions` and the `order_checklist` and `rebalance` prompts describe that sequence.

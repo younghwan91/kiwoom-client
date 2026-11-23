@@ -11,6 +11,8 @@
   종목명·수량·단가로 주문하는 `place_order`·`modify_order`·`cancel_order` 는 토큰이 없거나 파라미터가 다르거나
   만료·재사용이면 전송하지 않고 거부한다(실주문 opt-in 가드 뒤에만 등록). `order_preview` 는 정정·취소(`action`)와
   신용·금현물 TR(`tool`+`params`) 미리보기도 만든다
+- MCP: `order_preview` 가 서버 연결이 있으면 상·하한가(ka10001)·매수 주문가능수량(kt00011)·매도가능수량(kt00018)을
+  조회해 위반은 `errors`(토큰 발급 안 함), 근접·조회 실패는 `warnings` 로 돌려준다
 - 문서 사이트: 모든 페이지에 Open Graph·Twitter Card 메타, 홈에 JSON-LD(SoftwareApplication·SoftwareSourceCode).
   CI 가 빌드한 사이트를 `scripts/check_site_seo.py` 로 검사한다
 - 문서 사이트: 한/영 `hreflang` 을 절대 URL + `x-default` 로. 영어판이 없어 한국어 본문으로 대체된 `/en/` 사본은

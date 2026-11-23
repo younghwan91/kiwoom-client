@@ -131,8 +131,11 @@ class TestNoOrderToolWithoutOptIn:
 
 class TestHelperAndLocalToolsNeverOrder:
     async def test_every_local_tool_stays_off_order_endpoints(self, httpx_mock, api):
+        # pytest-httpx hands an already-used reusable response's later matches to
+        # the next unused match (the catch-all below), so pin the stock list by api-id.
         httpx_mock.add_response(
             url=f"{BASE}/api/dostk/stkinfo",
+            match_headers={"api-id": "ka10099"},
             json={"return_code": 0, "list": [{"code": "005930", "name": "삼성전자"}]},
             is_reusable=True,
         )
