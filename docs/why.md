@@ -37,6 +37,8 @@ REST 에 아직 없을 수 있으니, 꼭 필요한 TR 은 [키움 REST API 가�
 
 키움증권이 직접 내는 저장소라 API 스펙의 정본에 가장 가깝고, 미국주식까지 다룹니다. 아래 비교는 이 공식 도구와 겹치는 부분이 있다는 것을 전제로 읽어 주세요.
 
+MCP 만 놓고 보면, 공식 실행용 서버는 명령 목록(`kiwoom_commands`)·도움말(`kiwoom_help`)·실행(`kiwoom_query`) 도구로 명령을 찾아 부르는 구조이고 Claude Desktop 용 `.mcpb` 번들을 냅니다. kiwoom-client 의 MCP 서버는 기본 모드에서 종목명으로 받는 고수준 도구(시세·차트·계좌·주문 미리보기)를 먼저 올리고 나머지 TR 은 `search_tools` 로 찾게 하며, 역시 `.mcpb` 번들을 냅니다([MCP 서버](mcp.md)).
+
 ### OpenAPI+(OCX) 래퍼
 
 | 패키지 | 최신 버전 (올린 날) | 파이썬 | 비고 |

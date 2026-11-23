@@ -7,6 +7,26 @@ description: "kiwoom-client-mcp 로 Claude Code·Claude Desktop·Cursor·Codex �
 
 `kiwoom-client-mcp` 는 키움 REST API 를 MCP(Model Context Protocol) 도구로 노출합니다. Claude Code·Claude Desktop·Cursor·Codex 같은 에이전트가 시세·차트·순위·계좌를 직접 조회합니다. 실전 계좌의 주문 도구는 직접 켜기 전에는 **등록조차 되지 않습니다**.
 
+## 무엇을 물어보면 되나
+
+기본(smart) 모드에서 자주 묻는 일과 에이전트가 부르는 도구입니다. api_id·필드명은 몰라도 되고, 종목은 이름이나 코드로 말하면 됩니다.
+
+| 이렇게 물으면 | 쓰이는 도구 | 호출 수 |
+|---|---|---|
+| "삼성전자 지금 얼마야? PER 은?" | `stock_snapshot` | 1 |
+| "삼성전자·SK하이닉스·NAVER 시세 한 번에" | `get_quotes` (최대 20종목) | 1 |
+| "내 잔고랑 수익률 보여 줘" | `account_summary` | 1 |
+| "SK하이닉스 일봉으로 최근 추세 봐 줘" | `get_chart` (일·주·월·분봉, 이동평균·기간 수익률 포함) | 1 |
+| "에코프로 종목코드가 뭐야?" | `stock_search` | 1 |
+| "오늘 거래량 급등 종목" | `search_tools` → `describe_tool` → `call_tool`(`ranking_sudden_volume_increase`) | 3 |
+| "삼성전자 외국인 매매 추이" | `search_tools` → `describe_tool` → `call_tool`(`foreign_institution_foreign_trading_trend`) | 3 |
+| "삼성전자 10주 7만원에 사 줘" | `order_preview` → 사용자 확인 → `place_order`(`confirm_token`) | 2 |
+| "미체결 주문 취소해 줘" | `call_tool`(`account_unfilled_orders`, 이름·입력을 찾는 데 2회 더) → `order_preview` → 사용자 확인 → `cancel_order` | 3–5 |
+
+- 의도 도구(위의 호출 1회짜리)는 늘어나는 중입니다. 지금 목록은 [도구](#도구)에 있습니다.
+- 주문 도구(`place_order` 등)는 모의투자에서, 또는 실전에서 `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true` 를 켰을 때만 있습니다([실주문 가드](#실주문-가드)).
+- 프롬프트 `review_account`·`analyze_stock`·`market_today`·`rebalance`·`order_checklist` 를 고르면 위 순서를 에이전트에게 한 번에 지시합니다([resources 와 prompts](#resources-와-prompts)).
+
 ## 설치
 
 설치 없이 [uv](https://docs.astral.sh/uv/) 로 바로 띄우는 것이 가장 간단합니다.
