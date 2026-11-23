@@ -86,7 +86,7 @@ toolset 이름은 엔드포인트 모듈 이름과 같습니다: `account`, `sto
 - 경고
 - 주문 도구에 그대로 넘길 `params`
 
-`order_tools_enabled` 값으로 이 서버에 주문 도구가 있는지도 알려 줍니다. 에이전트는 미리보기를 사용자에게 보여 주고 확인을 받은 뒤에만 주문해야 합니다. 서버의 `instructions` 와 `order_checklist` 프롬프트가 이 순서를 안내합니다.
+`order_tools_enabled` 값으로 이 서버에 주문 도구가 있는지도 알려 줍니다. 에이전트는 미리보기를 사용자에게 보여 주고 확인을 받은 뒤에만 주문해야 합니다. 서버의 `instructions` 와 `order_checklist`·`rebalance` 프롬프트가 이 순서를 안내합니다.
 
 ## 도구
 
@@ -138,10 +138,12 @@ TR 도구는 `params` 에 키움 요청 필드를 문자열로 넣습니다. 각
 | `kiwoom://codes/markets` | 시장구분 `mrkt_tp` (ka10099) |
 | `kiwoom://tr/{api_id}` | TR 하나의 요청·응답 필드(예: `kiwoom://tr/ka10001`) |
 
-프롬프트는 세 가지입니다.
+서버의 `instructions` 는 "편의 도구 먼저 → 없으면 `search_tools` → 주문은 미리보기·사용자 확인 뒤" 순서를 안내합니다. 프롬프트는 다섯 가지입니다.
 
-- `analyze_stock(stock)`: 종목 분석, 조회만
-- `review_account()`: 계좌 점검, 조회만
+- `review_account()`: 잔고 점검(평가손익·미체결·예수금), 조회만
+- `analyze_stock(stock)`: 종목 분석(시세·지표·일봉·수급), 조회만
+- `market_today(focus?)`: 오늘 시장(업종 지수·거래대금/등락률 상위·외국인·기관), 조회만
+- `rebalance(target)`: 목표 비중과 잔고를 비교해 주문 계획과 미리보기를 만들고, 확인 전에는 주문하지 않음
 - `order_checklist(request)`: 미리보기를 만들고 사용자 확인 전에는 주문하지 않는 절차
 
 ## 문제 해결

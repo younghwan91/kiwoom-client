@@ -18,6 +18,7 @@ from kiwoom_client.mcp.codes import (
 )
 from kiwoom_client.mcp.resources import (
     GUIDE_URI,
+    INSTRUCTIONS,
     MARKETS_URI,
     TOOLS_URI,
     TR_URI_TEMPLATE,
@@ -131,6 +132,29 @@ class TestResources:
             await _read(app, uri)
 
 
+class TestInstructions:
+    def test_flow_intent_tools_then_search_then_confirmed_orders(self):
+        text = INSTRUCTIONS
+        for word in ("stock_search", "search_tools", "call_tool", "order_preview", "확인"):
+            assert word in text, word
+        assert text.index("stock_search") < text.index("search_tools") < text.index("order_preview")
+        assert "confirm_token" in text
+        assert "kiwoom://guide" in text
+
+    def test_stays_short(self):
+        # Clients put this in front of the model on every session.
+        assert len(INSTRUCTIONS) < 500
+
+    async def test_named_tools_exist_in_the_smart_listing(self):
+        app, _specs = build_server(api=None, allow_live_orders=False, mode="smart")
+        listed = await _tool_names(app)
+        named = set(re.findall(r"\b[a-z]+(?:_[a-z]+)+\b", INSTRUCTIONS)) - {
+            "max_rows",
+            "confirm_token",
+        }
+        assert named <= listed
+
+
 class TestPrompts:
     async def test_list(self):
         app, _specs = build_server(api=None, allow_live_orders=False)
@@ -138,6 +162,8 @@ class TestPrompts:
         assert {p.name for p in listed.prompts} == {
             "analyze_stock",
             "review_account",
+            "market_today",
+            "rebalance",
             "order_checklist",
         }
 
@@ -153,10 +179,33 @@ class TestPrompts:
         assert "order_preview" in text
         assert "확인" in text
 
-    async def test_required_argument_missing(self):
+    async def test_market_today_focus_is_optional(self):
+        app, _specs = build_server(api=None, allow_live_orders=False)
+        plain = await _prompt(app, "market_today")
+        focused = await _prompt(app, "market_today", {"focus": "반도체"})
+        assert "반도체" not in plain and "반도체" in focused
+        assert "주문" in plain  # 조회만 한다는 문구
+
+    async def test_rebalance_previews_and_waits_for_confirmation(self):
+        app, _specs = build_server(api=None, allow_live_orders=False)
+        text = await _prompt(app, "rebalance", {"target": "삼성전자 30%, 현금 70%"})
+        assert "삼성전자 30%" in text
+        assert "order_preview" in text
+        assert "확인" in text
+        assert "confirm_token" in text
+
+    async def test_order_prompts_point_to_the_confirm_token(self):
+        app, _specs = build_server(api=None, allow_live_orders=False)
+        text = await _prompt(app, "order_checklist", {"request": "x"})
+        assert "confirm_token" in text
+
+    @pytest.mark.parametrize(
+        ("name", "arguments"), [("analyze_stock", {}), ("rebalance", {}), ("order_checklist", {})]
+    )
+    async def test_required_argument_missing(self, name, arguments):
         app, _specs = build_server(api=None, allow_live_orders=False)
         with pytest.raises(ValueError):
-            await _prompt(app, "analyze_stock", {})
+            await _prompt(app, name, arguments)
 
     async def test_unknown_prompt(self):
         app, _specs = build_server(api=None, allow_live_orders=False)
@@ -170,6 +219,8 @@ class TestPrompts:
         texts = [
             await _prompt(app, "analyze_stock", {"stock": "x"}),
             await _prompt(app, "review_account"),
+            await _prompt(app, "market_today"),
+            await _prompt(app, "rebalance", {"target": "x"}),
             await _prompt(app, "order_checklist", {"request": "x"}),
             (await _read(app, GUIDE_URI)).text,
         ]
@@ -177,7 +228,8 @@ class TestPrompts:
         for text in texts:
             mentioned |= set(re.findall(r"\b[a-z]+(?:_[a-z0-9]+)+\b", text))
         tool_like = {m for m in mentioned if m in exposed or m.split("_")[0] in {
-            "stock", "chart", "account", "order",
+            "stock", "chart", "account", "order", "market", "ranking", "sector",
+            "foreign",
         }}  # fmt: skip
         non_tools = {"order_tools_enabled", "max_rows", "next_key", "cont_yn"}
         assert tool_like - non_tools <= exposed

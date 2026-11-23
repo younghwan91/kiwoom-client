@@ -21,7 +21,7 @@ from kiwoom_client.mcp.modes import (
     mode_from_env,
     parse_mode,
 )
-from kiwoom_client.mcp.server import _local_tools, build_server
+from kiwoom_client.mcp.server import build_server
 
 BASE = "https://mockapi.kiwoom.com"
 
@@ -88,7 +88,9 @@ class TestSmartListing:
     async def test_lists_local_tools_and_meta_tools_only(self):
         app, specs = build_server(api=None, allow_live_orders=False, mode="smart")
         listed = {t.name for t in await _list(app)}
-        local = {t.name for t in _local_tools(allow_live_orders=False)}
+        full, _ = build_server(api=None, allow_live_orders=False, mode="full")
+        local = {t.name for t in await _list(full)} - {s.tool_name for s in specs}
+        assert {"stock_search", "account_summary", "order_preview"} <= local
         assert listed == local | META_TOOL_NAMES
         assert not listed & {s.tool_name for s in specs}
 
