@@ -17,7 +17,13 @@ from mcp import types
 
 from kiwoom_client.mcp.local_tools import LocalTool
 from kiwoom_client.mcp.order_preview import EXCHANGES, preview_any, resolve_stock
-from kiwoom_client.mcp.orders.gate import TOKEN_ARGUMENT, OrderCall, OrderGate, pop_token
+from kiwoom_client.mcp.orders.gate import (
+    TOKEN_ARGUMENT,
+    OrderCall,
+    OrderGate,
+    OrderRejected,
+    pop_token,
+)
 
 PLACE_ORDER = "place_order"
 MODIFY_ORDER = "modify_order"
@@ -57,6 +63,7 @@ _SCHEMAS: dict[str, dict[str, Any]] = {
             "dmst_stex_tp": _EXCHANGE,
             TOKEN_ARGUMENT: _TOKEN,
         },
+        "additionalProperties": False,
         "required": ["stock", "side", "qty", "price", TOKEN_ARGUMENT],
     },
     MODIFY_ORDER: {
@@ -74,6 +81,7 @@ _SCHEMAS: dict[str, dict[str, Any]] = {
             "dmst_stex_tp": _EXCHANGE,
             TOKEN_ARGUMENT: _TOKEN,
         },
+        "additionalProperties": False,
         "required": ["order_no", "stock", "qty", "price", TOKEN_ARGUMENT],
     },
     CANCEL_ORDER: {
@@ -89,6 +97,7 @@ _SCHEMAS: dict[str, dict[str, Any]] = {
             "dmst_stex_tp": _EXCHANGE,
             TOKEN_ARGUMENT: _TOKEN,
         },
+        "additionalProperties": False,
         "required": ["order_no", "stock", TOKEN_ARGUMENT],
     },
 }
@@ -120,7 +129,16 @@ def order_tools(gate: OrderGate) -> list[LocalTool]:
     """The three high-level order tools, bound to ``gate``."""
 
     def make(tool: str) -> LocalTool:
+        allowed = frozenset(_SCHEMAS[tool]["properties"])
+
         async def handler(api: Any, arguments: dict[str, Any]) -> dict[str, Any]:
+            # The preview logic also reads TR field names (trde_tp, ord_uv ...);
+            # here only the schema's own arguments may shape the order.
+            unknown = sorted(set(arguments) - allowed)
+            if unknown:
+                raise OrderRejected(
+                    f"주문 거부(전송 안 함): {tool} 가 받지 않는 인자입니다: {', '.join(unknown)}"
+                )
             clean, token = pop_token(arguments)
             call = await build_call(api, tool, clean)
             module, method = _TR_METHODS[call.tool]

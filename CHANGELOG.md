@@ -22,6 +22,8 @@
   `~/.kiwoom-client/mcp-audit.jsonl`, `off` = 끔)에 남긴다. 키·토큰은 쓰지 않고 계좌번호는 마스킹, 파일 `0600`
 - MCP: 읽기 전용 모드 `KIWOOM_MCP_READ_ONLY=true` — 모의투자·opt-in 과 상관없이 주문 도구를 하나도 등록하지 않는다
   (`doctor` 도 보고)
+- MCP: `place_order`·`modify_order`·`cancel_order` 가 스키마 밖 인자(`trde_tp` 등)를 받으면 전송하지 않고 거부한다.
+  주문 안전장치 회귀 테스트 묶음 — 모든 경로 × 차단 조건에서 주문 요청 0건, 문서에 안전장치 표
 - 문서 사이트: 모든 페이지에 Open Graph·Twitter Card 메타, 홈에 JSON-LD(SoftwareApplication·SoftwareSourceCode).
   CI 가 빌드한 사이트를 `scripts/check_site_seo.py` 로 검사한다
 - 문서 사이트: 한/영 `hreflang` 을 절대 URL + `x-default` 로. 영어판이 없어 한국어 본문으로 대체된 `/en/` 사본은

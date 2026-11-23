@@ -116,6 +116,24 @@ Toolset names are the endpoint module names: `account`, `stock_info`, `market`, 
 
 Order tools carry the `destructiveHint=true` annotation so clients can ask before running them. Lookup tools carry `readOnlyHint=true`.
 
+### Server-enforced safeguards at a glance
+
+All of these are enforced inside the MCP server; nothing a model puts in a tool call turns them off. They apply top to bottom, and any one of them stops the order before a request is sent.
+
+| Safeguard | Stops | Where | Setting |
+|---|---|---|---|
+| Live-order opt-in guard | order tools on a live account | tool registration at start | `KIWOOM_MCP_ALLOW_LIVE_ORDERS` (off by default) |
+| Read-only mode | every order tool, paper trading included | tool registration at start | `KIWOOM_MCP_READ_ONLY` |
+| Preview checks | prices outside the daily band, more than the buyable/sellable quantity | `order_preview` (errors → no token) | always (with a connection) |
+| Order field allowlist | request fields the catalog doesn't list; arguments outside a high-level tool's schema | preview + right before sending | always |
+| Limits, allowed stocks, daily cap | large orders, unlisted stocks, runaway loops | preview + right before sending | `KIWOOM_MCP_MAX_ORDER_AMOUNT` etc. (no limit by default) |
+| Duplicate window | the same order sent again in quick succession | right before sending | `KIWOOM_MCP_DUPLICATE_WINDOW` (10 s) |
+| Confirmation token | orders sent without a preview and confirmation, or changed after it | right before sending | always for `place_order` etc.; `KIWOOM_MCP_REQUIRE_CONFIRM` for TR tools (on for live by default) |
+| Audit log | (records) previews, refusals, sends, failures | preview + around sending | `KIWOOM_MCP_AUDIT_LOG` |
+| Account-number masking | account numbers in responses | every tool response | `KIWOOM_MCP_MASK_ACCOUNTS` (on by default) |
+
+A regression test (`tests/test_mcp_order_safety_regression.py`) checks that every combination — direct call, `call_tool`, smart mode, `place_order` × no token, forged token, over a limit, outside the allowlist, unknown field, duplicate, daily cap, read-only — sends zero requests to the order endpoints.
+
 ### Order preview: `order_preview`
 
 `order_preview` sends nothing. Apart from a stock-list lookup (ka10099) when you give a name, it makes no network call. It returns:
