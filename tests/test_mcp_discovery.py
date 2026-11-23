@@ -91,7 +91,9 @@ class TestSearchAndDescribe:
     async def test_describe_returns_schema_and_annotations(self):
         app, _specs = build_server(api=None, allow_live_orders=False, discovery=True)
         detail = _json(await _call(app, DESCRIBE_TOOL, {"name": "order_preview"}))
-        assert detail["inputSchema"]["required"] == ["side", "stk_cd", "ord_qty"]
+        assert {"side", "stock", "stk_cd", "qty", "price"} <= set(
+            detail["inputSchema"]["properties"]
+        )
         assert detail["annotations"]["readOnlyHint"] is True
         assert detail["toolset"] == "order"
 

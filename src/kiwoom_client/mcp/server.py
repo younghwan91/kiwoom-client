@@ -33,6 +33,9 @@ from kiwoom_client.mcp.intents import intent_tools
 from kiwoom_client.mcp.local_tools import LocalTool
 from kiwoom_client.mcp.modes import DEFAULT_MODE, DISCOVERY, FULL, MODES, SMART
 from kiwoom_client.mcp.order_preview import order_preview_tool
+from kiwoom_client.mcp.orders.gate import OrderGate, with_token_argument
+from kiwoom_client.mcp.orders.policy import OrderPolicy
+from kiwoom_client.mcp.orders.tools import order_tools
 from kiwoom_client.mcp.response_size import ARGUMENT as MAX_ROWS_ARGUMENT
 from kiwoom_client.mcp.response_size import limit_rows, parse_max_rows, with_max_rows_argument
 from kiwoom_client.mcp.schema import rest_input_schema, split_arguments
@@ -88,6 +91,7 @@ def build_server(
     discovery: bool = False,
     max_rows: int | None = None,
     mode: str | None = None,
+    order_policy: OrderPolicy | None = None,
 ) -> tuple[Server, list[RestToolSpec]]:
     """Assemble the MCP Server, wired with its ``tools/list``/``tools/call``
     handlers, and the filtered list of tool specs.
@@ -111,10 +115,14 @@ def build_server(
 
     ``max_rows`` is the default row limit for lookup tools' list responses
     (``None`` = no limit); a call can override it with its own ``max_rows``.
+
+    ``order_policy`` sets the checks every order passes right before it is
+    sent (:mod:`.orders.gate`). ``None`` means the strict live defaults.
     """
     mode = DISCOVERY if discovery else (mode or FULL)
     if mode not in MODES:
         raise ValueError(f"unknown mode: {mode!r} (choose from {', '.join(MODES)})")
+    gate = OrderGate(order_policy if order_policy is not None else OrderPolicy())
     rest_specs = [
         spec for spec in discover_rest_tools() if not spec.guarded or allow_live_orders
     ]
@@ -124,7 +132,7 @@ def build_server(
     spec_by_name = {spec.tool_name: spec for spec in all_specs}
     local_tools = [
         tool
-        for tool in _local_tools(allow_live_orders=allow_live_orders, session=session)
+        for tool in _local_tools(allow_live_orders=allow_live_orders, session=session, gate=gate)
         if toolsets is None or tool.toolset in toolsets
     ]
     local_by_name = {tool.name: tool for tool in local_tools}
@@ -143,7 +151,7 @@ def build_server(
                 title=tool_title(spec),
                 description=spec.description,
                 input_schema=(
-                    _input_schema(spec)
+                    with_token_argument(_input_schema(spec))
                     if spec.guarded
                     else with_max_rows_argument(_input_schema(spec))
                 ),
@@ -162,6 +170,15 @@ def build_server(
         requested = arguments.pop(MAX_ROWS_ARGUMENT, None)
         limit = max_rows if requested is None else parse_max_rows(requested)
         assert api is not None
+        spec = spec_by_name.get(name)
+        if spec is not None and spec.guarded:
+            sent = await gate.send_tr(
+                name,
+                arguments,
+                lambda clean: dispatch_tool(api, session, spec_by_name, name, clean),
+                body_of=lambda clean: split_arguments(clean)[0],
+            )
+            return limit_rows(sent, limit)
         result = await dispatch_tool(api, session, spec_by_name, name, arguments)
         return limit_rows(result, limit)
 
@@ -210,16 +227,25 @@ def build_server(
 
 
 def _local_tools(
-    *, allow_live_orders: bool, session: ConditionSearchSession | None = None
+    *,
+    allow_live_orders: bool,
+    session: ConditionSearchSession | None = None,
+    gate: OrderGate | None = None,
 ) -> list[LocalTool]:
-    """Hand-written high-level tools: order_preview and the intent tools
-    (:mod:`.intents`). None of them can place an order.
+    """Hand-written high-level tools: order_preview, the intent tools
+    (:mod:`.intents`) and — only where the live-order guard registers the raw
+    order tools — the high-level order tools of :mod:`.orders.tools`. Only
+    those last three can place an order, and only through the order gate.
 
     This is the one registration point: whatever is returned here is listed
     directly in smart mode (subject to the toolset filter), so a new intent
     tool shows up there as soon as it is registered in :mod:`.intents`.
     """
-    return [order_preview_tool(order_tools_enabled=allow_live_orders), *intent_tools(session)]
+    gate = gate if gate is not None else OrderGate(OrderPolicy())
+    tools = [order_preview_tool(order_tools_enabled=allow_live_orders, gate=gate)]
+    if allow_live_orders:
+        tools += order_tools(gate)
+    return [*tools, *intent_tools(session)]
 
 
 async def dispatch_tool(
@@ -318,6 +344,7 @@ def run_server(
     """
     logging.basicConfig(level=logging.INFO)
 
+    order_policy = OrderPolicy.from_env(is_mock=is_mock)
     api = AsyncKiwoomAPI(app_key, app_secret, is_mock=is_mock)
     allow_live_orders = live_orders_allowed(is_mock=is_mock)
     session = ConditionSearchSession(connect=lambda: _connect_condition_search(api))
@@ -329,10 +356,13 @@ def run_server(
         toolsets=toolsets,
         max_rows=max_rows,
         mode=mode,
+        order_policy=order_policy,
     )
     if not allow_live_orders:
         excluded = sum(1 for s in discover_rest_tools() if s.guarded)
         logger.info("실주문 opt-in 미설정 — 주문 도구 %d개를 등록하지 않았습니다.", excluded)
+    elif order_policy.require_confirm:
+        logger.info("주문 도구는 order_preview 의 confirm_token 이 있어야 전송합니다.")
     if toolsets is not None:
         logger.info("toolset 필터 %s — 도구 %d개를 등록했습니다.", sorted(toolsets), len(specs))
     if mode == DISCOVERY:

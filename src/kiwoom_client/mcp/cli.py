@@ -25,6 +25,7 @@ from kiwoom_client.mcp.client_config import CLIENTS, LAUNCHERS, render
 from kiwoom_client.mcp.guard import ENV_VAR as LIVE_ORDERS_ENV_VAR
 from kiwoom_client.mcp.modes import DISCOVERY, FULL, mode_from_env
 from kiwoom_client.mcp.modes import ENV_VAR as MODE_ENV_VAR
+from kiwoom_client.mcp.orders.policy import REQUIRE_CONFIRM_ENV, OrderPolicy
 from kiwoom_client.mcp.response_size import ENV_VAR as MAX_ROWS_ENV_VAR
 from kiwoom_client.mcp.response_size import max_rows_from_env, parse_max_rows
 from kiwoom_client.mcp.toolsets import ENV_VAR as TOOLSETS_ENV_VAR
@@ -41,6 +42,8 @@ _EPILOG = f"""\
   {MODE_ENV_VAR}=discovery            메타 도구 3개만 노출 (--discovery 와 같음)
   {MAX_ROWS_ENV_VAR}=50                리스트 응답 기본 행 수 제한 (--max-rows 와 같음)
   {LIVE_ORDERS_ENV_VAR}=true  실전 계좌에서 주문 도구 노출 (기본 false)
+  {REQUIRE_CONFIRM_ENV}=true    TR 주문 도구에 order_preview 의 confirm_token 요구
+                                       (기본: 실전 true, 모의 false)
 
 toolset 이름: {", ".join(TOOLSET_NAMES)}
 
@@ -243,6 +246,12 @@ def main(argv: Sequence[str] | None = None) -> None:
         except ValueError as exc:
             print(f"Error: {exc}", file=sys.stderr)
             sys.exit(1)
+
+    try:
+        OrderPolicy.from_env(is_mock=is_mock)  # run_server reads it again; fail fast here
+    except ValueError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        sys.exit(1)
 
     max_rows = args.max_rows
     if max_rows is None:

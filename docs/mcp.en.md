@@ -55,6 +55,7 @@ The snippet goes to stdout and the "where to put it" note goes to stderr, so `> 
 | `KIWOOM_MCP_MODE` | `--full`, `--discovery` | `smart`, `full` or `discovery` (see "Saving context") | `smart` |
 | `KIWOOM_MCP_MAX_ROWS` | `--max-rows` | default row limit for list responses | no limit |
 | `KIWOOM_MCP_ALLOW_LIVE_ORDERS` | (none) | expose order tools on a live account | `false` |
+| `KIWOOM_MCP_REQUIRE_CONFIRM` | (none) | require a `confirm_token` on the TR order tools (`order_*`, `credit_order_*`) | `true` live, `false` paper |
 
 CLI options win over environment variables. The live-order opt-in deliberately has no CLI option.
 
@@ -62,7 +63,7 @@ Toolset names are the endpoint module names: `account`, `stock_info`, `market`, 
 
 ## Live-order guard
 
-- When `KIWOOM_IS_MOCK=false` (live) and `KIWOOM_MCP_ALLOW_LIVE_ORDERS` is not `true`, the server **does not register** the order tools (8 `order_*`, 4 `credit_order_*`). They do not appear in the tool list, `call_tool`, `search_tools` or `kiwoom://tools`.
+- When `KIWOOM_IS_MOCK=false` (live) and `KIWOOM_MCP_ALLOW_LIVE_ORDERS` is not `true`, the server **does not register** the order tools (8 `order_*`, 4 `credit_order_*`, `place_order`/`modify_order`/`cancel_order`). They do not appear in the tool list, `call_tool`, `search_tools` or `kiwoom://tools`.
 - The toolset filter, the listing modes (smart, full, discovery) and the helper tools only ever see what the guard left. Picking `--toolsets order` does not bring order tools back without the opt-in. A regression test (`tests/test_mcp_live_order_regression.py`) pins this.
 - Paper trading (`KIWOOM_IS_MOCK=true`) has no real fills, so the order tools are always available there.
 - The guard exists only on the MCP server path. Using `KiwoomAPI`/`AsyncKiwoomAPI` from Python is not gated.
@@ -71,15 +72,30 @@ Order tools carry the `destructiveHint=true` annotation so clients can ask befor
 
 ### Order preview: `order_preview`
 
-`order_preview` sends nothing (no network call). It returns:
+`order_preview` sends nothing. Apart from a stock-list lookup (ka10099) when you give a name, it makes no network call. It returns:
 
 - the price snapped to the tick size (down for a buy, up for a sell)
 - field checks
 - the estimated amount
 - warnings
 - the exact `params` to hand to the order tool
+- on a server with order tools, a `confirm_token` valid for that one order
+
+The stock can be `stock` (a name or a code) or `stk_cd`; quantity and price can be `qty`/`price` (`"market"` = market order) or the TR field names (`ord_qty`/`ord_uv`). With `action="modify"` or `"cancel"` and an `order_no` it previews a change or a cancel; with `tool` (e.g. `credit_order_margin_buy_order`) and `params` it previews that TR tool.
 
 `order_tools_enabled` says whether this server has order tools at all. An agent should show the preview to the user and place an order only after explicit confirmation. The server's `instructions` and the `order_checklist` and `rebalance` prompts describe that sequence.
+
+### Confirmation tokens (two-step orders)
+
+The server makes the `confirm_token`: an HMAC, under a random secret created when the process starts, over the previewed order's TR tool name and its normalised request fields. The token does not contain the order. An order tool refuses the order, **sending nothing**, when
+
+- there is no token,
+- anything differs from the preview (stock, quantity, price, trade type ...),
+- 120 seconds have passed,
+- the token was already used, or
+- the token came from before a server restart.
+
+`place_order`, `modify_order` and `cancel_order` always require a token. The TR order tools (`order_*`, `credit_order_*`) follow `KIWOOM_MCP_REQUIRE_CONFIRM`: `true` by default on a live account, `false` on paper trading. A token that is given is checked even where none is required. These checks run **after** the live-order opt-in guard; without the opt-in the order tools are still not registered at all.
 
 ## Tools
 
@@ -89,7 +105,8 @@ Order tools carry the `destructiveHint=true` annotation so clients can ask befor
 | | `stock_snapshot` | price, change, market cap, PER/PBR and more in one call (ka10001). Takes a stock name too |
 | | `account_summary` | account totals, P&L and holdings (kt00018) |
 | | `get_chart` | day/week/month/minute OHLCV (oldest first) + period return, high/low, average volume, 5/20 moving averages. Follows pages up to `count` (ka10081/82/83/80) |
-| | `order_preview` | order preview, never sent |
+| | `order_preview` | preview of an order, change or cancel, never sent. Issues a `confirm_token` |
+| Orders (opt-in) | `place_order`, `modify_order`, `cancel_order` | order, change or cancel by stock name, quantity and price (or `"market"`). `confirm_token` required |
 | TR tools | `<module>_<method>` | e.g. `stock_info_basic_stock_info`, `chart_stock_daily_chart`. [Full list](endpoints.md) |
 | Condition search | 4 `condition_search_*` tools | WebSocket. Real-time registration returns the first reply only |
 
