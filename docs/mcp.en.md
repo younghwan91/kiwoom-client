@@ -79,7 +79,7 @@ Order tools carry the `destructiveHint=true` annotation so clients can ask befor
 - warnings
 - the exact `params` to hand to the order tool
 
-`order_tools_enabled` says whether this server has order tools at all. An agent should show the preview to the user and place an order only after explicit confirmation. The server's `instructions` and the `order_checklist` prompt describe that sequence.
+`order_tools_enabled` says whether this server has order tools at all. An agent should show the preview to the user and place an order only after explicit confirmation. The server's `instructions` and the `order_checklist` and `rebalance` prompts describe that sequence.
 
 ## Tools
 
@@ -131,10 +131,12 @@ Every tool definition lands in the agent's context. So the default mode (`smart`
 | `kiwoom://codes/markets` | market codes `mrkt_tp` (ka10099) |
 | `kiwoom://tr/{api_id}` | request and response fields of one TR (e.g. `kiwoom://tr/ka10001`) |
 
-There are three prompts:
+The server's `instructions` steer the agent: helper tools first, then `search_tools`, and orders only after a preview and the user's confirmation. There are five prompts:
 
-- `analyze_stock(stock)`: analyse one stock, lookups only
-- `review_account()`: check your account, lookups only
+- `review_account()`: check balances (P&L, unfilled orders, deposit), lookups only
+- `analyze_stock(stock)`: analyse one stock (price, metrics, daily chart, flows), lookups only
+- `market_today(focus?)`: today's market (sector indices, top value/movers, foreign and institutional flows), lookups only
+- `rebalance(target)`: compare target weights with holdings, build an order plan and previews, never order before the user confirms
 - `order_checklist(request)`: build a preview and never order before the user confirms
 
 ## Troubleshooting

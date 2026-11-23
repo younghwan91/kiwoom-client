@@ -29,6 +29,9 @@
 - 문서(영어): "편의 기능"(from_env·종목코드 찾기·코드값 상수·to_ohlcv·호가 계산·예외·CLI) 영어판
 - MCP: 의도 도구 골격 `kiwoom_client.mcp.intents` — 등록 레지스트리, 숫자·퍼센트·날짜 정규화, 종목 인자(이름 또는 코드)
   해석(모호하면 후보 목록 에러), 기본 행 수 제한. `stock_snapshot` 은 `stock`(종목명)도 받고 가격의 등락 부호를 떼어 낸다
+- MCP 프롬프트 `market_today`(오늘 시장)·`rebalance`(리밸런싱 계획 — 미리보기와 사용자 확인 전에는 주문 안 함).
+  서버 `instructions`·`kiwoom://guide` 는 "편의 도구 먼저 → 없으면 `search_tools` → 주문은 미리보기·확인 뒤
+  `confirm_token`" 순서로 다시 썼다
 
 ### Changed
 
