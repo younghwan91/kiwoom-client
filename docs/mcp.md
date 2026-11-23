@@ -207,6 +207,7 @@ toolset 이름은 엔드포인트 모듈 이름과 같습니다: `account`, `sto
 | | `investor_flow` | 일별 투자자별 순매수(개인·외국인·기관계·연기금 등)와 기간 합계·순매수일 수. 금액(백만원) 또는 수량(ka10059) |
 | | `get_orders` | 미체결(open)·체결(filled) 주문 목록. 오늘은 ka10075/ka10076, 다른 날은 kt00007. 미체결 행에 `order_preview` 취소 인자(`cancel_preview_args`) |
 | | `get_buying_power` | 종목·단가로 살 수 있는 수량·금액(증거금률별, 현금만, kt00011). 종목을 빼면 예수금·D+2·주문가능·출금가능금액(kt00001) |
+| | `get_portfolio` | 보유 종목별 수량·평균단가·평가금액·손익·수익률·비중(총자산·주식 대비)과 현금(D+2)·주문가능금액·총자산. 계좌번호 마스킹(kt00018+kt00001+ka00001) |
 | | `order_preview` | 주문·정정·취소 미리보기, 전송 안 함. `confirm_token` 발급 |
 | 주문 (opt-in) | `place_order`·`modify_order`·`cancel_order` | 종목명·수량·단가(또는 `"market"`)로 주문·정정·취소. `confirm_token` 필수 |
 | TR 도구 | `<모듈>_<메서드>` | 예: `stock_info_basic_stock_info`, `chart_stock_daily_chart`. [전체 목록](endpoints.md) |
@@ -228,10 +229,10 @@ TR 도구는 `params` 에 키움 요청 필드를 문자열로 넣습니다. 각
 
 | 설정 | 도구 수 | `tools/list` 크기 (글자 수) |
 |---|---|---|
-| 기본 `smart` | 13 | 약 9.7 K |
+| 기본 `smart` | 14 | 약 10.2 K |
 | `--discovery` | 3 | 약 1.4 K |
-| `--full` | 184 | 약 225 K |
-| `--full --toolsets market,chart,account` | 83 | 약 99.4 K |
+| `--full` | 185 | 약 225 K |
+| `--full --toolsets market,chart,account` | 84 | 약 99.9 K |
 
 (TR 도구마다 입력 스키마에 요청 필드 ID·한글명이 들어 있어 큽니다. 모의투자는 주문 도구가 더해집니다. smart 의 도구 수는 편의 도구가 늘면 같이 늘어납니다. 표의 숫자는 테스트가 실제 목록과 대조합니다. 지금 내 설정의 값은 `kiwoom-client-mcp doctor` 로 봅니다.)
 
