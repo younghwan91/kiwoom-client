@@ -39,6 +39,11 @@ you choose.
 Published by Kiwoom itself, so it is the closest thing to the source of truth for the API, and it covers US stocks. Read
 the comparison below knowing that it overlaps with these official tools.
 
+On MCP alone: the official execution server finds and runs commands through a command list (`kiwoom_commands`), help
+(`kiwoom_help`) and run (`kiwoom_query`) tools, and ships a `.mcpb` bundle for Claude Desktop. kiwoom-client's MCP server
+lists high-level tools that take a stock name (quotes, charts, account, order preview) first in its default mode, finds the
+other TRs through `search_tools`, and also ships a `.mcpb` bundle ([MCP server](mcp.md)).
+
 ### OpenAPI+ (OCX) wrappers
 
 | Package | Latest (uploaded) | Python | Notes |

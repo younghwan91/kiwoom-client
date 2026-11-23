@@ -7,6 +7,26 @@ description: "kiwoom-client-mcp gives Claude Code, Claude Desktop, Cursor and Co
 
 `kiwoom-client-mcp` exposes the Kiwoom REST API as MCP (Model Context Protocol) tools. Agents such as Claude Code, Claude Desktop, Cursor and Codex can look up quotes, charts, rankings and your account directly. On a live account the order tools are **not even registered** until you turn them on yourself.
 
+## What to ask
+
+Common requests in the default (smart) mode and the tools the agent calls. No api_id or field names needed; name a stock by its name or code.
+
+| Ask | Tools used | Calls |
+|---|---|---|
+| "What's Samsung Electronics trading at? PER?" | `stock_snapshot` | 1 |
+| "Quotes for Samsung Electronics, SK hynix and NAVER" | `get_quotes` (up to 20 stocks) | 1 |
+| "Show my balance and returns" | `account_summary` | 1 |
+| "Daily chart trend for SK hynix" | `get_chart` (day/week/month/minute, with moving averages and period return) | 1 |
+| "What's EcoPro's ticker?" | `stock_search` | 1 |
+| "Stocks with a volume spike today" | `search_tools` → `describe_tool` → `call_tool` (`ranking_sudden_volume_increase`) | 3 |
+| "Foreign investors' trading in Samsung Electronics" | `search_tools` → `describe_tool` → `call_tool` (`foreign_institution_foreign_trading_trend`) | 3 |
+| "Buy 10 Samsung Electronics at 70,000" | `order_preview` → user confirms → `place_order` (`confirm_token`) | 2 |
+| "Cancel my unfilled order" | `call_tool` (`account_unfilled_orders`, plus 2 calls to find its name and input) → `order_preview` → user confirms → `cancel_order` | 3–5 |
+
+- More one-call intent tools are being added; the current list is under [Tools](#tools).
+- Order tools (`place_order` and the rest) exist on paper trading, or on a live account only with `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true` ([Live-order guard](#live-order-guard)).
+- The prompts `review_account`, `analyze_stock`, `market_today`, `rebalance` and `order_checklist` give the agent these steps in one go ([Resources and prompts](#resources-and-prompts)).
+
 ## Install
 
 The quickest way is to run it with [uv](https://docs.astral.sh/uv/), with nothing installed:
