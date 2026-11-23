@@ -8,10 +8,27 @@ without a list to maintain here.
 
 from __future__ import annotations
 
+import os
+from collections.abc import Mapping
 from functools import lru_cache
 from typing import Any
 
 from kiwoom_client import spec
+from kiwoom_client._env import parse_bool
+
+#: ``false`` returns account numbers in MCP responses unmasked (default: masked).
+ENV_VAR = "KIWOOM_MCP_MASK_ACCOUNTS"
+
+
+def mask_from_env(env: Mapping[str, str] | None = None) -> bool:
+    """``KIWOOM_MCP_MASK_ACCOUNTS`` (unset = true).
+
+    Raises:
+        ValueError: a value that is not a recognised boolean.
+    """
+    source = os.environ if env is None else env
+    value = source.get(ENV_VAR, "")
+    return parse_bool(value, ENV_VAR) if value.strip() else True
 
 #: Always masked, whatever the catalog says.
 _ALWAYS = frozenset({"acnt_no", "acctNo", "acnt_print", "9201"})

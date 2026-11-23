@@ -100,6 +100,7 @@ claude mcp add kiwoom -e KIWOOM_APP_KEY=YOUR_APP_KEY -e KIWOOM_APP_SECRET=YOUR_A
 | `KIWOOM_MCP_MAX_ROWS` | `--max-rows` | 리스트 응답 기본 행 수 제한 | 제한 없음 |
 | `KIWOOM_MCP_ALLOW_LIVE_ORDERS` | (없음) | 실전 계좌에서 주문 도구 노출 | `false` |
 | `KIWOOM_MCP_READ_ONLY` | (없음) | `true` 면 주문 도구를 하나도 등록하지 않음(모의투자 포함) | `false` |
+| `KIWOOM_MCP_MASK_ACCOUNTS` | (없음) | `false` 면 응답의 계좌번호를 가리지 않음 | `true` (끝 4자리만) |
 | `KIWOOM_MCP_REQUIRE_CONFIRM` | (없음) | TR 주문 도구(`order_*`·`credit_order_*`)에 `confirm_token` 요구 | 실전 `true`, 모의 `false` |
 | `KIWOOM_MCP_MAX_ORDER_AMOUNT` | (없음) | 주문 1건(신규·정정) 금액 한도, 원 | 제한 없음 |
 | `KIWOOM_MCP_MAX_ORDER_QTY` | (없음) | 주문 1건(신규·정정) 수량 한도, 주 | 제한 없음 |
@@ -175,6 +176,10 @@ toolset 이름은 엔드포인트 모듈 이름과 같습니다: `account`, `sto
 ### 중복 방지
 
 방금 보낸 주문과 TR 도구·요청 필드가 똑같은 주문이 `KIWOOM_MCP_DUPLICATE_WINDOW`(기본 10초) 안에 다시 오면 보내지 않고 거부합니다. 새 미리보기로 받은 새 토큰이어도 마찬가지입니다. 재시도 루프나 같은 지시를 두 번 처리해 같은 주문이 두 번 나가는 것을 막습니다. 미리보기는 이 경우 경고를 붙이고, 거부된 주문은 기억하지 않습니다.
+
+### 응답의 계좌번호 마스킹
+
+모든 도구 응답에서 계좌번호 필드(TR 카탈로그에서 이름이 계좌번호인 `acnt_no`·`acctNo`·`acnt_print` 등)는 끝 4자리만 남기고 `*` 로 가립니다. 대화 기록·에이전트 로그에 계좌번호가 남지 않게 하려는 것입니다. 그대로 받으려면 `KIWOOM_MCP_MASK_ACCOUNTS=false` 로 끕니다.
 
 ### 감사 로그
 

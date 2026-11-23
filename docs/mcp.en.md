@@ -93,6 +93,7 @@ The snippet goes to stdout and the "where to put it" note goes to stderr, so `> 
 | `KIWOOM_MCP_MAX_ROWS` | `--max-rows` | default row limit for list responses | no limit |
 | `KIWOOM_MCP_ALLOW_LIVE_ORDERS` | (none) | expose order tools on a live account | `false` |
 | `KIWOOM_MCP_READ_ONLY` | (none) | `true` registers no order tool at all, paper trading included | `false` |
+| `KIWOOM_MCP_MASK_ACCOUNTS` | (none) | `false` returns account numbers unmasked in responses | `true` (last 4 only) |
 | `KIWOOM_MCP_REQUIRE_CONFIRM` | (none) | require a `confirm_token` on the TR order tools (`order_*`, `credit_order_*`) | `true` live, `false` paper |
 | `KIWOOM_MCP_MAX_ORDER_AMOUNT` | (none) | largest amount of one new order or change, KRW | no limit |
 | `KIWOOM_MCP_MAX_ORDER_QTY` | (none) | largest quantity of one new order or change, shares | no limit |
@@ -168,6 +169,10 @@ The order tools (`order_*`, `credit_order_*`) accept only the TR catalog's reque
 ### Duplicate orders
 
 An order with the same TR tool and request fields as one just sent is refused, unsent, if it arrives within `KIWOOM_MCP_DUPLICATE_WINDOW` (default 10 s) — even with a fresh token from a new preview. This stops a retry loop, or an instruction handled twice, from placing the same order twice. The preview warns in that case; refused orders are not remembered.
+
+### Account numbers in responses
+
+In every tool response, account-number fields (the TR catalog fields named 계좌번호: `acnt_no`, `acctNo`, `acnt_print` ...) keep only their last 4 characters, so account numbers don't end up in chat transcripts or agent logs. Set `KIWOOM_MCP_MASK_ACCOUNTS=false` to get them as Kiwoom sends them.
 
 ### Audit log
 
