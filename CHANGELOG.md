@@ -16,6 +16,8 @@
 - MCP: 주문 한도·허용 종목 — `KIWOOM_MCP_MAX_ORDER_AMOUNT`(원, 시장가는 상한가로 계산)·`KIWOOM_MCP_MAX_ORDER_QTY`·
   `KIWOOM_MCP_ALLOWED_STOCKS`(쉼표)·`KIWOOM_MCP_DAILY_ORDER_LIMIT`(프로세스·KST 하루). `order_preview` 와 전송 직전
   둘 다에서 강제하고, 설정하지 않으면 제한 없음
+- MCP: 중복 주문 방지 — TR 도구·요청 필드가 똑같은 주문이 `KIWOOM_MCP_DUPLICATE_WINDOW`(기본 10초, `0` = 끔) 안에
+  다시 오면 새 토큰이어도 전송하지 않고 거부한다
 - 문서 사이트: 모든 페이지에 Open Graph·Twitter Card 메타, 홈에 JSON-LD(SoftwareApplication·SoftwareSourceCode).
   CI 가 빌드한 사이트를 `scripts/check_site_seo.py` 로 검사한다
 - 문서 사이트: 한/영 `hreflang` 을 절대 URL + `x-default` 로. 영어판이 없어 한국어 본문으로 대체된 `/en/` 사본은

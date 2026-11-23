@@ -12,13 +12,14 @@ which already decided at registration whether order tools exist at all.
 
 from __future__ import annotations
 
+import time
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
-from kiwoom_client.mcp.orders.confirm import ConfirmTokens, normalize_params
+from kiwoom_client.mcp.orders.confirm import ConfirmTokens, canonical, normalize_params
 from kiwoom_client.mcp.orders.policy import OrderPolicy
 
 #: Tool argument carrying the token. Never forwarded to Kiwoom.
@@ -122,6 +123,7 @@ class OrderGate:
         tokens: ConfirmTokens | None = None,
         quote: Quote | None = None,
         now: Callable[[], datetime] = lambda: datetime.now(_KST),
+        monotonic: Callable[[], float] = time.monotonic,
     ) -> None:
         self.policy = policy
         self.tokens = tokens if tokens is not None else ConfirmTokens(ttl=policy.confirm_ttl)
@@ -129,6 +131,8 @@ class OrderGate:
         self._now = now
         self._day = now().date()
         self.sent_today = 0
+        self._monotonic = monotonic
+        self._recent: dict[bytes, float] = {}  # canonical order -> when it was sent
 
     def issue(self, call: OrderCall) -> dict[str, Any]:
         """Token fields to add to a preview of ``call``."""
@@ -173,6 +177,27 @@ class OrderGate:
                 )
         return found
 
+    def duplicate_of_recent(self, call: OrderCall) -> float | None:
+        """Seconds since the exact same order was sent, if within the window."""
+        window = self.policy.duplicate_window
+        if window <= 0:
+            return None
+        now = self._monotonic()
+        for key in [k for k, t in self._recent.items() if now - t >= window]:
+            del self._recent[key]
+        sent = self._recent.get(canonical(call.tool, call.body))
+        return None if sent is None else now - sent
+
+    def _duplicate_problem(self, call: OrderCall) -> str | None:
+        ago = self.duplicate_of_recent(call)
+        if ago is None:
+            return None
+        return (
+            f"같은 주문을 {ago:.0f}초 전에 보냈습니다 — 중복으로 보고 거부합니다"
+            f"({self.policy.duplicate_window}초 안 재전송, KIWOOM_MCP_DUPLICATE_WINDOW). "
+            "정말 한 번 더 보내려면 잠시 뒤 다시 시도하세요"
+        )
+
     async def _amount_problems(self, facts: OrderFacts, limit: int) -> list[str]:
         assert facts.qty is not None
         price, basis = facts.price, "단가"
@@ -210,6 +235,9 @@ class OrderGate:
             OrderRejected: any check failed — ``sender`` was not called.
         """
         found = await self.problems(call)
+        duplicate = self._duplicate_problem(call)
+        if duplicate:
+            found.append(duplicate)
         if found:
             raise OrderRejected("주문 거부(전송 안 함): " + "; ".join(found))
         nonce: str | None = None
@@ -222,6 +250,7 @@ class OrderGate:
             self.tokens.consume(nonce)
         self._roll_day()
         self.sent_today += 1  # an attempt that reaches Kiwoom counts, whatever it answers
+        self._recent[canonical(call.tool, call.body)] = self._monotonic()
         return await sender()
 
     async def send_tr(
