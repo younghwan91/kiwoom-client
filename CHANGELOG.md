@@ -63,8 +63,8 @@
 
 - MCP 서버의 기본 모드가 `smart` 로 바뀝니다: `tools/list` 에 편의 도구(`stock_search`·`stock_snapshot`·
   `account_summary`·`order_preview` 등)와 메타 도구 3개(`search_tools`·`describe_tool`·`call_tool`)만 올리고,
-  나머지 TR 도구는 메타 도구로 찾아 부릅니다. TR 도구 178개를 전부 올리면 도구 정의만 약 219 K 글자라
-  에이전트 컨텍스트를 대화 전에 다 써 버리기 때문입니다(smart 는 약 3.9 K). 전처럼 전부 올리려면
+  나머지 TR 도구는 메타 도구로 찾아 부릅니다. TR 도구 181개를 전부 올리면 도구 정의만 약 222 K 글자라
+  에이전트 컨텍스트를 대화 전에 다 써 버리기 때문입니다(smart 는 약 7.5 K). 전처럼 전부 올리려면
   `KIWOOM_MCP_MODE=full` 또는 `kiwoom-client-mcp --full`. 실주문 가드·toolset 필터는 모든 모드에서 먼저 적용됩니다.
   파이썬에서 직접 부르는 `build_server()` 의 기본은 그대로 전체 목록입니다
 - MCP: 실전 서버에서 opt-in 으로 노출한 TR 주문 도구(`order_*`·`credit_order_*`)가 `order_preview` 의 `confirm_token` 을
