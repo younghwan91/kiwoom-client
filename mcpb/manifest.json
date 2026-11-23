@@ -1,0 +1,92 @@
+{
+  "$schema": "https://raw.githubusercontent.com/modelcontextprotocol/mcpb/main/schemas/mcpb-manifest-v0.4.schema.json",
+  "manifest_version": "0.4",
+  "name": "kiwoom-client",
+  "display_name": "kiwoom-client — 키움증권 REST API (비공식)",
+  "version": "0.5.0",
+  "description": "키움증권 REST API 로 시세·차트·순위·계좌를 조회하는 MCP 서버(비공식 오픈소스). 실전 계좌의 주문 도구는 등록되지 않습니다.",
+  "long_description": "[kiwoom-client](https://github.com/younghwan91/kiwoom-client) 의 MCP 서버를 Claude Desktop 에 바로 설치하는 번들입니다. 키움증권이 만든 것이 아닌 비공식 오픈소스입니다.\n\n- 앱키·시크릿은 [키움 REST API 포털](https://openapi.kiwoom.com)에서 발급합니다. 모의투자 키와 실전 키는 서로 다릅니다.\n- 기본은 **모의투자** 서버입니다. 끄면 실전 서버에 조회만 합니다 — 이 번들로는 실전 계좌의 주문 도구가 등록되지 않습니다.\n- 기본 모드(smart)는 편의 도구와 `search_tools`·`describe_tool`·`call_tool` 만 목록에 올려 컨텍스트를 아낍니다.\n- 서버 코드는 번들에 들어 있지 않습니다. 처음 실행할 때 uv 가 PyPI 의 `kiwoom-client[mcp]` 를 이 번들과 같은 버전으로 받습니다.",
+  "author": {
+    "name": "Younghwan Chae",
+    "url": "https://github.com/younghwan91"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/younghwan91/kiwoom-client"
+  },
+  "homepage": "https://younghwan91.github.io/kiwoom-client/",
+  "documentation": "https://younghwan91.github.io/kiwoom-client/mcp/",
+  "support": "https://github.com/younghwan91/kiwoom-client/issues",
+  "icon": "icon.png",
+  "server": {
+    "type": "uv",
+    "entry_point": "src/server.py",
+    "mcp_config": {
+      "command": "uv",
+      "args": ["run", "--directory", "${__dirname}", "src/server.py"],
+      "env": {
+        "KIWOOM_APP_KEY": "${user_config.app_key}",
+        "KIWOOM_APP_SECRET": "${user_config.app_secret}",
+        "KIWOOM_IS_MOCK": "${user_config.is_mock}",
+        "KIWOOM_MCP_MODE": "${user_config.mode}",
+        "KIWOOM_MCP_TOOLSETS": "${user_config.toolsets}"
+      }
+    }
+  },
+  "tools": [
+    {"name": "stock_search", "description": "종목명·코드로 종목 찾기"},
+    {"name": "stock_snapshot", "description": "현재가·등락률·시총·PER/PBR 등 한 번에"},
+    {"name": "account_summary", "description": "계좌 총평가·손익·보유 종목"},
+    {"name": "order_preview", "description": "주문 미리보기(전송 안 함) — 호가단위 보정·검증"},
+    {"name": "search_tools", "description": "TR 도구를 키워드로 찾기"},
+    {"name": "describe_tool", "description": "도구 하나의 입력 스키마"},
+    {"name": "call_tool", "description": "이름으로 TR 도구 실행"}
+  ],
+  "tools_generated": true,
+  "prompts_generated": true,
+  "keywords": ["kiwoom", "키움증권", "korea", "stock", "krx", "trading", "mcp"],
+  "license": "MIT",
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {
+      "python": ">=3.10"
+    }
+  },
+  "user_config": {
+    "app_key": {
+      "type": "string",
+      "title": "앱키 (App Key)",
+      "description": "키움 REST API 포털에서 발급한 앱키. 모의투자 서버를 쓰면 모의투자용 키를 넣습니다.",
+      "sensitive": true,
+      "required": true
+    },
+    "app_secret": {
+      "type": "string",
+      "title": "시크릿키 (App Secret)",
+      "description": "앱키와 함께 발급한 시크릿키.",
+      "sensitive": true,
+      "required": true
+    },
+    "is_mock": {
+      "type": "boolean",
+      "title": "모의투자 서버",
+      "description": "켜면 모의투자 서버(기본), 끄면 실전 서버에 연결합니다. 실전 서버에서도 이 번들로는 주문 도구가 등록되지 않습니다.",
+      "default": true,
+      "required": false
+    },
+    "mode": {
+      "type": "string",
+      "title": "도구 목록 모드",
+      "description": "smart(기본): 편의 도구 + search_tools/describe_tool/call_tool. full: TR 도구 약 180개 전부(컨텍스트 큼). discovery: 메타 도구 3개만.",
+      "default": "smart",
+      "required": false
+    },
+    "toolsets": {
+      "type": "string",
+      "title": "노출할 모듈 (선택)",
+      "description": "쉼표로 구분한 모듈 이름. 예: market,chart,account. 비우면 전부. 이름 목록: https://younghwan91.github.io/kiwoom-client/mcp/",
+      "default": "",
+      "required": false
+    }
+  }
+}

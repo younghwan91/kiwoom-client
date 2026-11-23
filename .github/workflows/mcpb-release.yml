@@ -1,0 +1,65 @@
+name: Attach .mcpb to release
+
+# Claude Desktop 번들(kiwoom-client-<버전>.mcpb)을 그 태그의 GitHub Release 에 붙인다.
+# 번들은 첫 실행 때 PyPI 의 kiwoom-client[mcp]==<버전> 을 받으므로 PyPI 배포(publish.yml)가 성공한 뒤에 돈다.
+# Release 는 사람이 만든다 — 이 워크플로는 만들지 않는다. 아직 없으면 건너뛰고,
+# Release 가 게시될 때(release: published) 다시 돌아 붙인다. 이미 있으면 같은 이름 파일을 덮어쓴다.
+
+on:
+  workflow_run:
+    workflows: ["Publish to PyPI"]
+    types: [completed]
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "붙일 태그 (예: v0.6.0)"
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mcpb-release
+  cancel-in-progress: false
+
+jobs:
+  attach:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      # workflow_run 이면 head_branch 가 푸시된 태그 이름이다.
+      TAG: ${{ github.event.inputs.tag || github.event.release.tag_name || github.event.workflow_run.head_branch }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.TAG }}
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Tag matches package version
+        run: |
+          version=$(python -c "import re,pathlib; print(re.search(r'^version\s*=\s*\"([^\"]+)\"', pathlib.Path('pyproject.toml').read_text(), re.M).group(1))")
+          test "$TAG" = "v$version" || { echo "::error::태그 $TAG 와 pyproject 버전 $version 이 다르다"; exit 1; }
+
+      - name: Build + validate
+        run: python scripts/build_mcpb.py --out dist
+
+      - name: Upload to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/*.mcpb --clobber
+          else
+            echo "::notice::Release $TAG 가 아직 없다 — 게시되면 release 이벤트로 다시 붙인다"
+          fi
