@@ -68,6 +68,8 @@
   파이썬에서 직접 부르는 `build_server()` 의 기본은 그대로 전체 목록입니다
 - MCP: 실전 서버에서 opt-in 으로 노출한 TR 주문 도구(`order_*`·`credit_order_*`)가 `order_preview` 의 `confirm_token` 을
   요구한다 — `KIWOOM_MCP_REQUIRE_CONFIRM`(실전 기본 `true`, 모의 기본 `false`). 토큰은 요청 필드로 전송되지 않는다
+- MCP: TR 주문 도구(`order_*`·`credit_order_*`)가 TR 카탈로그의 요청 필드만 받는다 — 모르는 키가 섞이면 전송하지 않고
+  거부한다(입력 스키마 `params` 도 `additionalProperties: false`). 조회 도구는 그대로
 
 ## [0.5.0] - 2026-11-21
 

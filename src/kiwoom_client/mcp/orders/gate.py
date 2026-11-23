@@ -20,6 +20,7 @@ from decimal import Decimal, InvalidOperation
 from typing import Any
 
 from kiwoom_client.mcp.orders.confirm import ConfirmTokens, canonical, normalize_params
+from kiwoom_client.mcp.orders.fields import unknown_fields
 from kiwoom_client.mcp.orders.policy import OrderPolicy
 
 #: Tool argument carrying the token. Never forwarded to Kiwoom.
@@ -27,8 +28,19 @@ TOKEN_ARGUMENT = "confirm_token"
 
 
 def with_token_argument(schema: dict[str, Any]) -> dict[str, Any]:
-    """Input schema of a raw TR order tool plus the ``confirm_token`` argument."""
+    """Input schema of a raw TR order tool plus the ``confirm_token`` argument.
+
+    ``params`` is closed (``additionalProperties: false``): the gate refuses
+    any field the TR catalog doesn't list, and the schema says so up front.
+    """
     properties = dict(schema.get("properties", {}))
+    params = properties.get("params")
+    if isinstance(params, dict) and params.get("properties"):
+        properties["params"] = {
+            **params,
+            "additionalProperties": False,
+            "description": (params.get("description", "") + " — 목록에 없는 필드는 거부").strip(),
+        }
     properties[TOKEN_ARGUMENT] = {
         "type": "string",
         "description": (
@@ -147,13 +159,24 @@ class OrderGate:
             self._day, self.sent_today = today, 0
 
     async def problems(self, call: OrderCall) -> list[str]:
-        """Why ``call`` breaks the configured limits (empty = within them).
+        """Why ``call`` can't be sent: request fields the TR doesn't accept,
+        or a configured limit (empty = fine).
 
         Used both by ``order_preview`` (as errors, no token) and right before
         sending (as a refusal). Unset limits check nothing.
         """
         policy, facts = self.policy, order_facts(call)
         found: list[str] = []
+        # Raw keys, not the normalised body: an unknown key with an empty value
+        # would still be sent.
+        unknown = unknown_fields(call.tool, call.params)
+        if unknown is None:
+            found.append(f"{call.tool} 는 TR 카탈로그에 요청 필드가 없는 주문 도구입니다")
+        elif unknown:
+            found.append(
+                f"{call.tool} 가 받지 않는 필드가 있습니다: {', '.join(unknown)} — "
+                "TR 카탈로그의 요청 필드만 보낼 수 있습니다(입력 스키마 참고)"
+            )
         if policy.allowed_stocks is not None and facts.stock not in policy.allowed_stocks:
             found.append(
                 f"종목 {facts.stock or '(없음)'} 은 허용 목록(KIWOOM_MCP_ALLOWED_STOCKS)에 없습니다"
