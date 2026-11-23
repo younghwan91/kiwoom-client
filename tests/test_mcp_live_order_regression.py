@@ -158,7 +158,7 @@ class TestHelperAndLocalToolsNeverOrder:
         # refuse with a plain error after reading the account — never by ordering.
         needs_account_data = {"rebalance_plan"}
         # This server has no WebSocket session, so WebSocket tools refuse up front.
-        needs_websocket = {"watch"}
+        needs_websocket = {"watch", "condition_search_run"}
         for tool in local:
             result = await _call(app, tool.name, sample_args.get(tool.name, {}))
             if tool.name in needs_account_data and result.is_error:
