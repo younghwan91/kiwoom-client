@@ -28,6 +28,15 @@
 - 문서(영어): 쿡북 "asyncio 동시 조회"·"호출 제한(429) 다루기" 영어판 — 쿡북 전 페이지 영어판 완료
 - 문서(영어): "편의 기능"(from_env·종목코드 찾기·코드값 상수·to_ohlcv·호가 계산·예외·CLI) 영어판
 
+### Changed
+
+- MCP 서버의 기본 모드가 `smart` 로 바뀝니다: `tools/list` 에 편의 도구(`stock_search`·`stock_snapshot`·
+  `account_summary`·`order_preview` 등)와 메타 도구 3개(`search_tools`·`describe_tool`·`call_tool`)만 올리고,
+  나머지 TR 도구는 메타 도구로 찾아 부릅니다. TR 도구 178개를 전부 올리면 도구 정의만 약 219 K 글자라
+  에이전트 컨텍스트를 대화 전에 다 써 버리기 때문입니다(smart 는 약 3.9 K). 전처럼 전부 올리려면
+  `KIWOOM_MCP_MODE=full` 또는 `kiwoom-client-mcp --full`. 실주문 가드·toolset 필터는 모든 모드에서 먼저 적용됩니다.
+  파이썬에서 직접 부르는 `build_server()` 의 기본은 그대로 전체 목록입니다
+
 ## [0.5.0] - 2026-11-21
 
 기존 코드는 그대로 돕니다 — `request()`·토큰 갱신·Rate Limiter·`tick_size`/`round_to_tick` 결과·
