@@ -232,8 +232,37 @@ class TestPrompts:
             "stock", "chart", "account", "order", "market", "ranking", "sector",
             "foreign",
         }}  # fmt: skip
-        non_tools = {"order_tools_enabled", "order_no", "max_rows", "next_key", "cont_yn"}
+        non_tools = {
+            "order_tools_enabled", "order_no", "order_preview_args",
+            "max_rows", "next_key", "cont_yn",
+        }
         assert tool_like - non_tools <= exposed
+
+    async def test_prompts_and_guide_prefer_intent_tools_over_tr_tools(self):
+        """Where an intent tool covers the job, prompts must name it, not a raw TR
+        tool — a TR name costs the agent a search_tools/describe_tool round trip in
+        smart mode. Only TRs with no intent equivalent may stay."""
+        from kiwoom_client.mcp.tools import discover_rest_tools
+
+        app, _specs = build_server(api=None, allow_live_orders=True)
+        texts = [
+            await _prompt(app, "analyze_stock", {"stock": "x"}),
+            await _prompt(app, "review_account"),
+            await _prompt(app, "market_today"),
+            await _prompt(app, "rebalance", {"target": "x"}),
+            await _prompt(app, "order_checklist", {"request": "x"}),
+            (await _read(app, GUIDE_URI)).text,
+            INSTRUCTIONS,
+        ]
+        tr_names = {spec.tool_name for spec in discover_rest_tools()}
+        named_trs = {
+            word
+            for text in texts
+            for word in re.findall(r"\b[a-z]+(?:_[a-z0-9]+)+\b", text)
+            if word in tr_names
+        }
+        no_intent_equivalent = {"sector_all_industry_index"}  # 업종 지수
+        assert named_trs <= no_intent_equivalent
 
     def test_tr_template_matches_catalog_ids(self):
         assert spec.get("ka10099").request_field("mrkt_tp") is not None

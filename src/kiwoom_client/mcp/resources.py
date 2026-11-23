@@ -45,8 +45,13 @@ GUIDE = """\
 
 ## 도구 고르는 순서
 
-1. **목록의 편의 도구부터.** 종목은 이름이나 코드로 받는다 — 코드를 모르면 `stock_search`
-   (예: "삼성전자" → 005930). 시세·지표는 `stock_snapshot`, 계좌는 `account_summary` 한 번이면 된다.
+1. **목록의 의도 도구부터.** 종목은 이름이나 코드로 받는다
+   (예: "삼성전자" → 005930, 모호하면 후보를 돌려준다).
+   - 시세·지표: `stock_snapshot`(한 종목), `get_quotes`(여러 종목) · 차트·추세: `get_chart`
+   - 시장: `market_movers`(거래량·등락률·거래대금 상위) · 수급: `investor_flow`
+   - 계좌: `get_portfolio`(비중·손익), `get_orders`(미체결·체결), `get_buying_power`(주문가능)
+   - 리밸런싱 계산: `rebalance_plan`(전송 안 함) · 실시간 감시: `watch`
+   - 조건검색: `condition_search_run`
 2. **맞는 도구가 없으면 `search_tools`.** 키워드(한글/영문, 예: "일봉", "거래대금 상위")로
    찾고 `describe_tool` 로 입력 스키마를 본 뒤 `call_tool` 로 실행한다.
    기본(smart) 모드에서는 목록에 없는 TR 도구를 이름으로 바로 부를 수 없다 —
@@ -75,8 +80,9 @@ GUIDE = """\
 #: Sent in the ``initialize`` result; clients show it to the model up front.
 #: Kept short — the long form is the ``kiwoom://guide`` resource.
 INSTRUCTIONS = (
-    "키움증권 REST API 서버. 목록의 편의 도구부터 쓴다: 종목코드는 stock_search(이름으로 찾음), "
-    "시세는 stock_snapshot, 계좌는 account_summary. 맞는 도구가 없으면 search_tools 로 찾아 "
+    "키움증권 REST API 서버. 목록의 의도 도구부터 쓴다(종목은 이름이나 코드): 종목코드는 "
+    "stock_search, 시세는 get_quotes, 차트는 get_chart, 시장은 market_movers, 계좌는 "
+    "get_portfolio·get_orders. 맞는 도구가 없으면 search_tools 로 찾아 "
     "describe_tool → call_tool 로 부른다. 긴 리스트는 max_rows 로 줄인다. 주문은 order_preview 로 "
     "미리보기 → 사용자에게 보여 주고 명시적 확인 → 그 뒤에만 주문 도구(미리보기가 confirm_token 을 "
     "주면 그대로 넣는다). 주문 도구가 목록에 없으면 이 서버로는 주문할 수 없다 — 우회하지 않는다. "
@@ -213,12 +219,11 @@ def _analyze_stock(args: dict[str, str]) -> str:
         raise ValueError("stock(종목명 또는 종목코드)이 필요합니다")
     return (
         f"'{stock}' 종목을 분석해 줘.\n\n"
-        "1. 종목코드가 아니면 stock_search 로 코드를 찾는다 "
+        "1. 종목명이 모호하면 stock_search 로 코드를 확정한다 "
         "(여러 개면 가장 맞는 것을 고르고 밝힌다).\n"
         "2. stock_snapshot 으로 현재가·등락률·거래량·시가총액·PER/PBR/ROE·250일 고저를 본다.\n"
-        "3. chart_stock_daily_chart 로 최근 일봉을 max_rows=60 으로 받아 추세·거래량 변화를 본다.\n"
-        "4. 가능하면 투자자별 매매(foreign_institution_foreign_trading_trend, "
-        "market_institutional_trading_trend 등)로 수급을 본다.\n"
+        "3. get_chart 로 최근 일봉 60개와 요약(기간 수익률·이동평균·평균 거래량)을 본다.\n"
+        "4. investor_flow 로 최근 20일 외국인·기관·개인 순매수를 본다.\n"
         "5. 숫자는 출처 도구와 함께 적고, 사실과 해석을 구분해 요약한다. "
         "매수·매도 권유나 주문은 하지 않는다.\n\n" + _NOT_LISTED
     )
@@ -227,9 +232,9 @@ def _analyze_stock(args: dict[str, str]) -> str:
 def _review_account(_args: dict[str, str]) -> str:
     return (
         "내 계좌 잔고를 점검해 줘.\n\n"
-        "1. account_summary 로 총평가·평가손익·수익률과 보유 종목을 본다.\n"
-        "2. account_unfilled_orders 로 미체결 주문이 있는지 본다.\n"
-        "3. 필요하면 account_deposit_detail 로 예수금·주문가능금액을 본다.\n"
+        "1. get_portfolio 로 총평가·손익·수익률과 종목별 비중·손익, 현금을 본다.\n"
+        "2. get_orders(status=\"open\") 로 미체결 주문이 있는지 본다.\n"
+        "3. 필요하면 get_buying_power 로 주문가능금액을 본다.\n"
         "4. 비중이 큰 종목, 손실이 큰 종목, 미체결 주문을 정리해 표로 보여 준다.\n"
         "조회만 한다 — 주문·정정·취소는 하지 않는다.\n\n" + _NOT_LISTED
     )
@@ -241,9 +246,9 @@ def _market_today(args: dict[str, str]) -> str:
     return (
         f"오늘 국내 주식시장을 요약해 줘{topic}.\n\n"
         "1. sector_all_industry_index 로 코스피·코스닥 등 업종 지수의 등락을 본다.\n"
-        "2. ranking_top_trading_value 와 ranking_top_change_rate 로 거래대금·등락률 상위 종목을 "
-        "max_rows=10 으로 본다.\n"
-        "3. ranking_top_foreign_institution_trades 로 외국인·기관 순매수 상위를 본다.\n"
+        "2. market_movers 로 거래대금(kind=value)·상승률(gainers)·하락률(losers)·"
+        "거래량 급증(volume_spike) 상위를 count=10 으로 본다.\n"
+        "3. 상위 종목 몇 개는 investor_flow 로 외국인·기관 순매수를 본다.\n"
         "4. 지수 → 주도 종목 → 수급 순으로 짧게 정리하고, 숫자마다 출처 도구를 적는다. "
         "장중이면 그 시각 기준임을 밝힌다.\n"
         "조회만 한다 — 종목 추천·주문은 하지 않는다.\n\n" + _NOT_LISTED
@@ -256,12 +261,11 @@ def _rebalance(args: dict[str, str]) -> str:
         raise ValueError("target(목표 비중, 예: 삼성전자 30%, 현금 20%)이 필요합니다")
     return (
         f"내 계좌를 다음 목표 비중으로 맞추는 리밸런싱 계획을 세워 줘: {target}\n\n"
-        "1. account_summary 로 보유 종목·평가금액·총자산을 보고, "
-        "목표에 나온 종목은 stock_search 로 코드를 확인한다.\n"
-        "2. 종목별 현재 비중과 목표 비중의 차이, 사고팔 금액을 표로 계산한다. 현재가는 "
-        "stock_snapshot 으로 확인한다.\n"
-        "3. 주문마다 order_preview 로 미리보기를 만들어 호가단위 보정·수량·예상금액·경고를 "
-        "보여 준다(전송 안 됨). 매도를 매수보다 먼저 둔다.\n"
+        "1. rebalance_plan 에 목표 비중을 넣어 종목별 현재·목표 비중과 사고팔 수량을 계산한다 "
+        "(전송 안 함, 호가단위·정수 주식·매도 먼저).\n"
+        "2. 계획을 표로 보여 준다.\n"
+        "3. 행마다 붙은 order_preview_args 를 order_preview 에 넘겨 미리보기를 만들고 "
+        "수량·예상금액·경고를 보여 준다(전송 안 됨).\n"
         "4. 여기서 멈추고 계획 전체를 사용자에게 확인받는다. 확인받은 주문만, 하나씩, "
         "미리보기가 준 confirm_token 이 있으면 그대로 넣어 보낸다. "
         "주문 도구가 없으면 계획만 보여 주고 끝낸다.\n\n"
