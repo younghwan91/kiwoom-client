@@ -21,6 +21,7 @@ from kiwoom_client.mcp import server as server_module
 from kiwoom_client.mcp.guard import ENV_VAR as LIVE_ORDERS_ENV_VAR
 from kiwoom_client.mcp.intents import intent_tools
 from kiwoom_client.mcp.modes import FULL, MODES
+from kiwoom_client.mcp.orders.tools import TOOL_NAMES as HIGH_LEVEL_ORDER_TOOLS
 from kiwoom_client.mcp.server import build_server
 from kiwoom_client.mcp.tools import GUARDED_MODULES, discover_rest_tools
 from kiwoom_client.mcp.toolsets import TOOLSET_NAMES
@@ -28,7 +29,10 @@ from kiwoom_client.mcp.toolsets import TOOLSET_NAMES
 BASE = "https://mockapi.kiwoom.com"
 ORDER_PATHS = ("/api/dostk/ordr", "/api/dostk/crdordr")
 
-GUARDED_NAMES = sorted(s.tool_name for s in discover_rest_tools() if s.guarded)
+#: Raw TR order tools plus the high-level ones (place_order ...) built on them.
+GUARDED_NAMES = sorted(
+    {s.tool_name for s in discover_rest_tools() if s.guarded} | HIGH_LEVEL_ORDER_TOOLS
+)
 
 TOOLSET_CHOICES = [
     None,

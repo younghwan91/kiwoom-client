@@ -62,6 +62,7 @@ claude mcp add kiwoom -e KIWOOM_APP_KEY=YOUR_APP_KEY -e KIWOOM_APP_SECRET=YOUR_A
 | `KIWOOM_MCP_MODE` | `--full`, `--discovery` | `smart`·`full`·`discovery` (아래 "컨텍스트 줄이기") | `smart` |
 | `KIWOOM_MCP_MAX_ROWS` | `--max-rows` | 리스트 응답 기본 행 수 제한 | 제한 없음 |
 | `KIWOOM_MCP_ALLOW_LIVE_ORDERS` | (없음) | 실전 계좌에서 주문 도구 노출 | `false` |
+| `KIWOOM_MCP_REQUIRE_CONFIRM` | (없음) | TR 주문 도구(`order_*`·`credit_order_*`)에 `confirm_token` 요구 | 실전 `true`, 모의 `false` |
 
 CLI 옵션이 환경변수보다 우선합니다. 실주문 opt-in 에는 일부러 CLI 옵션을 두지 않았습니다.
 
@@ -69,7 +70,7 @@ toolset 이름은 엔드포인트 모듈 이름과 같습니다: `account`, `sto
 
 ## 실주문 가드
 
-- `KIWOOM_IS_MOCK=false`(실전)이고 `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true` 가 아니면 주문 도구(`order_*` 8개, `credit_order_*` 4개)를 서버가 **등록하지 않습니다**. 도구 목록, `call_tool`, `search_tools`, `kiwoom://tools` 어디에도 나오지 않습니다.
+- `KIWOOM_IS_MOCK=false`(실전)이고 `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true` 가 아니면 주문 도구(`order_*` 8개, `credit_order_*` 4개, `place_order`·`modify_order`·`cancel_order`)를 서버가 **등록하지 않습니다**. 도구 목록, `call_tool`, `search_tools`, `kiwoom://tools` 어디에도 나오지 않습니다.
 - toolset 필터·모드(smart·full·discovery)·편의 도구는 모두 가드가 남긴 도구만 봅니다. `--toolsets order` 로 골라도 opt-in 없이는 주문 도구가 생기지 않습니다. 이 동작은 회귀 테스트(`tests/test_mcp_live_order_regression.py`)로 고정돼 있습니다.
 - 모의투자(`KIWOOM_IS_MOCK=true`)는 실제 체결이 없으므로 가드 없이 주문 도구가 보입니다.
 - 가드는 MCP 서버 경로에만 있습니다. 파이썬에서 `KiwoomAPI`/`AsyncKiwoomAPI` 를 직접 쓰면 막지 않습니다.
@@ -78,15 +79,30 @@ toolset 이름은 엔드포인트 모듈 이름과 같습니다: `account`, `sto
 
 ### 주문 미리보기 `order_preview`
 
-주문을 보내지 않고(네트워크 호출 없음) 다음을 돌려줍니다.
+주문을 보내지 않고 다음을 돌려줍니다. 종목명을 넣었을 때 종목 리스트(ka10099)를 조회하는 것 말고는 네트워크 호출이 없습니다.
 
 - 호가단위 보정: 매수는 내림, 매도는 올림
 - 필드 검증
 - 예상 금액
 - 경고
 - 주문 도구에 그대로 넘길 `params`
+- 주문 도구가 등록된 서버라면 그 주문에만 쓸 수 있는 `confirm_token`
+
+종목은 `stock`(이름 또는 코드)이나 `stk_cd` 로, 수량·단가는 `qty`·`price`(`"market"` = 시장가)나 TR 필드명(`ord_qty`·`ord_uv`)으로 받습니다. `action="modify"`·`"cancel"` 과 `order_no` 를 주면 정정·취소 미리보기를, `tool`(예: `credit_order_margin_buy_order`)과 `params` 를 주면 그 TR 도구용 미리보기를 만듭니다.
 
 `order_tools_enabled` 값으로 이 서버에 주문 도구가 있는지도 알려 줍니다. 에이전트는 미리보기를 사용자에게 보여 주고 확인을 받은 뒤에만 주문해야 합니다. 서버의 `instructions` 와 `order_checklist`·`rebalance` 프롬프트가 이 순서를 안내합니다.
+
+### 확인 토큰 (2단계 주문)
+
+`confirm_token` 은 서버가 만듭니다. 미리보기한 주문의 TR 도구 이름과 정규화한 요청 필드를, 프로세스를 시작할 때 만든 무작위 비밀키로 HMAC 서명합니다. 토큰 안에 주문 내용은 들어 있지 않습니다. 주문 도구는 다음 경우 주문을 **보내지 않고** 거부합니다.
+
+- 토큰이 없을 때
+- 미리보기와 종목·수량·단가·매매구분 등이 하나라도 다를 때
+- 120초가 지났을 때
+- 이미 쓴 토큰일 때
+- 서버를 다시 시작하기 전에 받은 토큰일 때
+
+`place_order`·`modify_order`·`cancel_order` 는 늘 토큰을 요구합니다. TR 주문 도구(`order_*`·`credit_order_*`)는 `KIWOOM_MCP_REQUIRE_CONFIRM` 을 따르며, 실전은 기본 `true`, 모의투자는 기본 `false` 입니다. 요구하지 않는 설정에서도 토큰을 넣으면 검사합니다. 이 검사는 실주문 opt-in 가드 **다음에** 적용됩니다. opt-in 없이 주문 도구가 등록되지 않는 동작은 그대로입니다.
 
 ## 도구
 
@@ -96,7 +112,8 @@ toolset 이름은 엔드포인트 모듈 이름과 같습니다: `account`, `sto
 | | `stock_snapshot` | 현재가·등락률·시총·PER/PBR 등 한 번에(ka10001). 종목명으로도 받음 |
 | | `account_summary` | 계좌 총평가·손익·보유 종목(kt00018) |
 | | `get_chart` | 일·주·월·분봉 OHLCV(날짜 오름차순) + 기간 수익률·고저·평균 거래량·5/20 이동평균. 연속조회로 `count` 개까지(ka10081/82/83/80) |
-| | `order_preview` | 주문 미리보기, 전송 안 함 |
+| | `order_preview` | 주문·정정·취소 미리보기, 전송 안 함. `confirm_token` 발급 |
+| 주문 (opt-in) | `place_order`·`modify_order`·`cancel_order` | 종목명·수량·단가(또는 `"market"`)로 주문·정정·취소. `confirm_token` 필수 |
 | TR 도구 | `<모듈>_<메서드>` | 예: `stock_info_basic_stock_info`, `chart_stock_daily_chart`. [전체 목록](endpoints.md) |
 | 조건검색 | `condition_search_*` 4개 | WebSocket. 실시간 등록은 첫 응답만 돌려줌 |
 

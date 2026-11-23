@@ -213,8 +213,9 @@ class TestPrompts:
             await _prompt(app, "nope")
 
     async def test_every_tool_a_prompt_names_exists(self):
-        """Prompts name tools in prose — catch a rename before an agent does."""
-        app, _specs = build_server(api=None, allow_live_orders=False)
+        """Prompts name tools in prose — catch a rename before an agent does.
+        With the opt-in, so the order tools the guide names are listed too."""
+        app, _specs = build_server(api=None, allow_live_orders=True)
         exposed = await _tool_names(app)
         texts = [
             await _prompt(app, "analyze_stock", {"stock": "x"}),
@@ -231,7 +232,7 @@ class TestPrompts:
             "stock", "chart", "account", "order", "market", "ranking", "sector",
             "foreign",
         }}  # fmt: skip
-        non_tools = {"order_tools_enabled", "max_rows", "next_key", "cont_yn"}
+        non_tools = {"order_tools_enabled", "order_no", "max_rows", "next_key", "cont_yn"}
         assert tool_like - non_tools <= exposed
 
     def test_tr_template_matches_catalog_ids(self):

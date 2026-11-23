@@ -7,6 +7,10 @@
 
 ### Added
 
+- MCP: 2단계 주문 — `order_preview` 가 그 주문에만 쓸 수 있는 1회용 `confirm_token`(HMAC, 120초)을 돌려주고,
+  종목명·수량·단가로 주문하는 `place_order`·`modify_order`·`cancel_order` 는 토큰이 없거나 파라미터가 다르거나
+  만료·재사용이면 전송하지 않고 거부한다(실주문 opt-in 가드 뒤에만 등록). `order_preview` 는 정정·취소(`action`)와
+  신용·금현물 TR(`tool`+`params`) 미리보기도 만든다
 - 문서 사이트: 모든 페이지에 Open Graph·Twitter Card 메타, 홈에 JSON-LD(SoftwareApplication·SoftwareSourceCode).
   CI 가 빌드한 사이트를 `scripts/check_site_seo.py` 로 검사한다
 - 문서 사이트: 한/영 `hreflang` 을 절대 URL + `x-default` 로. 영어판이 없어 한국어 본문으로 대체된 `/en/` 사본은
@@ -43,6 +47,8 @@
   에이전트 컨텍스트를 대화 전에 다 써 버리기 때문입니다(smart 는 약 3.9 K). 전처럼 전부 올리려면
   `KIWOOM_MCP_MODE=full` 또는 `kiwoom-client-mcp --full`. 실주문 가드·toolset 필터는 모든 모드에서 먼저 적용됩니다.
   파이썬에서 직접 부르는 `build_server()` 의 기본은 그대로 전체 목록입니다
+- MCP: 실전 서버에서 opt-in 으로 노출한 TR 주문 도구(`order_*`·`credit_order_*`)가 `order_preview` 의 `confirm_token` 을
+  요구한다 — `KIWOOM_MCP_REQUIRE_CONFIRM`(실전 기본 `true`, 모의 기본 `false`). 토큰은 요청 필드로 전송되지 않는다
 
 ## [0.5.0] - 2026-11-21
 
