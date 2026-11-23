@@ -71,6 +71,10 @@ The snippet goes to stdout and the "where to put it" note goes to stderr, so `> 
 | `KIWOOM_MCP_MAX_ROWS` | `--max-rows` | default row limit for list responses | no limit |
 | `KIWOOM_MCP_ALLOW_LIVE_ORDERS` | (none) | expose order tools on a live account | `false` |
 | `KIWOOM_MCP_REQUIRE_CONFIRM` | (none) | require a `confirm_token` on the TR order tools (`order_*`, `credit_order_*`) | `true` live, `false` paper |
+| `KIWOOM_MCP_MAX_ORDER_AMOUNT` | (none) | largest amount of one new order or change, KRW | no limit |
+| `KIWOOM_MCP_MAX_ORDER_QTY` | (none) | largest quantity of one new order or change, shares | no limit |
+| `KIWOOM_MCP_ALLOWED_STOCKS` | (none) | stock codes orders may name, comma-separated | no limit |
+| `KIWOOM_MCP_DAILY_ORDER_LIMIT` | (none) | orders this server process may send per day (KST) | no limit |
 
 CLI options win over environment variables. The live-order opt-in deliberately has no CLI option.
 
@@ -121,6 +125,15 @@ The server makes the `confirm_token`: an HMAC, under a random secret created whe
 - the token came from before a server restart.
 
 `place_order`, `modify_order` and `cancel_order` always require a token. The TR order tools (`order_*`, `credit_order_*`) follow `KIWOOM_MCP_REQUIRE_CONFIRM`: `true` by default on a live account, `false` on paper trading. A token that is given is checked even where none is required. These checks run **after** the live-order opt-in guard; without the opt-in the order tools are still not registered at all.
+
+### Limits and allowed stocks
+
+Set any of the four variables above and the server enforces it. `order_preview` puts a breach in `errors` and issues no token, and the check runs again right before sending: a breach is refused and nothing is sent. The send-time check does not trust the preview.
+
+- The amount is price × quantity. A market order is valued at the upper price limit (ka10001); if that lookup fails, the amount limit can't be checked and the order is refused.
+- Cancels skip the quantity and amount limits. The allowed stocks and the daily count apply to cancels too.
+- The daily count is the orders (new, change, cancel) this process sent to Kiwoom. Refused attempts don't count; a restart or a new day (KST) starts from zero.
+- Unset means no limit (the previous behaviour).
 
 ## Tools
 

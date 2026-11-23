@@ -20,6 +20,7 @@ never as passed. Every request here is a lookup; none goes to an order TR.
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Any
@@ -130,6 +131,19 @@ async def _sellable(api: Any, stk_cd: str, qty: int, exchange: str, out: CheckRe
     out.facts["sellable_qty"] = sellable
     if qty > sellable:
         out.errors.append(f"수량 {qty:,}주가 매도가능수량 {sellable:,}주보다 많습니다")
+
+
+def upper_limit_quote(api: Any) -> Callable[[str], Awaitable[int | None]]:
+    """For the order gate: a market order's amount is bounded at 상한가 (ka10001)."""
+
+    async def quote(stk_cd: str) -> int | None:
+        try:
+            resp = await api.stock_info.basic_stock_info(stk_cd=stk_cd)
+        except (KiwoomAPIError, httpx.HTTPError):
+            return None
+        return _int(resp.get("upl_pric")) or None
+
+    return quote
 
 
 async def market_checks(api: Any, preview: dict[str, Any]) -> CheckResult:

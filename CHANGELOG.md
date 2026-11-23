@@ -13,6 +13,9 @@
   신용·금현물 TR(`tool`+`params`) 미리보기도 만든다
 - MCP: `order_preview` 가 서버 연결이 있으면 상·하한가(ka10001)·매수 주문가능수량(kt00011)·매도가능수량(kt00018)을
   조회해 위반은 `errors`(토큰 발급 안 함), 근접·조회 실패는 `warnings` 로 돌려준다
+- MCP: 주문 한도·허용 종목 — `KIWOOM_MCP_MAX_ORDER_AMOUNT`(원, 시장가는 상한가로 계산)·`KIWOOM_MCP_MAX_ORDER_QTY`·
+  `KIWOOM_MCP_ALLOWED_STOCKS`(쉼표)·`KIWOOM_MCP_DAILY_ORDER_LIMIT`(프로세스·KST 하루). `order_preview` 와 전송 직전
+  둘 다에서 강제하고, 설정하지 않으면 제한 없음
 - 문서 사이트: 모든 페이지에 Open Graph·Twitter Card 메타, 홈에 JSON-LD(SoftwareApplication·SoftwareSourceCode).
   CI 가 빌드한 사이트를 `scripts/check_site_seo.py` 로 검사한다
 - 문서 사이트: 한/영 `hreflang` 을 절대 URL + `x-default` 로. 영어판이 없어 한국어 본문으로 대체된 `/en/` 사본은

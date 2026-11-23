@@ -78,6 +78,10 @@ claude mcp add kiwoom -e KIWOOM_APP_KEY=YOUR_APP_KEY -e KIWOOM_APP_SECRET=YOUR_A
 | `KIWOOM_MCP_MAX_ROWS` | `--max-rows` | 리스트 응답 기본 행 수 제한 | 제한 없음 |
 | `KIWOOM_MCP_ALLOW_LIVE_ORDERS` | (없음) | 실전 계좌에서 주문 도구 노출 | `false` |
 | `KIWOOM_MCP_REQUIRE_CONFIRM` | (없음) | TR 주문 도구(`order_*`·`credit_order_*`)에 `confirm_token` 요구 | 실전 `true`, 모의 `false` |
+| `KIWOOM_MCP_MAX_ORDER_AMOUNT` | (없음) | 주문 1건(신규·정정) 금액 한도, 원 | 제한 없음 |
+| `KIWOOM_MCP_MAX_ORDER_QTY` | (없음) | 주문 1건(신규·정정) 수량 한도, 주 | 제한 없음 |
+| `KIWOOM_MCP_ALLOWED_STOCKS` | (없음) | 주문할 수 있는 종목코드, 쉼표 구분 | 제한 없음 |
+| `KIWOOM_MCP_DAILY_ORDER_LIMIT` | (없음) | 이 서버 프로세스가 하루(KST)에 보낼 수 있는 주문 수 | 제한 없음 |
 
 CLI 옵션이 환경변수보다 우선합니다. 실주문 opt-in 에는 일부러 CLI 옵션을 두지 않았습니다.
 
@@ -128,6 +132,15 @@ toolset 이름은 엔드포인트 모듈 이름과 같습니다: `account`, `sto
 - 서버를 다시 시작하기 전에 받은 토큰일 때
 
 `place_order`·`modify_order`·`cancel_order` 는 늘 토큰을 요구합니다. TR 주문 도구(`order_*`·`credit_order_*`)는 `KIWOOM_MCP_REQUIRE_CONFIRM` 을 따르며, 실전은 기본 `true`, 모의투자는 기본 `false` 입니다. 요구하지 않는 설정에서도 토큰을 넣으면 검사합니다. 이 검사는 실주문 opt-in 가드 **다음에** 적용됩니다. opt-in 없이 주문 도구가 등록되지 않는 동작은 그대로입니다.
+
+### 한도·허용 종목
+
+위 환경변수 네 개를 설정하면 서버가 주문 한도를 강제합니다. `order_preview` 에서 위반이면 `errors` 에 넣고 토큰을 만들지 않으며, 전송 직전에 한 번 더 검사해 위반이면 보내지 않고 거부합니다. 미리보기 결과를 믿지 않고 전송할 때 다시 봅니다.
+
+- 금액은 단가 × 수량입니다. 시장가 주문은 상한가(ka10001)로 계산하며, 상한가를 조회하지 못하면 금액 한도를 확인할 수 없어 거부합니다.
+- 취소는 수량·금액 한도를 보지 않습니다. 허용 종목과 하루 주문 수는 취소에도 적용됩니다.
+- 하루 주문 수는 이 프로세스가 키움에 보낸 주문(신규·정정·취소)을 셉니다. 거부된 시도는 세지 않고, 서버를 다시 시작하거나 날짜(KST)가 바뀌면 0부터 셉니다.
+- 설정하지 않으면 제한이 없습니다(기존 동작).
 
 ## 도구
 
