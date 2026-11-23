@@ -172,7 +172,22 @@ class TestConfigSnippets:
             assert APP_KEY_PLACEHOLDER in body
             assert LIVE_ORDERS_ENV_VAR not in body
 
-    @pytest.mark.parametrize("client", ["claude-desktop", "cursor"])
+    @pytest.mark.parametrize("client", CLIENTS)
+    def test_default_is_mock(self, client):
+        assert "KIWOOM_IS_MOCK" in render(client).body
+        body = render(client).body.replace(" ", "").replace('"', "").replace("'", "")
+        assert "KIWOOM_IS_MOCK=true" in body or "KIWOOM_IS_MOCK:true" in body
+
+    def test_claude_desktop_note_points_to_the_bundle(self):
+        assert ".mcpb" in render("claude-desktop").note
+
+    def test_vscode_snippet_uses_the_portable_stdio_format(self):
+        server = json.loads(render("vscode").body)["mcpServers"][SERVER_NAME]
+        assert server["type"] == "stdio"
+        assert server["command"] == "uvx"
+        assert ".mcp.json" in render("vscode").note
+
+    @pytest.mark.parametrize("client", ["claude-desktop", "cursor", "vscode", "gemini-cli"])
     def test_json_snippets_are_valid_json(self, client):
         config = json.loads(render(client, toolsets=["market", "chart"]).body)
         server = config["mcpServers"][SERVER_NAME]

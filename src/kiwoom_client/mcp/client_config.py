@@ -13,8 +13,22 @@ import shlex
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-#: Supported ``config`` targets.
-CLIENTS: tuple[str, ...] = ("claude-code", "claude-desktop", "cursor", "codex")
+#: Supported ``config`` targets. Formats follow each client's own docs:
+#: Claude Code ``claude mcp add``; Claude Desktop ``claude_desktop_config.json``;
+#: Cursor ``mcp.json``; Codex ``config.toml`` ``[mcp_servers.*]``; VS Code
+#: (GitHub Copilot) portable ``.mcp.json``/``~/.copilot/mcp-config.json``
+#: (``mcpServers`` with ``type: "stdio"``); Gemini CLI ``settings.json``.
+CLIENTS: tuple[str, ...] = (
+    "claude-code",
+    "claude-desktop",
+    "cursor",
+    "codex",
+    "vscode",
+    "gemini-cli",
+)
+
+#: Release page with the one-click Claude Desktop bundle (.mcpb).
+RELEASES_URL = "https://github.com/younghwan91/kiwoom-client/releases"
 
 #: Name the server is registered under in every snippet. Short on purpose:
 #: some clients prefix every tool name with it.
@@ -65,8 +79,12 @@ def server_env(
     return env
 
 
-def _mcp_servers_json(argv: list[str], env: dict[str, str]) -> str:
-    config = {"mcpServers": {SERVER_NAME: {"command": argv[0], "args": argv[1:], "env": env}}}
+def _mcp_servers_json(
+    argv: list[str], env: dict[str, str], extra: dict[str, object] | None = None
+) -> str:
+    server: dict[str, object] = dict(extra or {})
+    server.update({"command": argv[0], "args": argv[1:], "env": env})
+    config = {"mcpServers": {SERVER_NAME: server}}
     return json.dumps(config, ensure_ascii=False, indent=2)
 
 
@@ -116,7 +134,9 @@ def render(
     if client == "claude-desktop":
         return Snippet(
             note=(
-                "claude_desktop_config.json 의 mcpServers 에 병합하세요.\n"
+                "가장 쉬운 방법: Releases 의 kiwoom-client-<버전>.mcpb 를 더블클릭해 설치하면\n"
+                f"  키를 입력 화면에서 받습니다 (JSON 편집 불필요). {RELEASES_URL}\n"
+                "직접 설정하려면 claude_desktop_config.json 의 mcpServers 에 병합하세요.\n"
                 "  macOS:   ~/Library/Application Support/Claude/claude_desktop_config.json\n"
                 "  Windows: %APPDATA%\\Claude\\claude_desktop_config.json"
             ),
@@ -129,4 +149,22 @@ def render(
         )
     if client == "codex":
         return Snippet(note="~/.codex/config.toml 에 추가하세요.", body=_codex_toml(argv, env))
+    if client == "vscode":
+        return Snippet(
+            note=(
+                "VS Code (GitHub Copilot): 워크스페이스 루트 .mcp.json 또는 "
+                "~/.copilot/mcp-config.json 의 mcpServers 에 병합하세요.\n"
+                "  키를 파일에 두기 싫으면 값을 \"${KIWOOM_APP_KEY}\" 처럼 "
+                "환경변수 참조로 바꿉니다."
+            ),
+            body=_mcp_servers_json(argv, env, extra={"type": "stdio"}) + "\n",
+        )
+    if client == "gemini-cli":
+        return Snippet(
+            note=(
+                "~/.gemini/settings.json (사용자) 또는 <프로젝트>/.gemini/settings.json 의 "
+                "mcpServers 에 병합하세요."
+            ),
+            body=_mcp_servers_json(argv, env) + "\n",
+        )
     raise ValueError(f"unknown client: {client!r} (choose from {', '.join(CLIENTS)})")
