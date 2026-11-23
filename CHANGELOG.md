@@ -48,6 +48,8 @@
   모의/실전·모드·toolset·실주문 가드 상태, 노출될 도구 수와 `tools/list` 크기. 기본은 네트워크 호출 없음,
   `--check-auth` 일 때만 토큰을 한 번 발급한다(폐기 안 함)
 - MCP: `get_quotes` 의도 도구 — 최대 20종목의 현재가·등락률·거래량·거래대금·시가총액을 ka10095 요청 한 번에. 종목별 부분 실패는 그 종목만 error
+- `kiwoom-client-mcp config vscode`(GitHub Copilot 의 `.mcp.json`·`~/.copilot/mcp-config.json`, `type: "stdio"`)·
+  `config gemini-cli`(`~/.gemini/settings.json`). `config claude-desktop` 안내에 `.mcpb` 원클릭 설치를 먼저 적는다
 
 ### Changed
 

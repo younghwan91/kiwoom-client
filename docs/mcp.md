@@ -48,6 +48,8 @@ kiwoom-client-mcp config claude-code      # 터미널에서 실행할 claude mcp
 kiwoom-client-mcp config claude-desktop   # claude_desktop_config.json 에 병합할 JSON
 kiwoom-client-mcp config cursor           # ~/.cursor/mcp.json 또는 .cursor/mcp.json
 kiwoom-client-mcp config codex            # ~/.codex/config.toml
+kiwoom-client-mcp config vscode           # VS Code(GitHub Copilot) .mcp.json 또는 ~/.copilot/mcp-config.json
+kiwoom-client-mcp config gemini-cli       # ~/.gemini/settings.json
 ```
 
 붙여넣을 본문은 stdout, 파일 위치 안내는 stderr 로 나옵니다. 그래서 `> mcp.json` 으로 저장해도 유효한 JSON 입니다. 쓸 수 있는 옵션은 아래와 같습니다.

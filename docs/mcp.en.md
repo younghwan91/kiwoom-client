@@ -48,6 +48,8 @@ kiwoom-client-mcp config claude-code      # a `claude mcp add` command
 kiwoom-client-mcp config claude-desktop   # JSON to merge into claude_desktop_config.json
 kiwoom-client-mcp config cursor           # ~/.cursor/mcp.json or .cursor/mcp.json
 kiwoom-client-mcp config codex            # ~/.codex/config.toml
+kiwoom-client-mcp config vscode           # VS Code (GitHub Copilot) .mcp.json or ~/.copilot/mcp-config.json
+kiwoom-client-mcp config gemini-cli       # ~/.gemini/settings.json
 ```
 
 The snippet goes to stdout and the "where to put it" note goes to stderr, so `> mcp.json` saves valid JSON. The options are:
