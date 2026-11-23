@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from kiwoom_client.mcp.intents import chart, lookup  # noqa: F401  (registers tools)
+from kiwoom_client.mcp.intents import chart, lookup, quotes  # noqa: F401  (registers tools)
 from kiwoom_client.mcp.intents.registry import IntentContext, build_intent_tools
 from kiwoom_client.mcp.local_tools import LocalTool
 
