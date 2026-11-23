@@ -11,6 +11,7 @@ BASE = "https://mockapi.kiwoom.com"
 ORDR = f"{BASE}/api/dostk/ordr"
 CRDORDR = f"{BASE}/api/dostk/crdordr"
 STKINFO = f"{BASE}/api/dostk/stkinfo"
+ACNT = f"{BASE}/api/dostk/acnt"
 ORDER_PATHS = ("/api/dostk/ordr", "/api/dostk/crdordr")
 
 KOSPI = [
@@ -54,6 +55,60 @@ def mock_stock_lists(httpx_mock) -> None:
             is_reusable=True,
             is_optional=True,
         )
+
+
+def mock_quote(httpx_mock, *, upper="+91000", lower="-49000", current="70000") -> None:
+    """ka10001 for the preview's 상·하한가 check."""
+    httpx_mock.add_response(
+        url=STKINFO,
+        match_headers={"api-id": "ka10001"},
+        json={
+            "return_code": 0,
+            "stk_cd": "005930",
+            "upl_pric": upper,
+            "lst_pric": lower,
+            "cur_prc": current,
+        },
+        is_reusable=True,
+        is_optional=True,
+    )
+
+
+def mock_buyable(httpx_mock, *, rate="40", allowed="100", cash_only="50", cash="3500000") -> None:
+    """kt00011 for the preview's 주문가능수량 check."""
+    httpx_mock.add_response(
+        url=ACNT,
+        match_headers={"api-id": "kt00011"},
+        json={
+            "return_code": 0,
+            "aplc_rt": rate,
+            f"profa_{rate}ord_alowq": allowed,
+            "min_ord_alowq": cash_only,
+            "ord_alowa": cash,
+        },
+        is_reusable=True,
+        is_optional=True,
+    )
+
+
+def mock_holdings(httpx_mock, rows=None) -> None:
+    """kt00018 for the preview's 매도가능수량 check."""
+    if rows is None:
+        rows = [{"stk_cd": "A005930", "rmnd_qty": "000000000020", "trde_able_qty": "000000000020"}]
+    httpx_mock.add_response(
+        url=ACNT,
+        match_headers={"api-id": "kt00018"},
+        json={"return_code": 0, "acnt_evlt_remn_indv_tot": rows},
+        is_reusable=True,
+        is_optional=True,
+    )
+
+
+def mock_lookups(httpx_mock) -> None:
+    """Every lookup order_preview may make, with generous limits."""
+    mock_quote(httpx_mock)
+    mock_buyable(httpx_mock)
+    mock_holdings(httpx_mock)
 
 
 def order_requests(httpx_mock) -> list[Any]:
