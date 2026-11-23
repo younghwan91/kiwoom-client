@@ -31,6 +31,8 @@ from kiwoom_client.mcp.discovery import CatalogEntry, discovery_tools
 from kiwoom_client.mcp.guard import order_tools_allowed, read_only
 from kiwoom_client.mcp.intents import intent_tools
 from kiwoom_client.mcp.local_tools import LocalTool
+from kiwoom_client.mcp.masking import mask_accounts as mask_account_fields
+from kiwoom_client.mcp.masking import mask_from_env
 from kiwoom_client.mcp.modes import DEFAULT_MODE, DISCOVERY, FULL, MODES, SMART
 from kiwoom_client.mcp.order_preview import order_preview_tool
 from kiwoom_client.mcp.orders.checks import upper_limit_quote
@@ -93,6 +95,7 @@ def build_server(
     max_rows: int | None = None,
     mode: str | None = None,
     order_policy: OrderPolicy | None = None,
+    mask_accounts: bool = True,
 ) -> tuple[Server, list[RestToolSpec]]:
     """Assemble the MCP Server, wired with its ``tools/list``/``tools/call``
     handlers, and the filtered list of tool specs.
@@ -116,6 +119,9 @@ def build_server(
 
     ``max_rows`` is the default row limit for lookup tools' list responses
     (``None`` = no limit); a call can override it with its own ``max_rows``.
+
+    ``mask_accounts`` masks account-number fields in every tool response
+    (:mod:`.masking`); ``False`` returns them as Kiwoom sent them.
 
     ``order_policy`` sets the checks every order passes right before it is
     sent (:mod:`.orders.gate`). ``None`` means the strict live defaults.
@@ -219,6 +225,8 @@ def build_server(
                 content=[types.TextContent(type="text", text=str(exc))],
                 is_error=True,
             )
+        if mask_accounts:
+            result = mask_account_fields(result)
         return types.CallToolResult(
             content=[types.TextContent(type="text", text=json.dumps(result, ensure_ascii=False))]
         )
@@ -340,6 +348,7 @@ def run_server(
     discovery: bool = False,
     max_rows: int | None = None,
     mode: str | None = None,
+    mask_accounts: bool | None = None,
 ) -> None:
     """Start the stdio MCP server and block until the client disconnects.
 
@@ -349,6 +358,8 @@ def run_server(
     logging.basicConfig(level=logging.INFO)
 
     order_policy = OrderPolicy.from_env(is_mock=is_mock)
+    if mask_accounts is None:
+        mask_accounts = mask_from_env()
     api = AsyncKiwoomAPI(app_key, app_secret, is_mock=is_mock)
     allow_live_orders = order_tools_allowed(is_mock=is_mock)
     session = ConditionSearchSession(connect=lambda: _connect_condition_search(api))
@@ -361,7 +372,10 @@ def run_server(
         max_rows=max_rows,
         mode=mode,
         order_policy=order_policy,
+        mask_accounts=mask_accounts,
     )
+    if not mask_accounts:
+        logger.info("KIWOOM_MCP_MASK_ACCOUNTS=false — 응답에 계좌번호가 그대로 나갑니다.")
     if read_only():
         logger.info("읽기 전용 모드(KIWOOM_MCP_READ_ONLY) — 주문 도구를 등록하지 않았습니다.")
     elif not allow_live_orders:

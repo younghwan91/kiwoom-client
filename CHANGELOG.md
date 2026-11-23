@@ -76,6 +76,8 @@
   요구한다 — `KIWOOM_MCP_REQUIRE_CONFIRM`(실전 기본 `true`, 모의 기본 `false`). 토큰은 요청 필드로 전송되지 않는다
 - MCP: TR 주문 도구(`order_*`·`credit_order_*`)가 TR 카탈로그의 요청 필드만 받는다 — 모르는 키가 섞이면 전송하지 않고
   거부한다(입력 스키마 `params` 도 `additionalProperties: false`). 조회 도구는 그대로
+- MCP: 도구 응답의 계좌번호 필드(`acnt_no`·`acctNo`·`acnt_print` 등, TR 카탈로그 기준)를 끝 4자리만 남기고 가린다.
+  그대로 받으려면 `KIWOOM_MCP_MASK_ACCOUNTS=false`
 
 ## [0.5.0] - 2026-11-21
 
