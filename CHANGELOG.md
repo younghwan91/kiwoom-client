@@ -57,6 +57,7 @@
   `config gemini-cli`(`~/.gemini/settings.json`). `config claude-desktop` 안내에 `.mcpb` 원클릭 설치를 먼저 적는다
 - 문서: MCP 페이지(한/영)를 "무엇을 물어보면 되나" 표(질문 → 쓰이는 도구 → 호출 수)로 시작한다. why 페이지에 공식 MCP 와의
   구조 차이를 사실만 두 줄
+- MCP: `market_movers` 의도 도구 — 거래량·상승률·하락률·거래대금·거래량 급증 상위를 시장별로, 순위 TR 요청 코드를 채워 정규화된 행으로
 
 ### Changed
 
