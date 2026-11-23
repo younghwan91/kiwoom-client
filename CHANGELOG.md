@@ -42,6 +42,9 @@
   설치 화면에서 앱키·시크릿(가림), 모의투자 여부(기본 켬), 모드, toolset 을 받고 실주문 opt-in 은 넣지 않는다.
   `scripts/build_mcpb.py` 가 공식 `@anthropic-ai/mcpb` 로 검증·팩하고, CI 가 매 PR 에 돌린다.
   릴리스 태그 때 PyPI 배포가 끝나면 GitHub Release 에 붙는다(`mcpb-release.yml`)
+- `kiwoom-client-mcp doctor` — 서버를 띄우지 않고 설정 점검: 파이썬·`mcp` 버전, 환경변수 유무(값은 출력 안 함),
+  모의/실전·모드·toolset·실주문 가드 상태, 노출될 도구 수와 `tools/list` 크기. 기본은 네트워크 호출 없음,
+  `--check-auth` 일 때만 토큰을 한 번 발급한다(폐기 안 함)
 
 ### Changed
 
