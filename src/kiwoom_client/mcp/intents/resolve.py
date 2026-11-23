@@ -60,9 +60,7 @@ def looks_like_code(value: str) -> bool:
     return bool(_CODE.match(value.strip().upper()))
 
 
-async def resolve_stock(
-    api: Any, stock: Any, *, markets: Sequence[str] = NAME_MARKETS
-) -> Stock:
+async def resolve_stock(api: Any, stock: Any, *, markets: Sequence[str] = NAME_MARKETS) -> Stock:
     """Resolve one ``stock`` argument.
 
     Raises:

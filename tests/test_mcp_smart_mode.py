@@ -159,12 +159,12 @@ class TestSmartCalls:
 class TestToolsetFilterAppliesFirst:
     async def test_smart_lists_only_local_tools_of_chosen_toolsets(self):
         app, _specs = build_server(
-            api=None, allow_live_orders=False, mode="smart", toolsets=frozenset({"chart"})
+            api=None, allow_live_orders=False, mode="smart", toolsets=frozenset({"theme"})
         )
         listed = {t.name for t in await _list(app)}
-        assert listed == META_TOOL_NAMES  # every current local tool is in another toolset
+        assert listed == META_TOOL_NAMES  # no local tool is in the theme toolset
         summary = _json(await _call(app, "search_tools"))
-        assert set(summary["toolsets"]) == {"chart"}
+        assert set(summary["toolsets"]) == {"theme"}
 
     async def test_smart_keeps_local_tools_in_chosen_toolsets(self):
         app, _specs = build_server(

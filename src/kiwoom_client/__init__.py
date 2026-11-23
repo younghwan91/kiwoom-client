@@ -53,6 +53,7 @@ from kiwoom_client.errors import (
 from kiwoom_client.parsing import (
     extract_records,
     normalize,
+    ohlcv_rows,
     to_dataframe,
     to_number,
     to_ohlcv,
@@ -107,6 +108,7 @@ __all__ = [
     "extract_records",
     "is_on_tick",
     "normalize",
+    "ohlcv_rows",
     "round_to_tick",
     "round_up_to_tick",
     "tick_size",

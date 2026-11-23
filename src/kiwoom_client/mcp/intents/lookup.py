@@ -125,9 +125,9 @@ def lookup_tools(_context: IntentContext) -> list[LocalTool]:
             description=(
                 "종목명(일부도 가능, 공백 무시) 또는 종목코드로 종목을 찾아 코드·이름·시장을 "
                 "돌려준다. 다른 도구에 넣을 stk_cd 를 모를 때 먼저 부른다. 첫 호출 때 "
-                "ka10099 종목 리스트를 시장별로 받아 서버 프로세스 안에 캐시한다. "
-                "예: {\"query\": \"삼성\"}"
+                "ka10099 종목 리스트를 시장별로 받아 서버 프로세스 안에 캐시한다."
             ),
+            example={"query": "삼성전자"},
             properties={
                 "query": {"type": "string", "description": "예: '삼성전자', '카카오', '005930'"},
                 "markets": {
@@ -148,9 +148,9 @@ def lookup_tools(_context: IntentContext) -> list[LocalTool]:
             description=(
                 "종목 하나의 현재가·전일대비·등락률·거래량·시고저·상하한가·시가총액·"
                 "PER/PBR/EPS/ROE·52주(250일) 고저를 숫자로 한 번에 돌려준다(ka10001). "
-                "종목은 stk_cd(코드) 또는 stock(이름도 가능)으로 준다. "
-                "예: {\"stock\": \"삼성전자\"}"
+                "종목은 stk_cd(코드) 또는 stock(이름도 가능)으로 준다."
             ),
+            example={"stock": "삼성전자"},
             properties={
                 "stk_cd": {"type": "string", "description": "종목코드 (예: 005930)"},
                 "stock": {
@@ -166,9 +166,9 @@ def lookup_tools(_context: IntentContext) -> list[LocalTool]:
             title="계좌 잔고·평가 요약",
             description=(
                 "계좌의 총매입·총평가·평가손익·수익률·추정예탁자산과 보유 종목별 수량·"
-                "매입가·현재가·평가손익·수익률을 한 번에 돌려준다(kt00018, 합산). 조회만 한다. "
-                "예: {}"
+                "매입가·현재가·평가손익·수익률을 한 번에 돌려준다(kt00018, 합산). 조회만 한다."
             ),
+            example={},
             properties={
                 "dmst_stex_tp": {"type": "string", "enum": ["KRX", "NXT"], "default": "KRX"}
             },

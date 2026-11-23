@@ -15,7 +15,14 @@ import re
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any
 
-__all__ = ["extract_records", "normalize", "to_dataframe", "to_number", "to_ohlcv"]
+__all__ = [
+    "extract_records",
+    "normalize",
+    "ohlcv_rows",
+    "to_dataframe",
+    "to_number",
+    "to_ohlcv",
+]
 
 _NUMERIC = re.compile(r"^[+-]?\d+(\.\d+)?$")
 
@@ -275,6 +282,30 @@ def to_ohlcv(
         empty.index = pd.DatetimeIndex([], name="datetime")
         return empty
 
+    source, stamps, fmt = _ohlcv_layout(records)
+    data = {
+        column: [_unsigned_number(record.get(name)) for record in records]
+        for column, name in source.items()
+    }
+    for name in extra:
+        data[name] = [to_number(record.get(name)) for record in records]
+
+    index = pd.DatetimeIndex(
+        pd.to_datetime(stamps, format=fmt), name="date" if fmt == "%Y%m%d" else "datetime"
+    )
+    frame = pd.DataFrame(data, index=index, columns=columns + extra)
+    return frame.sort_index(kind="stable")
+
+
+def _ohlcv_layout(
+    records: list[dict[str, Any]],
+) -> tuple[dict[str, str], list[str], str]:
+    """A chart's OHLCV source fields, raw time stamps and their strptime format.
+
+    Raises:
+        KeyError: no time or price fields — not a chart.
+        ValueError: time stamps of an unknown or mixed width.
+    """
     first = records[0]
     time_field = _pick(first, _TIME_FIELDS)
     if time_field is None:
@@ -297,19 +328,57 @@ def to_ohlcv(
     fmt = _TIME_FORMATS.get(widths.pop()) if len(widths) == 1 else None
     if fmt is None:
         raise ValueError(f"{time_field} 형식을 알 수 없습니다: {stamps[:3]}")
+    return source, stamps, fmt
 
-    data = {
-        column: [_unsigned_number(record.get(name)) for record in records]
-        for column, name in source.items()
-    }
-    for name in extra:
-        data[name] = [to_number(record.get(name)) for record in records]
 
-    index = pd.DatetimeIndex(
-        pd.to_datetime(stamps, format=fmt), name="date" if fmt == "%Y%m%d" else "datetime"
-    )
-    frame = pd.DataFrame(data, index=index, columns=columns + extra)
-    return frame.sort_index(kind="stable")
+def _iso_stamp(stamp: str) -> str:
+    """``"20261124"`` → ``"2026-11-24"``; 12/14 digits → ``"2026-11-24T09:01:00"``."""
+    if len(stamp) == 8:
+        return f"{stamp[:4]}-{stamp[4:6]}-{stamp[6:]}"
+    seconds = stamp[12:14] or "00"
+    return f"{stamp[:4]}-{stamp[4:6]}-{stamp[6:8]}T{stamp[8:10]}:{stamp[10:12]}:{seconds}"
+
+
+def ohlcv_rows(
+    response: Any,
+    key: str | None = None,
+    keep: Iterable[str] = (),
+) -> list[dict[str, Any]]:
+    """Like :func:`to_ohlcv`, but a list of plain dicts — no pandas needed.
+
+    Each row is ``{"date": "2026-11-24", "open": ..., "high": ..., "low": ...,
+    "close": ..., "volume": ...}`` (``"datetime": "2026-11-24T09:01:00"`` for
+    intraday charts), oldest first. Field detection, sign handling and errors
+    are those of :func:`to_ohlcv`; ``keep`` adds extra fields the same way.
+
+    Args:
+        response: A chart response dict, or the list from ``request_all()``.
+        key: Payload key. Auto-detected when omitted.
+        keep: Extra fields to carry over, numeric-converted with :func:`to_number`.
+
+    Returns:
+        Rows sorted by time, oldest first; empty for no records.
+
+    Raises:
+        KeyError: If the records have no time or price fields.
+        ValueError: If the time stamps have an unknown or mixed width.
+    """
+    _, records = extract_records(response, key)
+    if not records:
+        return []
+    source, stamps, fmt = _ohlcv_layout(records)
+    time_key = "date" if fmt == "%Y%m%d" else "datetime"
+    extra = list(keep)
+    rows = []
+    for stamp, record in zip(stamps, records, strict=True):
+        row: dict[str, Any] = {time_key: _iso_stamp(stamp)}
+        for column, name in source.items():
+            row[column] = _unsigned_number(record.get(name))
+        for name in extra:
+            row[name] = to_number(record.get(name))
+        rows.append(row)
+    order = sorted(range(len(rows)), key=lambda i: stamps[i])
+    return [rows[i] for i in order]
 
 
 def _import_pandas() -> Any:

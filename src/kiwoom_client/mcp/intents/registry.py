@@ -12,6 +12,7 @@ the single gate for them.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -68,9 +69,15 @@ def read_only_tool(
     properties: dict[str, Any],
     toolset: str,
     handler: Handler,
+    example: dict[str, Any],
     required: tuple[str, ...] = (),
 ) -> LocalTool:
-    """A lookup tool: ``readOnlyHint=true``, talks to Kiwoom (open world)."""
+    """A lookup tool: ``readOnlyHint=true``, talks to Kiwoom (open world).
+
+    ``example`` is appended to the description (``예: {...}``) so the agent
+    sees a valid call, and tests call every tool with it.
+    """
+    description = f"{description} 예: {json.dumps(example, ensure_ascii=False)}"
     schema: dict[str, Any] = {"type": "object", "properties": properties}
     if required:
         schema["required"] = list(required)
@@ -84,4 +91,5 @@ def read_only_tool(
         ),
         toolset=toolset,
         handler=handler,
+        example=example,
     )

@@ -30,6 +30,9 @@ class LocalTool:
     annotations: types.ToolAnnotations
     toolset: str
     handler: Handler
+    #: Sample arguments that make a valid call — shown in the description of
+    #: intent tools and used by tests that call every tool.
+    example: dict[str, Any] | None = None
 
     def to_mcp(self) -> types.Tool:
         return types.Tool(
