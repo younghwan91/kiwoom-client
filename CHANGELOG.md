@@ -34,6 +34,10 @@
   `confirm_token`" 순서로 다시 썼다
 - MCP: `get_chart` 의도 도구 — 일·주·월·분봉 OHLCV(오름차순)와 요약(기간 수익률·고저·평균 거래량·5/20 이동평균)을
   한 번에, 연속조회로 `count` 개까지. pandas 없이 쓰는 `ohlcv_rows()`(`to_ohlcv` 와 같은 필드 규칙) 추가
+- Claude Desktop 원클릭 번들 `kiwoom-client-<버전>.mcpb`(MCPB manifest 0.4, `uv` 서버 — 코드는 PyPI 에서 받는다).
+  설치 화면에서 앱키·시크릿(가림), 모의투자 여부(기본 켬), 모드, toolset 을 받고 실주문 opt-in 은 넣지 않는다.
+  `scripts/build_mcpb.py` 가 공식 `@anthropic-ai/mcpb` 로 검증·팩하고, CI 가 매 PR 에 돌린다.
+  릴리스 태그 때 PyPI 배포가 끝나면 GitHub Release 에 붙는다(`mcpb-release.yml`)
 
 ### Changed
 

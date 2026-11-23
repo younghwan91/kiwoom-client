@@ -26,6 +26,21 @@ kiwoom-client-mcp --version
 
 ## 클라이언트에 붙이기
 
+### Claude Desktop: 원클릭 번들 (.mcpb)
+
+[GitHub Releases](https://github.com/younghwan91/kiwoom-client/releases) 의 `kiwoom-client-<버전>.mcpb` 를 받아 더블클릭하거나, Claude Desktop 의 설정 → 확장 프로그램 화면에 끌어다 놓습니다(번들은 0.5.0 다음 릴리스부터 붙습니다). 설치 화면에서 받는 값은 아래와 같습니다.
+
+| 항목 | 기본값 | 설명 |
+|---|---|---|
+| 앱키·시크릿키 | — | 입력값을 가리고 안전한 저장소에 보관합니다 |
+| 모의투자 서버 | 켜짐 | 끄면 실전 서버에 조회만 합니다. 이 번들로는 실전 주문 도구를 켤 수 없습니다 |
+| 도구 목록 모드 | `smart` | `full`·`discovery` (아래 "컨텍스트 줄이기") |
+| 노출할 모듈 | 비움(전부) | 예: `market,chart,account` |
+
+번들에는 서버 코드가 들어 있지 않습니다. 처음 실행할 때 uv 가 PyPI 에서 번들과 같은 버전의 `kiwoom-client[mcp]` 를 받습니다. 직접 만들려면 `python scripts/build_mcpb.py` 를 실행합니다(Node.js 필요, 공식 `@anthropic-ai/mcpb` CLI 로 검증하고 팩).
+
+### 설정 스니펫
+
 `config` 명령이 클라이언트별로 붙여넣을 설정을 출력합니다. 키는 `YOUR_APP_KEY` 같은 자리표시자로 나오고, 기본값은 모의투자입니다. 키와 네트워크 없이 동작합니다.
 
 ```bash

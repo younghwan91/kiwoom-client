@@ -1,0 +1,12 @@
+# Claude Desktop 번들(.mcpb)용 uv 프로젝트. 서버 코드는 번들에 넣지 않고, 호스트가 `uv run` 할 때
+# PyPI 의 kiwoom-client[mcp] 를 이 번들과 같은 버전으로 받는다. 버전은 레포 pyproject.toml 과
+# 같아야 한다 — tests/test_mcpb_bundle.py 가 본다.
+[project]
+name = "kiwoom-client-mcpb"
+version = "0.5.0"
+description = "Claude Desktop bundle for the kiwoom-client MCP server"
+requires-python = ">=3.10"
+dependencies = ["kiwoom-client[mcp]==0.5.0"]
+
+[tool.uv]
+package = false

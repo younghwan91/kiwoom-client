@@ -131,3 +131,27 @@ jobs:
 
       - name: sdist·wheel 빌드 + 설치 스모크
         run: bash scripts/check_dist.sh
+
+  # Claude Desktop 번들(.mcpb): 공식 CLI(@anthropic-ai/mcpb)로 manifest 검증 + 팩. 키·키움 서버 없이 끝난다.
+  # 릴리스 태그 때는 mcpb-release.yml 이 같은 스크립트로 만들어 GitHub Release 에 붙인다.
+  mcpb:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Build + validate
+        run: python scripts/build_mcpb.py --out dist
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: mcpb
+          path: dist/*.mcpb
+          if-no-files-found: error

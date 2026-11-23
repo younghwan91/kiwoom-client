@@ -26,6 +26,21 @@ Get an app key and secret from the [Kiwoom REST API portal](https://openapi.kiwo
 
 ## Add it to your client
 
+### Claude Desktop: one-click bundle (.mcpb)
+
+Download `kiwoom-client-<version>.mcpb` from [GitHub Releases](https://github.com/younghwan91/kiwoom-client/releases) and double-click it, or drop it on Claude Desktop's Settings → Extensions screen (bundles are attached from the release after 0.5.0). The install screen asks for:
+
+| Field | Default | Notes |
+|---|---|---|
+| App key, app secret | — | masked and kept in secure storage |
+| Paper-trading server | on | off = lookups on the live server. This bundle cannot turn on live order tools |
+| Tool listing mode | `smart` | `full` or `discovery` (see "Saving context") |
+| Modules to expose | empty (all) | e.g. `market,chart,account` |
+
+The bundle carries no server code: on first run uv installs `kiwoom-client[mcp]` from PyPI at the bundle's version. To build one yourself run `python scripts/build_mcpb.py` (needs Node.js; validates and packs with the official `@anthropic-ai/mcpb` CLI).
+
+### Config snippets
+
 The `config` command prints a ready-to-paste snippet for each client. Keys come out as `YOUR_APP_KEY` placeholders and the default is paper trading. The command needs no keys and no network.
 
 ```bash
