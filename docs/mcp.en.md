@@ -88,6 +88,7 @@ Order tools carry the `destructiveHint=true` annotation so clients can ask befor
 | Intent tools | `stock_search` | find a stock by name or code (ka10099, cached) |
 | | `stock_snapshot` | price, change, market cap, PER/PBR and more in one call (ka10001). Takes a stock name too |
 | | `account_summary` | account totals, P&L and holdings (kt00018) |
+| | `get_chart` | day/week/month/minute OHLCV (oldest first) + period return, high/low, average volume, 5/20 moving averages. Follows pages up to `count` (ka10081/82/83/80) |
 | | `order_preview` | order preview, never sent |
 | TR tools | `<module>_<method>` | e.g. `stock_info_basic_stock_info`, `chart_stock_daily_chart`. [Full list](endpoints.md) |
 | Condition search | 4 `condition_search_*` tools | WebSocket. Real-time registration returns the first reply only |

@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-import json
-
 import pytest
 from mcp import types
 
-from kiwoom_client import AsyncKiwoomAPI
 from kiwoom_client.mcp.intents import intent_tools
 from kiwoom_client.mcp.intents import registry as intent_registry
 from kiwoom_client.mcp.intents.limits import row_count
@@ -24,54 +21,13 @@ from kiwoom_client.mcp.intents.resolve import AmbiguousStock, StockNotFound, res
 from kiwoom_client.mcp.server import build_server
 from kiwoom_client.mcp.tools import discover_rest_tools
 
-BASE = "https://mockapi.kiwoom.com"
-STKINFO = f"{BASE}/api/dostk/stkinfo"
-
-LISTING = [
-    {"code": "005930", "name": "삼성전자", "marketName": "거래소"},
-    {"code": "005935", "name": "삼성전자우", "marketName": "거래소"},
-    {"code": "028260", "name": "삼성물산", "marketName": "거래소"},
-    {"code": "035720", "name": "카카오", "marketName": "거래소"},
-    {"code": "293490", "name": "카카오게임즈", "marketName": "코스닥"},
-]
+from .intent_support import STKINFO, call, mock_api, mock_listing
 
 
 @pytest.fixture
 async def api(httpx_mock):
-    httpx_mock.add_response(
-        url=f"{BASE}/oauth2/token",
-        json={"token": "test_token", "token_type": "Bearer", "expires_in": 86400},
-    )
-    api = AsyncKiwoomAPI("key", "secret", is_mock=True)
-    await api.login()
-    yield api
-    await api.close()
-
-
-def mock_listing(httpx_mock, rows=LISTING):
-    """ka10099: every market returns ``rows`` (first market wins on de-dup)."""
-    httpx_mock.add_response(
-        url=STKINFO,
-        match_json={"mrkt_tp": "0"},
-        json={"return_code": 0, "list": rows},
-        is_reusable=True,
-    )
-    for market in ("10", "8"):
-        httpx_mock.add_response(
-            url=STKINFO,
-            match_json={"mrkt_tp": market},
-            json={"return_code": 0, "list": []},
-            is_reusable=True,
-        )
-
-
-async def call(app, name, arguments):
-    result = await app.get_request_handler("tools/call").handler(
-        None, types.CallToolRequestParams(name=name, arguments=arguments)
-    )
-    return result.is_error, (
-        result.content[0].text if result.is_error else json.loads(result.content[0].text)
-    )
+    async with mock_api(httpx_mock) as client:
+        yield client
 
 
 class TestNormalize:

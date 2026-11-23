@@ -561,6 +561,31 @@ Args:
 Returns:
     A new structure of the same shape; the input is not mutated.
 
+### `ohlcv_rows`
+
+```
+def ohlcv_rows(response: Any, key: str | None = None, keep: Iterable[str] = ()) -> list[dict[str, Any]]
+```
+
+Like :func:`to_ohlcv`, but a list of plain dicts — no pandas needed.
+
+Each row is ``{"date": "2026-11-24", "open": ..., "high": ..., "low": ...,
+"close": ..., "volume": ...}`` (``"datetime": "2026-11-24T09:01:00"`` for
+intraday charts), oldest first. Field detection, sign handling and errors
+are those of :func:`to_ohlcv`; ``keep`` adds extra fields the same way.
+
+Args:
+    response: A chart response dict, or the list from ``request_all()``.
+    key: Payload key. Auto-detected when omitted.
+    keep: Extra fields to carry over, numeric-converted with :func:`to_number`.
+
+Returns:
+    Rows sorted by time, oldest first; empty for no records.
+
+Raises:
+    KeyError: If the records have no time or price fields.
+    ValueError: If the time stamps have an unknown or mixed width.
+
 ### `to_dataframe`
 
 ```

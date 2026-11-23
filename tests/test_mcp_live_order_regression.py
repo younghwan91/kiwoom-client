@@ -19,6 +19,7 @@ from mcp import types
 from kiwoom_client import AsyncKiwoomAPI
 from kiwoom_client.mcp import server as server_module
 from kiwoom_client.mcp.guard import ENV_VAR as LIVE_ORDERS_ENV_VAR
+from kiwoom_client.mcp.intents import intent_tools
 from kiwoom_client.mcp.modes import FULL, MODES
 from kiwoom_client.mcp.server import build_server
 from kiwoom_client.mcp.tools import GUARDED_MODULES, discover_rest_tools
@@ -134,14 +135,17 @@ class TestHelperAndLocalToolsNeverOrder:
         httpx_mock.add_response(
             url=f"{BASE}/api/dostk/acnt", json={"return_code": 0}, is_reusable=True
         )
+        # Any other lookup endpoint an intent tool uses answers an empty OK. Order
+        # endpoints would answer too — the assertion at the end is what catches them.
+        httpx_mock.add_response(json={"return_code": 0}, is_reusable=True, is_optional=True)
         app, specs = build_server(api, allow_live_orders=False)
         rest_names = {s.tool_name for s in specs}
         local = [t for t in await _list(app) if t.name not in rest_names]
         assert {t.name for t in local} >= {"order_preview", "stock_search", "account_summary"}
         sample_args = {
             "order_preview": {"side": "buy", "stk_cd": "005930", "ord_qty": 1, "ord_uv": 70000},
-            "stock_search": {"query": "삼성전자"},
-            "stock_snapshot": {"stk_cd": "005930"},
+            # every intent tool, called with the example shown in its description
+            **{tool.name: tool.example for tool in intent_tools() if tool.example is not None},
         }
         for tool in local:
             result = await _call(app, tool.name, sample_args.get(tool.name, {}))

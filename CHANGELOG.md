@@ -32,6 +32,8 @@
 - MCP 프롬프트 `market_today`(오늘 시장)·`rebalance`(리밸런싱 계획 — 미리보기와 사용자 확인 전에는 주문 안 함).
   서버 `instructions`·`kiwoom://guide` 는 "편의 도구 먼저 → 없으면 `search_tools` → 주문은 미리보기·확인 뒤
   `confirm_token`" 순서로 다시 썼다
+- MCP: `get_chart` 의도 도구 — 일·주·월·분봉 OHLCV(오름차순)와 요약(기간 수익률·고저·평균 거래량·5/20 이동평균)을
+  한 번에, 연속조회로 `count` 개까지. pandas 없이 쓰는 `ohlcv_rows()`(`to_ohlcv` 와 같은 필드 규칙) 추가
 
 ### Changed
 

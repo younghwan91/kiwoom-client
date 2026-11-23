@@ -95,6 +95,7 @@ toolset 이름은 엔드포인트 모듈 이름과 같습니다: `account`, `sto
 | 의도 도구 | `stock_search` | 종목명·코드로 종목 찾기(ka10099, 캐시) |
 | | `stock_snapshot` | 현재가·등락률·시총·PER/PBR 등 한 번에(ka10001). 종목명으로도 받음 |
 | | `account_summary` | 계좌 총평가·손익·보유 종목(kt00018) |
+| | `get_chart` | 일·주·월·분봉 OHLCV(날짜 오름차순) + 기간 수익률·고저·평균 거래량·5/20 이동평균. 연속조회로 `count` 개까지(ka10081/82/83/80) |
 | | `order_preview` | 주문 미리보기, 전송 안 함 |
 | TR 도구 | `<모듈>_<메서드>` | 예: `stock_info_basic_stock_info`, `chart_stock_daily_chart`. [전체 목록](endpoints.md) |
 | 조건검색 | `condition_search_*` 4개 | WebSocket. 실시간 등록은 첫 응답만 돌려줌 |
