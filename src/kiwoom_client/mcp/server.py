@@ -29,7 +29,7 @@ from kiwoom_client.mcp.condition_search_session import (
 )
 from kiwoom_client.mcp.discovery import CatalogEntry, discovery_tools
 from kiwoom_client.mcp.guard import live_orders_allowed
-from kiwoom_client.mcp.helpers import helper_tools
+from kiwoom_client.mcp.intents import intent_tools
 from kiwoom_client.mcp.local_tools import LocalTool
 from kiwoom_client.mcp.modes import DEFAULT_MODE, DISCOVERY, FULL, MODES, SMART
 from kiwoom_client.mcp.order_preview import order_preview_tool
@@ -124,7 +124,7 @@ def build_server(
     spec_by_name = {spec.tool_name: spec for spec in all_specs}
     local_tools = [
         tool
-        for tool in _local_tools(allow_live_orders=allow_live_orders)
+        for tool in _local_tools(allow_live_orders=allow_live_orders, session=session)
         if toolsets is None or tool.toolset in toolsets
     ]
     local_by_name = {tool.name: tool for tool in local_tools}
@@ -209,14 +209,17 @@ def build_server(
     return app, all_specs
 
 
-def _local_tools(*, allow_live_orders: bool) -> list[LocalTool]:
-    """Hand-written high-level tools. None of them can place an order.
+def _local_tools(
+    *, allow_live_orders: bool, session: ConditionSearchSession | None = None
+) -> list[LocalTool]:
+    """Hand-written high-level tools: order_preview and the intent tools
+    (:mod:`.intents`). None of them can place an order.
 
     This is the one registration point: whatever is returned here is listed
     directly in smart mode (subject to the toolset filter), so a new intent
-    tool shows up there as soon as it is added to this list.
+    tool shows up there as soon as it is registered in :mod:`.intents`.
     """
-    return [order_preview_tool(order_tools_enabled=allow_live_orders), *helper_tools()]
+    return [order_preview_tool(order_tools_enabled=allow_live_orders), *intent_tools(session)]
 
 
 async def dispatch_tool(

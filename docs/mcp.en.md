@@ -85,12 +85,14 @@ Order tools carry the `destructiveHint=true` annotation so clients can ask befor
 
 | Kind | Name | Notes |
 |---|---|---|
-| Helpers | `stock_search` | find a stock by name or code (ka10099, cached) |
-| | `stock_snapshot` | price, change, market cap, PER/PBR and more in one call (ka10001) |
+| Intent tools | `stock_search` | find a stock by name or code (ka10099, cached) |
+| | `stock_snapshot` | price, change, market cap, PER/PBR and more in one call (ka10001). Takes a stock name too |
 | | `account_summary` | account totals, P&L and holdings (kt00018) |
 | | `order_preview` | order preview, never sent |
 | TR tools | `<module>_<method>` | e.g. `stock_info_basic_stock_info`, `chart_stock_daily_chart`. [Full list](endpoints.md) |
 | Condition search | 4 `condition_search_*` tools | WebSocket. Real-time registration returns the first reply only |
+
+Intent tools answer one thing a person asks in one call, with no api_id or field names. They take a stock as a name (`"삼성전자"`) or a code (`"005930"`); a name that matches several stocks returns an error listing the candidates. Numbers come back without signs-as-direction, commas or zero padding, and lists are cut to a default row count. All of them are read-only (`readOnlyHint=true`).
 
 TR tools take Kiwoom request fields, as strings, under `params`. Each tool's input schema lists the field names, whether they are required and what they mean, from the TR catalog.
 
