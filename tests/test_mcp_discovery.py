@@ -50,7 +50,7 @@ class TestMode:
         assert discovery_from_env({ENV_VAR: "full"}) is False
         assert discovery_from_env({}) is False
 
-    async def test_default_mode_lists_every_tool_and_no_meta_tools(self):
+    async def test_build_server_default_lists_every_tool_and_no_meta_tools(self):
         app, specs = build_server(api=None, allow_live_orders=False)
         listed = await _list(app)
         assert {s.tool_name for s in specs} <= set(listed)
@@ -188,7 +188,7 @@ class TestCliDiscoveryFlag:
         cli.main([])
         monkeypatch.delenv(ENV_VAR)
         cli.main([])
-        assert [c["discovery"] for c in calls] == [True, True, False]
+        assert [c["mode"] for c in calls] == ["discovery", "discovery", "smart"]
 
     def test_config_snippet_can_enable_it(self, capsys):
         cli.main(["config", "cursor", "--discovery"])

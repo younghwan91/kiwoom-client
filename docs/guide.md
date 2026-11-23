@@ -229,12 +229,12 @@ uvx --from 'kiwoom-client[mcp]' kiwoom-client-mcp config claude-code   # 붙여�
 | `KIWOOM_APP_KEY` / `KIWOOM_APP_SECRET` | 앱키·시크릿키 (필수) | — |
 | `KIWOOM_IS_MOCK` | 모의투자 서버 사용 여부 (true/false) | `false` |
 | `KIWOOM_MCP_TOOLSETS` | 노출할 모듈 (예: `market,chart,account`) | 전부 |
-| `KIWOOM_MCP_MODE` | `discovery` 면 메타 도구 3개만 노출해 컨텍스트 절약 | — |
+| `KIWOOM_MCP_MODE` | 기본 `smart`(편의 도구 + 메타 도구 3개). `full` 은 TR 도구 전부, `discovery` 는 메타 도구 3개만 | `smart` |
 | `KIWOOM_MCP_ALLOW_LIVE_ORDERS` | 실전투자 계좌에서 주문 도구를 노출할지 여부 | `false` |
 
-**실주문 가드**: `KIWOOM_IS_MOCK=false`(실전투자)이고 `KIWOOM_MCP_ALLOW_LIVE_ORDERS` 가 `true` 가 아니면 주문 관련 도구는 서버 시작 시점에 아예 등록되지 않습니다. 도구 목록·toolset 필터·discovery 모드 어디로도 AI 에이전트가 그 도구에 닿지 못합니다. 모의투자(`KIWOOM_IS_MOCK=true`)는 이 가드 없이 항상 사용 가능합니다. 가드는 MCP 서버 경로에만 적용되며, 파이썬 코드에서 `KiwoomAPI`/`AsyncKiwoomAPI` 를 직접 쓰는 방식에는 영향이 없습니다.
+**실주문 가드**: `KIWOOM_IS_MOCK=false`(실전투자)이고 `KIWOOM_MCP_ALLOW_LIVE_ORDERS` 가 `true` 가 아니면 주문 관련 도구는 서버 시작 시점에 아예 등록되지 않습니다. 도구 목록·toolset 필터·smart/discovery 모드 어디로도 AI 에이전트가 그 도구에 닿지 못합니다. 모의투자(`KIWOOM_IS_MOCK=true`)는 이 가드 없이 항상 사용 가능합니다. 가드는 MCP 서버 경로에만 적용되며, 파이썬 코드에서 `KiwoomAPI`/`AsyncKiwoomAPI` 를 직접 쓰는 방식에는 영향이 없습니다.
 
-클라이언트별 설정, 옵션 전체(`--toolsets`·`--discovery`·`--max-rows`), 도구·resources·prompts, 문제 해결은 [MCP 서버 문서](https://younghwan91.github.io/kiwoom-client/mcp/)에 있습니다.
+클라이언트별 설정, 옵션 전체(`--toolsets`·`--full`·`--discovery`·`--max-rows`), 도구·resources·prompts, 문제 해결은 [MCP 서버 문서](https://younghwan91.github.io/kiwoom-client/mcp/)에 있습니다.
 
 ## 아키텍처
 

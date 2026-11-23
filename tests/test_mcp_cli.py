@@ -106,7 +106,7 @@ class TestServe:
                 "app_secret": "s",
                 "is_mock": False,
                 "toolsets": None,
-                "discovery": False,
+                "mode": "smart",
                 "max_rows": None,
             }
         ]

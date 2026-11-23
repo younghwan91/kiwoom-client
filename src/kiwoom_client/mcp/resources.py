@@ -48,8 +48,8 @@ GUIDE = """\
   필드 목록은 각 도구의 입력 스키마나 `kiwoom://tr/{api_id}` 리소스에 있다.
 - 리스트가 긴 TR(차트·순위)은 `max_rows` 로 행 수를 줄인다. 잘리면 `_truncated` 가 붙는다.
   다음 페이지는 응답의 `cont-yn`/`next-key` 를 `cont_yn="Y"`, `next_key` 로 넘긴다.
-- 도구가 너무 많으면 서버를 `--discovery` 로 띄운다.
-  `search_tools` → `describe_tool` → `call_tool` 순으로 쓴다.
+- 기본(smart) 모드에서는 편의 도구만 목록에 있다. 목록에 없는 TR 도구는
+  `search_tools` → `describe_tool` → `call_tool` 순으로 쓴다(`--full` 이면 전부 목록에 있다).
 
 ## 주문
 
@@ -199,7 +199,7 @@ def _analyze_stock(args: dict[str, str]) -> str:
         "4. 가능하면 투자자별 매매(stock_info_investor_institution_by_stock 등)로 수급을 본다.\n"
         "5. 숫자는 출처 도구와 함께 적고, 사실과 해석을 구분해 요약한다. "
         "매수·매도 권유나 주문은 하지 않는다.\n\n"
-        "discovery 모드라면 같은 도구를 call_tool 로 부른다."
+        "도구가 목록에 없으면(smart·discovery 모드) 같은 이름을 call_tool 로 부른다."
     )
 
 

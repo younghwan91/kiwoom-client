@@ -31,6 +31,7 @@ from kiwoom_client.mcp.discovery import CatalogEntry, discovery_tools
 from kiwoom_client.mcp.guard import live_orders_allowed
 from kiwoom_client.mcp.helpers import helper_tools
 from kiwoom_client.mcp.local_tools import LocalTool
+from kiwoom_client.mcp.modes import DEFAULT_MODE, DISCOVERY, FULL, MODES, SMART
 from kiwoom_client.mcp.order_preview import order_preview_tool
 from kiwoom_client.mcp.response_size import ARGUMENT as MAX_ROWS_ARGUMENT
 from kiwoom_client.mcp.response_size import limit_rows, parse_max_rows, with_max_rows_argument
@@ -86,6 +87,7 @@ def build_server(
     toolsets: Collection[str] | None = None,
     discovery: bool = False,
     max_rows: int | None = None,
+    mode: str | None = None,
 ) -> tuple[Server, list[RestToolSpec]]:
     """Assemble the MCP Server, wired with its ``tools/list``/``tools/call``
     handlers, and the filtered list of tool specs.
@@ -98,12 +100,21 @@ def build_server(
     ``toolsets`` (module names, ``None`` = all) narrows the list further. It
     is applied after the live-order guard and can only remove tools.
 
-    ``discovery=True`` lists only the meta tools of :mod:`.discovery`, which
-    search and call into that same filtered catalog — never beyond it.
+    ``mode`` (see :mod:`.modes`) picks what ``tools/list`` shows from that
+    filtered catalog: ``"full"`` every tool, ``"discovery"`` only the meta
+    tools of :mod:`.discovery`, ``"smart"`` the hand-written high-level tools
+    (:func:`_local_tools`) plus the meta tools. The meta tools search and call
+    into the same filtered catalog — never beyond it. ``discovery=True`` is the
+    older spelling of ``mode="discovery"``. Unset, this function lists
+    ``"full"`` so direct callers keep the full list; the CLI/:func:`run_server`
+    default is ``"smart"``.
 
     ``max_rows`` is the default row limit for lookup tools' list responses
     (``None`` = no limit); a call can override it with its own ``max_rows``.
     """
+    mode = DISCOVERY if discovery else (mode or FULL)
+    if mode not in MODES:
+        raise ValueError(f"unknown mode: {mode!r} (choose from {', '.join(MODES)})")
     rest_specs = [
         spec for spec in discover_rest_tools() if not spec.guarded or allow_live_orders
     ]
@@ -154,20 +165,23 @@ def build_server(
         result = await dispatch_tool(api, session, spec_by_name, name, arguments)
         return limit_rows(result, limit)
 
-    if discovery:
-        meta_tools = discovery_tools(catalog, call_catalog_tool)
-        meta_by_name = {tool.name: tool for tool in meta_tools}
-        listed = [tool.to_mcp() for tool in meta_tools]
-    else:
+    meta_tools = discovery_tools(catalog, call_catalog_tool) if mode != FULL else []
+    meta_by_name = {tool.name: tool for tool in meta_tools}
+    # smart: the hand-written tools stay directly callable next to the meta tools.
+    direct_names = set(local_by_name) if mode == SMART else set()
+    if mode == FULL:
         listed = [entry.tool for entry in catalog]
+    else:
+        listed = [tool.to_mcp() for tool in local_tools if tool.name in direct_names]
+        listed += [tool.to_mcp() for tool in meta_tools]
 
     async def call_listed_tool(name: str, arguments: dict[str, Any]) -> Any:
-        if discovery:
-            meta = meta_by_name.get(name)
-            if meta is None:
-                raise ValueError(f"Unknown tool: {name} — discovery 모드에서는 call_tool 로 부른다")
-            return await meta.handler(api, arguments)
-        return await call_catalog_tool(name, arguments)
+        if mode == FULL or name in direct_names:
+            return await call_catalog_tool(name, arguments)
+        meta = meta_by_name.get(name)
+        if meta is None:
+            raise ValueError(f"Unknown tool: {name} — {mode} 모드에서는 call_tool 로 부른다")
+        return await meta.handler(api, arguments)
 
     async def on_list_tools(
         _ctx: ServerRequestContext[Any], _params: types.PaginatedRequestParams | None
@@ -196,7 +210,12 @@ def build_server(
 
 
 def _local_tools(*, allow_live_orders: bool) -> list[LocalTool]:
-    """Hand-written helper tools. None of them can place an order."""
+    """Hand-written high-level tools. None of them can place an order.
+
+    This is the one registration point: whatever is returned here is listed
+    directly in smart mode (subject to the toolset filter), so a new intent
+    tool shows up there as soon as it is added to this list.
+    """
     return [order_preview_tool(order_tools_enabled=allow_live_orders), *helper_tools()]
 
 
@@ -287,28 +306,39 @@ def run_server(
     toolsets: Collection[str] | None = None,
     discovery: bool = False,
     max_rows: int | None = None,
+    mode: str | None = None,
 ) -> None:
-    """Start the stdio MCP server and block until the client disconnects."""
+    """Start the stdio MCP server and block until the client disconnects.
+
+    ``mode`` defaults to :data:`~kiwoom_client.mcp.modes.DEFAULT_MODE`
+    (``"smart"``); ``discovery=True`` is the older spelling of ``"discovery"``.
+    """
     logging.basicConfig(level=logging.INFO)
 
     api = AsyncKiwoomAPI(app_key, app_secret, is_mock=is_mock)
     allow_live_orders = live_orders_allowed(is_mock=is_mock)
     session = ConditionSearchSession(connect=lambda: _connect_condition_search(api))
+    mode = DISCOVERY if discovery else (mode or DEFAULT_MODE)
     app, specs = build_server(
         api,
         allow_live_orders=allow_live_orders,
         session=session,
         toolsets=toolsets,
-        discovery=discovery,
         max_rows=max_rows,
+        mode=mode,
     )
     if not allow_live_orders:
         excluded = sum(1 for s in discover_rest_tools() if s.guarded)
         logger.info("실주문 opt-in 미설정 — 주문 도구 %d개를 등록하지 않았습니다.", excluded)
     if toolsets is not None:
         logger.info("toolset 필터 %s — 도구 %d개를 등록했습니다.", sorted(toolsets), len(specs))
-    if discovery:
+    if mode == DISCOVERY:
         logger.info("discovery 모드 — search_tools/describe_tool/call_tool 만 노출합니다.")
+    elif mode == SMART:
+        logger.info(
+            "smart 모드 — 고수준 도구 + search_tools/describe_tool/call_tool 을 노출합니다 "
+            "(TR 도구 전부를 목록에 올리려면 --full)."
+        )
     if max_rows is not None:
         logger.info("리스트 응답을 기본 %d행으로 자릅니다 (호출별 max_rows 로 변경).", max_rows)
 

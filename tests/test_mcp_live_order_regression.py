@@ -1,9 +1,9 @@
 """Regression bundle: without the opt-in, no path exposes or reaches an order tool.
 
 The live-order guard drops order/credit_order tools at registration. Every
-feature added on top of the plain tool list — toolset filter, discovery meta
-tools, helper tools, resources — must see only what the guard left. This file
-walks every path in every server configuration and fails if an order tool is
+feature added on top of the plain tool list — toolset filter, listing modes
+(full/smart/discovery), helper tools, resources — must see only what the guard
+left. This file walks every path in every server configuration and fails if an order tool is
 listed, searchable, describable, callable, or if any request reaches an order
 endpoint. A positive control proves the checks would notice a leak.
 """
@@ -19,6 +19,7 @@ from mcp import types
 from kiwoom_client import AsyncKiwoomAPI
 from kiwoom_client.mcp import server as server_module
 from kiwoom_client.mcp.guard import ENV_VAR as LIVE_ORDERS_ENV_VAR
+from kiwoom_client.mcp.modes import FULL, MODES
 from kiwoom_client.mcp.server import build_server
 from kiwoom_client.mcp.tools import GUARDED_MODULES, discover_rest_tools
 from kiwoom_client.mcp.toolsets import TOOLSET_NAMES
@@ -36,8 +37,8 @@ TOOLSET_CHOICES = [
     frozenset(TOOLSET_NAMES),
 ]
 CONFIGS = [
-    pytest.param(discovery, toolsets, id=f"discovery={discovery}-toolsets={sorted(toolsets or [])}")
-    for discovery in (False, True)
+    pytest.param(mode, toolsets, id=f"mode={mode}-toolsets={sorted(toolsets or [])}")
+    for mode in MODES
     for toolsets in TOOLSET_CHOICES
 ]
 
@@ -80,10 +81,10 @@ async def _tool_index(app) -> set[str]:
     return {item["name"] for item in json.loads(result.contents[0].text)}
 
 
-async def _reachable_names(app, *, discovery: bool) -> set[str]:
+async def _reachable_names(app, *, meta: bool) -> set[str]:
     """Every tool name an agent could learn about through any path."""
     names = {t.name for t in await _list(app)} | await _tool_index(app)
-    if discovery:
+    if meta:
         found = await _call(app, "search_tools", {"limit": 50})
         summary = json.loads(found.content[0].text)
         for toolset in summary["toolsets"]:
@@ -96,31 +97,27 @@ async def _reachable_names(app, *, discovery: bool) -> set[str]:
     return names
 
 
-@pytest.mark.parametrize(("discovery", "toolsets"), CONFIGS)
+@pytest.mark.parametrize(("mode", "toolsets"), CONFIGS)
 class TestNoOrderToolWithoutOptIn:
-    async def test_not_listed_indexed_or_searchable(self, discovery, toolsets):
-        app, specs = build_server(
-            api=None, allow_live_orders=False, discovery=discovery, toolsets=toolsets
-        )
+    async def test_not_listed_indexed_or_searchable(self, mode, toolsets):
+        app, specs = build_server(api=None, allow_live_orders=False, mode=mode, toolsets=toolsets)
         assert not any(spec.guarded for spec in specs)
-        assert not set(GUARDED_NAMES) & await _reachable_names(app, discovery=discovery)
+        assert not set(GUARDED_NAMES) & await _reachable_names(app, meta=mode != FULL)
         for tool in await _list(app):
             ann = tool.annotations
             if tool.name != "call_tool":
                 assert not (ann and ann.destructive_hint), tool.name
-        if discovery:
+        if mode != FULL:
             for name in GUARDED_NAMES:
                 described = await _call(app, "describe_tool", {"name": name})
                 assert described.is_error is True, name
 
-    async def test_not_callable_by_any_route(self, httpx_mock, api, discovery, toolsets):
-        app, _specs = build_server(
-            api, allow_live_orders=False, discovery=discovery, toolsets=toolsets
-        )
+    async def test_not_callable_by_any_route(self, httpx_mock, api, mode, toolsets):
+        app, _specs = build_server(api, allow_live_orders=False, mode=mode, toolsets=toolsets)
         for name in GUARDED_NAMES:
             direct = await _call(app, name, ORDER_ARGS)
             assert direct.is_error is True, name
-            if discovery:
+            if mode != FULL:
                 meta = await _call(app, "call_tool", {"name": name, "arguments": ORDER_ARGS})
                 assert meta.is_error is True, name
                 assert "Unknown tool" in meta.content[0].text
@@ -162,9 +159,10 @@ class TestHelperAndLocalToolsNeverOrder:
 class TestPositiveControl:
     """With the opt-in the same checks find the order tools — they are not vacuous."""
 
-    async def test_opt_in_exposes_order_tools_everywhere(self):
-        app, _specs = build_server(api=None, allow_live_orders=True, discovery=True)
-        assert set(GUARDED_NAMES) <= await _reachable_names(app, discovery=True)
+    @pytest.mark.parametrize("mode", ["discovery", "smart"])
+    async def test_opt_in_exposes_order_tools_everywhere(self, mode):
+        app, _specs = build_server(api=None, allow_live_orders=True, mode=mode)
+        assert set(GUARDED_NAMES) <= await _reachable_names(app, meta=True)
         listed = {t.name: t for t in await _list(app)}
         assert listed["call_tool"].annotations.destructive_hint is True
 

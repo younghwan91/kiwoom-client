@@ -41,7 +41,8 @@ kiwoom-client-mcp config codex            # ~/.codex/config.toml
 |---|---|
 | `--live` | `KIWOOM_IS_MOCK=false`(실전 서버 조회). 주문 도구는 여전히 꺼져 있음 |
 | `--toolsets market,chart` | 노출할 모듈만 넣음 |
-| `--discovery` | 메타 도구 3개만 노출(아래 "컨텍스트 줄이기") |
+| `--full` | TR 도구 전부를 목록에 올림(아래 "컨텍스트 줄이기") |
+| `--discovery` | 메타 도구 3개만 노출 |
 | `--launcher installed` | `uvx` 대신 PATH 의 `kiwoom-client-mcp` 를 씀 |
 
 Claude Code 예시(출력 그대로):
@@ -58,7 +59,7 @@ claude mcp add kiwoom -e KIWOOM_APP_KEY=YOUR_APP_KEY -e KIWOOM_APP_SECRET=YOUR_A
 | `KIWOOM_APP_KEY`, `KIWOOM_APP_SECRET` | — | 앱키·시크릿키 (서버 실행 시 필수) | — |
 | `KIWOOM_IS_MOCK` | `--mock` | 모의투자 서버. true/false·1/0·yes/no 만 받고 그 밖의 값은 에러 | `false` (실전) |
 | `KIWOOM_MCP_TOOLSETS` | `--toolsets` | 노출할 모듈, 쉼표 구분. `all` = 전부 | 전부 |
-| `KIWOOM_MCP_MODE` | `--discovery` | `discovery` 면 메타 도구 3개만 | 전부 노출 |
+| `KIWOOM_MCP_MODE` | `--full`, `--discovery` | `smart`·`full`·`discovery` (아래 "컨텍스트 줄이기") | `smart` |
 | `KIWOOM_MCP_MAX_ROWS` | `--max-rows` | 리스트 응답 기본 행 수 제한 | 제한 없음 |
 | `KIWOOM_MCP_ALLOW_LIVE_ORDERS` | (없음) | 실전 계좌에서 주문 도구 노출 | `false` |
 
@@ -69,7 +70,7 @@ toolset 이름은 엔드포인트 모듈 이름과 같습니다: `account`, `sto
 ## 실주문 가드
 
 - `KIWOOM_IS_MOCK=false`(실전)이고 `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true` 가 아니면 주문 도구(`order_*` 8개, `credit_order_*` 4개)를 서버가 **등록하지 않습니다**. 도구 목록, `call_tool`, `search_tools`, `kiwoom://tools` 어디에도 나오지 않습니다.
-- toolset 필터·discovery 모드·편의 도구는 모두 가드가 남긴 도구만 봅니다. `--toolsets order` 로 골라도 opt-in 없이는 주문 도구가 생기지 않습니다. 이 동작은 회귀 테스트(`tests/test_mcp_live_order_regression.py`)로 고정돼 있습니다.
+- toolset 필터·모드(smart·full·discovery)·편의 도구는 모두 가드가 남긴 도구만 봅니다. `--toolsets order` 로 골라도 opt-in 없이는 주문 도구가 생기지 않습니다. 이 동작은 회귀 테스트(`tests/test_mcp_live_order_regression.py`)로 고정돼 있습니다.
 - 모의투자(`KIWOOM_IS_MOCK=true`)는 실제 체결이 없으므로 가드 없이 주문 도구가 보입니다.
 - 가드는 MCP 서버 경로에만 있습니다. 파이썬에서 `KiwoomAPI`/`AsyncKiwoomAPI` 를 직접 쓰면 막지 않습니다.
 
@@ -108,18 +109,21 @@ TR 도구는 `params` 에 키움 요청 필드를 문자열로 넣습니다. 각
 
 ## 컨텍스트 줄이기
 
-도구 정의는 에이전트 컨텍스트에 통째로 올라갑니다. 설정별 `tools/list` 크기는 다음과 같습니다.
+도구 정의는 에이전트 컨텍스트에 통째로 올라갑니다. 그래서 기본 모드(`smart`)는 편의 도구와 메타 도구 3개만 목록에 올리고, 나머지 TR 도구는 메타 도구로 찾아 씁니다. 설정별 `tools/list` 크기(실전 서버·가드 켜짐 기준 실측)는 다음과 같습니다.
 
 | 설정 | 도구 수 | `tools/list` 크기 (글자 수) |
 |---|---|---|
-| 전부 (실전, 가드) | 178 | 약 220 K |
-| `--toolsets market,chart,account` | 80 | 약 97 K |
-| `--discovery` | 3 | 약 1.5 K |
+| 기본 `smart` | 7 | 약 3.9 K |
+| `--discovery` | 3 | 약 1.4 K |
+| `--full` | 178 | 약 219 K |
+| `--full --toolsets market,chart,account` | 80 | 약 97 K |
 
-(TR 도구마다 입력 스키마에 요청 필드 ID·한글명이 들어 있어 큽니다.)
+(TR 도구마다 입력 스키마에 요청 필드 ID·한글명이 들어 있어 큽니다. 모의투자는 주문 도구가 더해집니다. smart 의 도구 수는 편의 도구가 늘면 같이 늘어납니다.)
 
-- **toolset**: 쓰는 모듈만 켭니다.
-- **discovery 모드**: `search_tools`(키워드·toolset 검색) → `describe_tool`(입력 스키마) → `call_tool`(실행) 세 도구로 전체 TR 을 씁니다.
+- **smart 모드(기본)**: 편의 도구(`stock_search`·`stock_snapshot`·`account_summary`·`order_preview` 등)는 바로 부르고, 그 밖의 TR 은 `search_tools`(키워드·toolset 검색) → `describe_tool`(입력 스키마) → `call_tool`(실행)로 씁니다.
+- **full 모드**: `--full` 또는 `KIWOOM_MCP_MODE=full`. 0.5.x 까지의 기본 동작으로, TR 도구 전부를 목록에 올립니다. 클라이언트가 메타 도구를 잘 못 쓰거나 TR 이름으로 바로 부르는 기존 설정이 있으면 이 모드로 되돌립니다.
+- **discovery 모드**: 메타 도구 3개만 올립니다. 편의 도구도 `call_tool` 로 부릅니다.
+- **toolset**: 쓰는 모듈만 켭니다. 모든 모드에 같이 적용됩니다.
 - **`max_rows`**: 조회 도구 호출마다 `max_rows` 를 주면 응답의 각 리스트를 앞에서 N행만 남깁니다. 서버 기본값은 `--max-rows` 로 정합니다. 잘린 응답에는 `"_truncated": {"<키>": {"total": 300, "returned": 20}}` 가 붙습니다.
 
 ## resources 와 prompts

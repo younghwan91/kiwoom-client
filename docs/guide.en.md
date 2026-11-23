@@ -195,12 +195,12 @@ uvx --from 'kiwoom-client[mcp]' kiwoom-client-mcp config claude-code   # prints 
 | `KIWOOM_APP_KEY` / `KIWOOM_APP_SECRET` | App key and secret (required) | — |
 | `KIWOOM_IS_MOCK` | Use the mock trading server (true/false) | `false` |
 | `KIWOOM_MCP_TOOLSETS` | Modules to expose (e.g. `market,chart,account`) | all |
-| `KIWOOM_MCP_MODE` | `discovery` exposes only three meta tools to save context | — |
+| `KIWOOM_MCP_MODE` | default `smart` (helper tools + three meta tools). `full` lists every TR tool, `discovery` only the three meta tools | `smart` |
 | `KIWOOM_MCP_ALLOW_LIVE_ORDERS` | Expose order tools against a live account | `false` |
 
-**Live-order guard**: when `KIWOOM_IS_MOCK=false` (live account) and `KIWOOM_MCP_ALLOW_LIVE_ORDERS` is not `true`, order-related tools are not registered at server startup at all. No path (tool list, toolset filter, discovery mode) lets the agent reach them. Mock trading (`KIWOOM_IS_MOCK=true`) always has them available. The guard applies only to the MCP path; direct use of `KiwoomAPI`/`AsyncKiwoomAPI` from Python is unaffected.
+**Live-order guard**: when `KIWOOM_IS_MOCK=false` (live account) and `KIWOOM_MCP_ALLOW_LIVE_ORDERS` is not `true`, order-related tools are not registered at server startup at all. No path (tool list, toolset filter, smart/discovery mode) lets the agent reach them. Mock trading (`KIWOOM_IS_MOCK=true`) always has them available. The guard applies only to the MCP path; direct use of `KiwoomAPI`/`AsyncKiwoomAPI` from Python is unaffected.
 
-Per-client setup, every option (`--toolsets`, `--discovery`, `--max-rows`), tools, resources, prompts and troubleshooting are in the [MCP server docs](https://younghwan91.github.io/kiwoom-client/en/mcp/).
+Per-client setup, every option (`--toolsets`, `--full`, `--discovery`, `--max-rows`), tools, resources, prompts and troubleshooting are in the [MCP server docs](https://younghwan91.github.io/kiwoom-client/en/mcp/).
 
 ## Architecture
 

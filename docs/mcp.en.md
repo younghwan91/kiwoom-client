@@ -41,7 +41,8 @@ The snippet goes to stdout and the "where to put it" note goes to stderr, so `> 
 |---|---|
 | `--live` | `KIWOOM_IS_MOCK=false` (lookups on the live server). Order tools stay off |
 | `--toolsets market,chart` | expose only these modules |
-| `--discovery` | expose only three meta tools (see "Saving context" below) |
+| `--full` | list every TR tool (see "Saving context" below) |
+| `--discovery` | expose only three meta tools |
 | `--launcher installed` | use `kiwoom-client-mcp` from PATH instead of `uvx` |
 
 ## Environment variables and options
@@ -51,7 +52,7 @@ The snippet goes to stdout and the "where to put it" note goes to stderr, so `> 
 | `KIWOOM_APP_KEY`, `KIWOOM_APP_SECRET` | — | App key and secret (required to serve) | — |
 | `KIWOOM_IS_MOCK` | `--mock` | paper-trading server. Accepts true/false, 1/0, yes/no; anything else is an error | `false` (live) |
 | `KIWOOM_MCP_TOOLSETS` | `--toolsets` | modules to expose, comma-separated. `all` = every module | all |
-| `KIWOOM_MCP_MODE` | `--discovery` | `discovery` = three meta tools only | everything listed |
+| `KIWOOM_MCP_MODE` | `--full`, `--discovery` | `smart`, `full` or `discovery` (see "Saving context") | `smart` |
 | `KIWOOM_MCP_MAX_ROWS` | `--max-rows` | default row limit for list responses | no limit |
 | `KIWOOM_MCP_ALLOW_LIVE_ORDERS` | (none) | expose order tools on a live account | `false` |
 
@@ -62,7 +63,7 @@ Toolset names are the endpoint module names: `account`, `stock_info`, `market`, 
 ## Live-order guard
 
 - When `KIWOOM_IS_MOCK=false` (live) and `KIWOOM_MCP_ALLOW_LIVE_ORDERS` is not `true`, the server **does not register** the order tools (8 `order_*`, 4 `credit_order_*`). They do not appear in the tool list, `call_tool`, `search_tools` or `kiwoom://tools`.
-- The toolset filter, discovery mode and the helper tools only ever see what the guard left. Picking `--toolsets order` does not bring order tools back without the opt-in. A regression test (`tests/test_mcp_live_order_regression.py`) pins this.
+- The toolset filter, the listing modes (smart, full, discovery) and the helper tools only ever see what the guard left. Picking `--toolsets order` does not bring order tools back without the opt-in. A regression test (`tests/test_mcp_live_order_regression.py`) pins this.
 - Paper trading (`KIWOOM_IS_MOCK=true`) has no real fills, so the order tools are always available there.
 - The guard exists only on the MCP server path. Using `KiwoomAPI`/`AsyncKiwoomAPI` from Python is not gated.
 
@@ -101,18 +102,21 @@ To fetch the next page, pass the response's `cont-yn`/`next-key` back as `cont_y
 
 ## Saving context
 
-Every tool definition lands in the agent's context. The size of `tools/list` by setting:
+Every tool definition lands in the agent's context. So the default mode (`smart`) lists only the helper tools and three meta tools, and the agent finds the other TR tools through the meta tools. The size of `tools/list` by setting (measured on the live server with the guard on):
 
 | Setting | Tools | `tools/list` size (characters) |
 |---|---|---|
-| everything (live, guarded) | 178 | about 220 K |
-| `--toolsets market,chart,account` | 80 | about 97 K |
-| `--discovery` | 3 | about 1.5 K |
+| default `smart` | 7 | about 3.9 K |
+| `--discovery` | 3 | about 1.4 K |
+| `--full` | 178 | about 219 K |
+| `--full --toolsets market,chart,account` | 80 | about 97 K |
 
-(Each TR tool's input schema lists its request field IDs and Korean names, which makes them large.)
+(Each TR tool's input schema lists its request field IDs and Korean names, which makes them large. Paper trading adds the order tools. The smart count grows as helper tools are added.)
 
-- **Toolsets**: turn on only the modules you use.
-- **Discovery mode**: use every TR through three tools: `search_tools` (keyword or toolset search) → `describe_tool` (input schema) → `call_tool` (run).
+- **Smart mode (default)**: call the helper tools (`stock_search`, `stock_snapshot`, `account_summary`, `order_preview`, ...) directly; reach any other TR with `search_tools` (keyword or toolset search) → `describe_tool` (input schema) → `call_tool` (run).
+- **Full mode**: `--full` or `KIWOOM_MCP_MODE=full`. The default up to 0.5.x: every TR tool is listed. Switch back to it if your client struggles with the meta tools or an existing setup calls TR tools by name.
+- **Discovery mode**: only the three meta tools. Helper tools are called through `call_tool` too.
+- **Toolsets**: turn on only the modules you use. Applies in every mode.
 - **`max_rows`**: pass `max_rows` to any lookup tool to keep only the first N rows of each list in the response. Set a server-wide default with `--max-rows`. A cut response carries `"_truncated": {"<key>": {"total": 300, "returned": 20}}`.
 
 ## Resources and prompts

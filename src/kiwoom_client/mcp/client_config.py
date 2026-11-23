@@ -39,9 +39,18 @@ def launch_command(launcher: str) -> list[str]:
 
 
 def server_env(
-    *, mock: bool, toolsets: Sequence[str] | None = None, discovery: bool = False
+    *,
+    mock: bool,
+    toolsets: Sequence[str] | None = None,
+    discovery: bool = False,
+    mode: str | None = None,
 ) -> dict[str, str]:
-    """Environment block for the snippet — placeholders only."""
+    """Environment block for the snippet — placeholders only.
+
+    ``mode`` (``"full"``/``"discovery"``) is written as ``KIWOOM_MCP_MODE``;
+    ``None`` leaves it out so the server uses its default (smart).
+    ``discovery=True`` is the older spelling of ``mode="discovery"``.
+    """
     env = {
         "KIWOOM_APP_KEY": APP_KEY_PLACEHOLDER,
         "KIWOOM_APP_SECRET": APP_SECRET_PLACEHOLDER,
@@ -50,7 +59,9 @@ def server_env(
     if toolsets:
         env["KIWOOM_MCP_TOOLSETS"] = ",".join(toolsets)
     if discovery:
-        env["KIWOOM_MCP_MODE"] = "discovery"
+        mode = "discovery"
+    if mode:
+        env["KIWOOM_MCP_MODE"] = mode
     return env
 
 
@@ -89,10 +100,11 @@ def render(
     toolsets: Sequence[str] | None = None,
     launcher: str = "uvx",
     discovery: bool = False,
+    mode: str | None = None,
 ) -> Snippet:
     """Return the snippet for ``client`` (one of :data:`CLIENTS`)."""
     argv = launch_command(launcher)
-    env = server_env(mock=mock, toolsets=toolsets, discovery=discovery)
+    env = server_env(mock=mock, toolsets=toolsets, discovery=discovery, mode=mode)
 
     if client == "claude-code":
         env_flags = " ".join(f"-e {shlex.quote(f'{k}={v}')}" for k, v in env.items())

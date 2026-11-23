@@ -23,8 +23,8 @@ from kiwoom_client import __version__
 from kiwoom_client._env import ENV_IS_MOCK, parse_bool
 from kiwoom_client.mcp.client_config import CLIENTS, LAUNCHERS, render
 from kiwoom_client.mcp.guard import ENV_VAR as LIVE_ORDERS_ENV_VAR
+from kiwoom_client.mcp.modes import DISCOVERY, FULL, mode_from_env
 from kiwoom_client.mcp.modes import ENV_VAR as MODE_ENV_VAR
-from kiwoom_client.mcp.modes import discovery_from_env
 from kiwoom_client.mcp.response_size import ENV_VAR as MAX_ROWS_ENV_VAR
 from kiwoom_client.mcp.response_size import max_rows_from_env, parse_max_rows
 from kiwoom_client.mcp.toolsets import ENV_VAR as TOOLSETS_ENV_VAR
@@ -36,6 +36,8 @@ _EPILOG = f"""\
   KIWOOM_IS_MOCK=true                  모의투자 서버 (--mock 과 같음, 기본 false = 실전;
                                        true/false·1/0·yes/no 외의 값은 시작 시 에러)
   {TOOLSETS_ENV_VAR}=market,chart     노출할 모듈 (--toolsets 와 같음, 기본 전부)
+  {MODE_ENV_VAR}=smart                기본. 고수준 도구 + 메타 도구 3개(search_tools 등)
+  {MODE_ENV_VAR}=full                 TR 도구 ~180개 전부 노출 (--full 과 같음, 0.5.x 기본)
   {MODE_ENV_VAR}=discovery            메타 도구 3개만 노출 (--discovery 와 같음)
   {MAX_ROWS_ENV_VAR}=50                리스트 응답 기본 행 수 제한 (--max-rows 와 같음)
   {LIVE_ORDERS_ENV_VAR}=true  실전 계좌에서 주문 도구 노출 (기본 false)
@@ -101,12 +103,25 @@ def build_parser() -> argparse.ArgumentParser:
         help=f"노출할 모듈, 쉼표 구분 ({TOOLSETS_ENV_VAR} 보다 우선). 예: market,chart,account",
     )
 
-    parser.add_argument(
-        "--discovery",
-        action="store_true",
+    listing = parser.add_mutually_exclusive_group()
+    listing.add_argument(
+        "--full",
+        action="store_const",
+        const=FULL,
+        dest="mode",
         help=(
-            "도구 ~180개 대신 search_tools/describe_tool/call_tool 3개만 노출 "
-            f"({MODE_ENV_VAR}=discovery 와 같음). 컨텍스트 절약"
+            "TR 도구 ~180개를 전부 목록에 올린다 "
+            f"({MODE_ENV_VAR}=full 과 같음). 기본(smart)은 고수준 도구 + 메타 도구 3개"
+        ),
+    )
+    listing.add_argument(
+        "--discovery",
+        action="store_const",
+        const=DISCOVERY,
+        dest="mode",
+        help=(
+            "search_tools/describe_tool/call_tool 3개만 노출 "
+            f"({MODE_ENV_VAR}=discovery 와 같음). 컨텍스트 최소"
         ),
     )
     parser.add_argument(
@@ -150,10 +165,19 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="LIST",
         help="KIWOOM_MCP_TOOLSETS 값으로 넣을 모듈 목록",
     )
-    config.add_argument(
+    config_listing = config.add_mutually_exclusive_group()
+    config_listing.add_argument(
+        "--full",
+        dest="config_mode",
+        action="store_const",
+        const=FULL,
+        help=f"{MODE_ENV_VAR}=full 을 넣는다 (TR 도구 전부)",
+    )
+    config_listing.add_argument(
         "--discovery",
-        dest="config_discovery",
-        action="store_true",
+        dest="config_mode",
+        action="store_const",
+        const=DISCOVERY,
         help=f"{MODE_ENV_VAR}=discovery 를 넣는다",
     )
     config.add_argument(
@@ -173,7 +197,7 @@ def _print_config(args: argparse.Namespace) -> None:
         mock=args.config_mock,
         toolsets=toolsets,
         launcher=args.launcher,
-        discovery=args.config_discovery,
+        mode=args.config_mode,
     )
     print(snippet.note, file=sys.stderr)
     sys.stdout.write(snippet.body)
@@ -212,6 +236,14 @@ def main(argv: Sequence[str] | None = None) -> None:
             print(f"Error: {exc}", file=sys.stderr)
             sys.exit(1)
 
+    mode = args.mode
+    if mode is None:
+        try:
+            mode = mode_from_env()
+        except ValueError as exc:
+            print(f"Error: {exc}", file=sys.stderr)
+            sys.exit(1)
+
     max_rows = args.max_rows
     if max_rows is None:
         try:
@@ -236,6 +268,6 @@ def main(argv: Sequence[str] | None = None) -> None:
         app_secret=app_secret,
         is_mock=is_mock,
         toolsets=toolsets,
-        discovery=args.discovery or discovery_from_env(),
         max_rows=max_rows,
+        mode=mode,
     )
