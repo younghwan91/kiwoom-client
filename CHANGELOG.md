@@ -47,9 +47,6 @@
   에이전트 컨텍스트를 대화 전에 다 써 버리기 때문입니다(smart 는 약 3.9 K). 전처럼 전부 올리려면
   `KIWOOM_MCP_MODE=full` 또는 `kiwoom-client-mcp --full`. 실주문 가드·toolset 필터는 모든 모드에서 먼저 적용됩니다.
   파이썬에서 직접 부르는 `build_server()` 의 기본은 그대로 전체 목록입니다
-
-### Changed
-
 - MCP: 실전 서버에서 opt-in 으로 노출한 TR 주문 도구(`order_*`·`credit_order_*`)가 `order_preview` 의 `confirm_token` 을
   요구한다 — `KIWOOM_MCP_REQUIRE_CONFIRM`(실전 기본 `true`, 모의 기본 `false`). 토큰은 요청 필드로 전송되지 않는다
 
