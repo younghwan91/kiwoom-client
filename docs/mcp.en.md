@@ -212,12 +212,12 @@ Every tool definition lands in the agent's context. So the default mode (`smart`
 
 | Setting | Tools | `tools/list` size (characters) |
 |---|---|---|
-| default `smart` | 7 | about 3.9 K |
+| default `smart` | 10 | about 7.5 K |
 | `--discovery` | 3 | about 1.4 K |
-| `--full` | 178 | about 219 K |
-| `--full --toolsets market,chart,account` | 80 | about 97 K |
+| `--full` | 181 | about 222 K |
+| `--full --toolsets market,chart,account` | 81 | about 98 K |
 
-(Each TR tool's input schema lists its request field IDs and Korean names, which makes them large. Paper trading adds the order tools. The smart count grows as helper tools are added.)
+(Each TR tool's input schema lists its request field IDs and Korean names, which makes them large. Paper trading adds the order tools. The smart count grows as helper tools are added. A test checks these numbers against the real list; `kiwoom-client-mcp doctor` shows the values for your own setup.)
 
 - **Smart mode (default)**: call the helper tools (`stock_search`, `stock_snapshot`, `account_summary`, `order_preview`, ...) directly; reach any other TR with `search_tools` (keyword or toolset search) → `describe_tool` (input schema) → `call_tool` (run).
 - **Full mode**: `--full` or `KIWOOM_MCP_MODE=full`. The default up to 0.5.x: every TR tool is listed. Switch back to it if your client struggles with the meta tools or an existing setup calls TR tools by name.

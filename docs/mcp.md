@@ -219,12 +219,12 @@ TR 도구는 `params` 에 키움 요청 필드를 문자열로 넣습니다. 각
 
 | 설정 | 도구 수 | `tools/list` 크기 (글자 수) |
 |---|---|---|
-| 기본 `smart` | 7 | 약 3.9 K |
+| 기본 `smart` | 10 | 약 7.5 K |
 | `--discovery` | 3 | 약 1.4 K |
-| `--full` | 178 | 약 219 K |
-| `--full --toolsets market,chart,account` | 80 | 약 97 K |
+| `--full` | 181 | 약 222 K |
+| `--full --toolsets market,chart,account` | 81 | 약 98 K |
 
-(TR 도구마다 입력 스키마에 요청 필드 ID·한글명이 들어 있어 큽니다. 모의투자는 주문 도구가 더해집니다. smart 의 도구 수는 편의 도구가 늘면 같이 늘어납니다.)
+(TR 도구마다 입력 스키마에 요청 필드 ID·한글명이 들어 있어 큽니다. 모의투자는 주문 도구가 더해집니다. smart 의 도구 수는 편의 도구가 늘면 같이 늘어납니다. 표의 숫자는 테스트가 실제 목록과 대조합니다. 지금 내 설정의 값은 `kiwoom-client-mcp doctor` 로 봅니다.)
 
 - **smart 모드(기본)**: 편의 도구(`stock_search`·`stock_snapshot`·`account_summary`·`order_preview` 등)는 바로 부르고, 그 밖의 TR 은 `search_tools`(키워드·toolset 검색) → `describe_tool`(입력 스키마) → `call_tool`(실행)로 씁니다.
 - **full 모드**: `--full` 또는 `KIWOOM_MCP_MODE=full`. 0.5.x 까지의 기본 동작으로, TR 도구 전부를 목록에 올립니다. 클라이언트가 메타 도구를 잘 못 쓰거나 TR 이름으로 바로 부르는 기존 설정이 있으면 이 모드로 되돌립니다.
