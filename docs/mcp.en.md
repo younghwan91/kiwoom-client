@@ -184,6 +184,16 @@ The server's `instructions` steer the agent: helper tools first, then `search_to
 
 ## Troubleshooting
 
+Start with `doctor`. It does not start the server, needs no keys and makes no network call. It shows whether each environment variable is set, never its value.
+
+```bash
+kiwoom-client-mcp doctor                  # Python/mcp versions, which env vars are set, server, mode, guard, tools/list size
+kiwoom-client-mcp --mock doctor           # server options go before doctor (resolved exactly as when serving)
+kiwoom-client-mcp doctor --check-auth     # issue one token to check the keys (one request to Kiwoom, never revoked)
+```
+
+It exits with code 1 and `[err]` lines when something is wrong.
+
 | Symptom | Cause and fix |
 |---|---|
 | `KIWOOM_APP_KEY and KIWOOM_APP_SECRET ... must be set` | put the keys in the client config's `env` |

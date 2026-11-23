@@ -5,11 +5,14 @@
     kiwoom-client-mcp                      # stdio MCP 서버 실행 (기본)
     kiwoom-client-mcp --mock --toolsets market,chart
     kiwoom-client-mcp config claude-code   # 클라이언트 설정 스니펫 출력
+    kiwoom-client-mcp doctor               # 설정 점검 (키·네트워크 없이)
     kiwoom-client-mcp --version
 
 ``--help``, ``--version`` and ``config`` need neither API keys nor the ``mcp``
 extra, so they work right after ``pip install kiwoom-client`` or via ``uvx``.
-The ``mcp`` package is imported only when the server actually starts.
+The ``mcp`` package is imported only when the server actually starts (or
+``doctor`` counts the tools). ``doctor`` needs no keys and makes no network
+call unless ``--check-auth`` is given.
 """
 
 from __future__ import annotations
@@ -137,7 +140,7 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
 
-    sub = parser.add_subparsers(dest="command", metavar="{config}")
+    sub = parser.add_subparsers(dest="command", metavar="{config,doctor}")
     config = sub.add_parser(
         "config",
         help="MCP 클라이언트 설정 스니펫 출력 (키는 placeholder)",
@@ -189,7 +192,34 @@ def build_parser() -> argparse.ArgumentParser:
         default="uvx",
         help="uvx: 설치 없이 실행 (기본) / installed: PATH 의 kiwoom-client-mcp",
     )
+    doctor = sub.add_parser(
+        "doctor",
+        help="설정 점검 — 버전·환경변수(값은 안 보임)·모드·가드·도구 수 (키·네트워크 불필요)",
+        description=(
+            "서버를 띄우지 않고 설정을 점검합니다. 환경변수는 있는지만 보여 주고 값은 출력하지 "
+            "않습니다. 기본은 네트워크 호출이 없습니다. 서버 옵션(--mock, --toolsets, --full, "
+            "--discovery, --max-rows)은 doctor 앞에 씁니다: kiwoom-client-mcp --mock doctor"
+        ),
+    )
+    doctor.add_argument(
+        "--check-auth",
+        action="store_true",
+        help="앱키로 토큰을 한 번 발급해 본다 (키움 서버에 요청 1회, 토큰 폐기는 하지 않음)",
+    )
     return parser
+
+
+def _doctor(args: argparse.Namespace) -> None:
+    from kiwoom_client.mcp.doctor import Overrides, run
+
+    flags = Overrides(
+        mock=args.mock,
+        toolsets=None if args.toolsets == set(TOOLSET_NAMES) else args.toolsets,
+        toolsets_all=args.toolsets == set(TOOLSET_NAMES),
+        mode=args.mode,
+        max_rows=args.max_rows,
+    )
+    sys.exit(run(env=os.environ, flags=flags, check_auth=args.check_auth))
 
 
 def _print_config(args: argparse.Namespace) -> None:
@@ -213,6 +243,8 @@ def main(argv: Sequence[str] | None = None) -> None:
     if args.command == "config":
         _print_config(args)
         return
+    if args.command == "doctor":
+        _doctor(args)
 
     app_key = os.environ.get("KIWOOM_APP_KEY")
     app_secret = os.environ.get("KIWOOM_APP_SECRET")

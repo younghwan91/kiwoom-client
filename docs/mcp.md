@@ -191,6 +191,16 @@ TR 도구는 `params` 에 키움 요청 필드를 문자열로 넣습니다. 각
 
 ## 문제 해결
 
+먼저 `doctor` 로 설정을 점검합니다. 서버를 띄우지 않고, 키 없이도, 네트워크 호출 없이 돕니다. 환경변수는 있는지만 보여 주고 값은 출력하지 않습니다.
+
+```bash
+kiwoom-client-mcp doctor                  # 파이썬·mcp 버전, 환경변수 유무, 서버·모드·가드 상태, tools/list 크기
+kiwoom-client-mcp --mock doctor           # 서버 옵션은 doctor 앞에 (실제로 띄울 때와 같은 해석)
+kiwoom-client-mcp doctor --check-auth     # 토큰을 한 번 발급해 키를 확인 (키움 서버 요청 1회, 폐기는 안 함)
+```
+
+문제가 있으면 `[err]` 줄과 함께 종료 코드 1 로 끝납니다.
+
 | 증상 | 원인·해결 |
 |---|---|
 | `KIWOOM_APP_KEY and KIWOOM_APP_SECRET ... must be set` | 클라이언트 설정의 `env` 에 키를 넣었는지 확인 |
