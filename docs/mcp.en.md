@@ -193,6 +193,8 @@ App key, secret, access token and `confirm_token` are never written; account-num
 | | `get_quotes` | price, change, volume, trade value and market cap for up to 20 stocks in one request (ka10095). Unresolved stocks get a per-stock error |
 | | `market_movers` | today's top stocks: `kind` = volume, gainers, losers, value (trade value), volume_spike; `market` = all, kospi, kosdaq (ka10030/10027/10032/10023) |
 | | `investor_flow` | daily net buying by individuals, foreigners, institutions (and pension funds etc.) with period totals and buy/sell day counts; amount (million KRW) or shares (ka10059) |
+| | `get_orders` | open or filled orders. Today via ka10075/ka10076, other days via kt00007. Open rows carry `cancel_preview_args` for `order_preview` |
+| | `get_buying_power` | how many shares/how much for a stock at a price (by margin rate and cash-only, kt00011); without a stock, deposit, D+2, orderable and withdrawable amounts (kt00001) |
 | | `order_preview` | preview of an order, change or cancel, never sent. Issues a `confirm_token` |
 | Orders (opt-in) | `place_order`, `modify_order`, `cancel_order` | order, change or cancel by stock name, quantity and price (or `"market"`). `confirm_token` required |
 | TR tools | `<module>_<method>` | e.g. `stock_info_basic_stock_info`, `chart_stock_daily_chart`. [Full list](endpoints.md) |
@@ -214,10 +216,10 @@ Every tool definition lands in the agent's context. So the default mode (`smart`
 
 | Setting | Tools | `tools/list` size (characters) |
 |---|---|---|
-| default `smart` | 10 | about 7.5 K |
+| default `smart` | 13 | about 9.7 K |
 | `--discovery` | 3 | about 1.4 K |
-| `--full` | 181 | about 222 K |
-| `--full --toolsets market,chart,account` | 81 | about 98 K |
+| `--full` | 184 | about 225 K |
+| `--full --toolsets market,chart,account` | 83 | about 99.4 K |
 
 (Each TR tool's input schema lists its request field IDs and Korean names, which makes them large. Paper trading adds the order tools. The smart count grows as helper tools are added. A test checks these numbers against the real list; `kiwoom-client-mcp doctor` shows the values for your own setup.)
 
