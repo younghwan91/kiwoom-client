@@ -228,6 +228,7 @@ toolset 이름은 엔드포인트 모듈 이름과 같습니다: `account`, `sto
 | | `get_portfolio` | 보유 종목별 수량·평균단가·평가금액·손익·수익률·비중(총자산·주식 대비)과 현금(D+2)·주문가능금액·총자산. 계좌번호 마스킹(kt00018+kt00001+ka00001) |
 | | `rebalance_plan` | 목표 비중(`{"삼성전자": 0.5}`)까지 사고팔 정수 수량·호가단위 단가를 현재 잔고·현재가로 계산. 매도 먼저, 현금 안에서만 매수. **주문 안 함** — 행마다 `order_preview_args` |
 | | `watch` | 실시간 체결(0B)을 최대 60초 모아 종목별 마지막가·고저·매수/매도 체결량·틱 수. `until`(예: `{"stock": "005930", "above": 72000}`)에 걸리면 즉시 반환. WebSocket |
+| | `condition_search_run` | 영웅문4에 저장한 조건식을 이름(일부)·번호로 한 번 실행해 걸린 종목의 코드·이름·현재가·등락률·거래량(CNSRLST→CNSRREQ, WebSocket) |
 | | `order_preview` | 주문·정정·취소 미리보기, 전송 안 함. `confirm_token` 발급 |
 | 주문 (opt-in) | `place_order`·`modify_order`·`cancel_order` | 종목명·수량·단가(또는 `"market"`)로 주문·정정·취소. `confirm_token` 필수 |
 | TR 도구 | `<모듈>_<메서드>` | 예: `stock_info_basic_stock_info`, `chart_stock_daily_chart`. [전체 목록](endpoints.md) |
@@ -249,9 +250,9 @@ TR 도구는 `params` 에 키움 요청 필드를 문자열로 넣습니다. 각
 
 | 설정 | 도구 수 | `tools/list` 크기 (글자 수) |
 |---|---|---|
-| 기본 `smart` | 16 | 약 12.1 K |
+| 기본 `smart` | 17 | 약 12.8 K |
 | `--discovery` | 3 | 약 1.4 K |
-| `--full` | 187 | 약 227 K |
+| `--full` | 188 | 약 228 K |
 | `--full --toolsets market,chart,account` | 86 | 약 102 K |
 
 (TR 도구마다 입력 스키마에 요청 필드 ID·한글명이 들어 있어 큽니다. 모의투자는 주문 도구가 더해집니다. smart 의 도구 수는 편의 도구가 늘면 같이 늘어납니다. 표의 숫자는 테스트가 실제 목록과 대조합니다. 지금 내 설정의 값은 `kiwoom-client-mcp doctor` 로 봅니다.)
