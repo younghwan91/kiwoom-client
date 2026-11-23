@@ -4,12 +4,16 @@ condition_search rides the same WebSocket as real-time data: a request is
 sent as one frame (``trnm`` + optionally ``seq``) and the reply arrives later
 as a separate frame carrying the same ``trnm``/``seq``. This wraps that in an
 async request/response call so each MCP tool call can simply await one.
+
+The same connection also serves short real-time watches (:meth:`realtime`,
+used by the ``watch`` intent tool), so the server keeps one WebSocket.
 """
 
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
+import contextlib
+from collections.abc import AsyncIterator, Awaitable, Callable, Sequence
 from typing import Any
 
 from kiwoom_client.websocket import KiwoomWebSocket
@@ -37,6 +41,9 @@ class ConditionSearchSession:
         self._listen_task: asyncio.Task[None] | None = None
         self._pending: dict[tuple[str, str | None], asyncio.Future[dict[str, Any]]] = {}
         self._dispatched_trnms: set[str] = set()
+        self._realtime_types: set[str] = set()
+        self._watchers: set[asyncio.Queue[dict[str, Any]]] = set()
+        self._realtime_lock = asyncio.Lock()
 
     async def _ensure_connected(self) -> KiwoomWebSocket:
         if self._ws is None:
@@ -95,6 +102,44 @@ class ConditionSearchSession:
             raise ConditionSearchTimeout(
                 f"{trnm} 응답을 {RESPONSE_TIMEOUT}초 안에 받지 못했습니다"
             ) from exc
+
+    def _ensure_realtime_dispatcher(self, ws: KiwoomWebSocket, data_type: str) -> None:
+        """One ``on(type)`` callback per real-time type, fanning items out to
+        the active watchers' queues (KiwoomWebSocket has no ``off()``)."""
+        if data_type in self._realtime_types:
+            return
+        self._realtime_types.add(data_type)
+
+        def _dispatch(item: dict[str, Any]) -> None:
+            for queue in list(self._watchers):
+                queue.put_nowait(item)
+
+        ws.on(data_type, _dispatch)
+
+    @contextlib.asynccontextmanager
+    async def realtime(
+        self, types: Sequence[str], items: Sequence[str], *, grp_no: str = "9"
+    ) -> AsyncIterator[asyncio.Queue[dict[str, Any]]]:
+        """Register real-time ``types`` for ``items`` while the block runs.
+
+        Yields a queue that receives every REAL item of those types (each a
+        dict with ``type``, ``item``, ``values``). On exit the registration
+        is removed. One watch at a time: a second caller waits, so one
+        caller's REMOVE can't drop the other's items.
+        """
+        async with self._realtime_lock:
+            ws = await self._ensure_connected()
+            for data_type in types:
+                self._ensure_realtime_dispatcher(ws, data_type)
+            queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
+            self._watchers.add(queue)
+            try:
+                await ws.subscribe(list(types), list(items), grp_no=grp_no, refresh="1")
+                yield queue
+            finally:
+                self._watchers.discard(queue)
+                with contextlib.suppress(Exception):
+                    await ws.unsubscribe(list(types), list(items), grp_no=grp_no, refresh="1")
 
     async def close(self) -> None:
         if self._listen_task is not None:

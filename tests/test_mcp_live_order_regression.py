@@ -157,9 +157,14 @@ class TestHelperAndLocalToolsNeverOrder:
         # A plan needs holdings and prices; against the empty mock account it may
         # refuse with a plain error after reading the account — never by ordering.
         needs_account_data = {"rebalance_plan"}
+        # This server has no WebSocket session, so WebSocket tools refuse up front.
+        needs_websocket = {"watch"}
         for tool in local:
             result = await _call(app, tool.name, sample_args.get(tool.name, {}))
             if tool.name in needs_account_data and result.is_error:
+                continue
+            if tool.name in needs_websocket:
+                assert result.is_error is True and "WebSocket" in result.content[0].text
                 continue
             assert result.is_error is False, (tool.name, result.content[0].text)
         assert _order_requests(httpx_mock) == []

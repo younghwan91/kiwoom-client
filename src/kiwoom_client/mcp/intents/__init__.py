@@ -19,6 +19,7 @@ from kiwoom_client.mcp.intents import (  # noqa: F401  (registers tools)
     portfolio,
     quotes,
     rebalance,
+    watch,
 )
 from kiwoom_client.mcp.intents.registry import IntentContext, build_intent_tools
 from kiwoom_client.mcp.local_tools import LocalTool
