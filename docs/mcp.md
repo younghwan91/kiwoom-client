@@ -183,6 +183,7 @@ toolset 이름은 엔드포인트 모듈 이름과 같습니다: `account`, `sto
 | | `get_chart` | 일·주·월·분봉 OHLCV(날짜 오름차순) + 기간 수익률·고저·평균 거래량·5/20 이동평균. 연속조회로 `count` 개까지(ka10081/82/83/80) |
 | | `get_quotes` | 여러 종목(최대 20) 현재가·등락률·거래량·거래대금·시총을 요청 한 번에(ka10095). 못 찾은 종목만 error |
 | | `market_movers` | 오늘 상위 종목: `kind` = volume 거래량·gainers 상승률·losers 하락률·value 거래대금·volume_spike 거래량 급증, `market` = all·kospi·kosdaq (ka10030/10027/10032/10023) |
+| | `investor_flow` | 일별 투자자별 순매수(개인·외국인·기관계·연기금 등)와 기간 합계·순매수일 수. 금액(백만원) 또는 수량(ka10059) |
 | | `order_preview` | 주문·정정·취소 미리보기, 전송 안 함. `confirm_token` 발급 |
 | 주문 (opt-in) | `place_order`·`modify_order`·`cancel_order` | 종목명·수량·단가(또는 `"market"`)로 주문·정정·취소. `confirm_token` 필수 |
 | TR 도구 | `<모듈>_<메서드>` | 예: `stock_info_basic_stock_info`, `chart_stock_daily_chart`. [전체 목록](endpoints.md) |

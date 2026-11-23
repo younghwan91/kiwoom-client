@@ -176,6 +176,7 @@ An order with the same TR tool and request fields as one just sent is refused, u
 | | `get_chart` | day/week/month/minute OHLCV (oldest first) + period return, high/low, average volume, 5/20 moving averages. Follows pages up to `count` (ka10081/82/83/80) |
 | | `get_quotes` | price, change, volume, trade value and market cap for up to 20 stocks in one request (ka10095). Unresolved stocks get a per-stock error |
 | | `market_movers` | today's top stocks: `kind` = volume, gainers, losers, value (trade value), volume_spike; `market` = all, kospi, kosdaq (ka10030/10027/10032/10023) |
+| | `investor_flow` | daily net buying by individuals, foreigners, institutions (and pension funds etc.) with period totals and buy/sell day counts; amount (million KRW) or shares (ka10059) |
 | | `order_preview` | preview of an order, change or cancel, never sent. Issues a `confirm_token` |
 | Orders (opt-in) | `place_order`, `modify_order`, `cancel_order` | order, change or cancel by stock name, quantity and price (or `"market"`). `confirm_token` required |
 | TR tools | `<module>_<method>` | e.g. `stock_info_basic_stock_info`, `chart_stock_daily_chart`. [Full list](endpoints.md) |

@@ -12,6 +12,7 @@ from typing import Any
 
 from kiwoom_client.mcp.intents import (  # noqa: F401  (registers tools)
     chart,
+    flow,
     lookup,
     movers,
     quotes,
