@@ -33,6 +33,7 @@ from kiwoom_client.mcp.intents import intent_tools
 from kiwoom_client.mcp.local_tools import LocalTool
 from kiwoom_client.mcp.modes import DEFAULT_MODE, DISCOVERY, FULL, MODES, SMART
 from kiwoom_client.mcp.order_preview import order_preview_tool
+from kiwoom_client.mcp.orders.checks import upper_limit_quote
 from kiwoom_client.mcp.orders.gate import OrderGate, with_token_argument
 from kiwoom_client.mcp.orders.policy import OrderPolicy
 from kiwoom_client.mcp.orders.tools import order_tools
@@ -122,7 +123,10 @@ def build_server(
     mode = DISCOVERY if discovery else (mode or FULL)
     if mode not in MODES:
         raise ValueError(f"unknown mode: {mode!r} (choose from {', '.join(MODES)})")
-    gate = OrderGate(order_policy if order_policy is not None else OrderPolicy())
+    gate = OrderGate(
+        order_policy if order_policy is not None else OrderPolicy(),
+        quote=upper_limit_quote(api) if api is not None else None,
+    )
     rest_specs = [
         spec for spec in discover_rest_tools() if not spec.guarded or allow_live_orders
     ]

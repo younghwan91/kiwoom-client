@@ -452,6 +452,8 @@ async def build_preview(
         result["warnings"] += checks.warnings
         if checks.facts:
             result["checks"] = checks.facts
+    if gate is not None:
+        result["errors"] += await gate.problems(OrderCall(result["would_call"], result["params"]))
     if result["errors"]:
         result["warnings"].append(
             "errors 가 있어 confirm_token 을 만들지 않았습니다 — 주문을 고치세요"

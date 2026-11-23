@@ -47,6 +47,10 @@ _EPILOG = f"""\
   {LIVE_ORDERS_ENV_VAR}=true  실전 계좌에서 주문 도구 노출 (기본 false)
   {REQUIRE_CONFIRM_ENV}=true    TR 주문 도구에 order_preview 의 confirm_token 요구
                                        (기본: 실전 true, 모의 false)
+  KIWOOM_MCP_MAX_ORDER_AMOUNT=1000000  주문 1건 금액 한도(원)  ┐
+  KIWOOM_MCP_MAX_ORDER_QTY=100         주문 1건 수량 한도(주)  │ 미설정 = 제한 없음.
+  KIWOOM_MCP_ALLOWED_STOCKS=005930,... 주문 가능 종목코드      │ 미리보기와 전송 직전
+  KIWOOM_MCP_DAILY_ORDER_LIMIT=20      하루 주문 수(프로세스)  ┘ 둘 다에서 강제
 
 toolset 이름: {", ".join(TOOLSET_NAMES)}
 
