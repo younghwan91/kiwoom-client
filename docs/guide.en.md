@@ -1,103 +1,14 @@
-[한국어](https://github.com/younghwan91/kiwoom-client/blob/main/README.md) | [English](https://github.com/younghwan91/kiwoom-client/blob/main/README_EN.md)
+# Usage Guide
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/brand/wordmark-dark.svg">
-  <img alt="kiwoom-client" src="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/brand/wordmark-light.svg" height="56">
-</picture>
+New here? Start with the [README](https://github.com/younghwan91/kiwoom-client/blob/main/README.en.md).
 
-# kiwoom-client — Python client for the Kiwoom Securities REST API
-
-**The Kiwoom REST API, from Python and AI agents.** 182 endpoints, real-time WebSocket, and an MCP server so AI agents can trade Korean stocks too. No OpenAPI+ COM/OCX, so trading bots and data jobs run on Windows, macOS and Linux. An unofficial open-source project, not affiliated with Kiwoom Securities.
-
-[![PyPI version](https://img.shields.io/pypi/v/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
-[![Python](https://img.shields.io/pypi/pyversions/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
-[![Downloads](https://img.shields.io/pypi/dm/kiwoom-client)](https://pypi.org/project/kiwoom-client/)
-[![CI](https://github.com/younghwan91/kiwoom-client/actions/workflows/ci.yml/badge.svg)](https://github.com/younghwan91/kiwoom-client/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/github/license/younghwan91/kiwoom-client)](https://github.com/younghwan91/kiwoom-client/blob/main/LICENSE)
-[![Docs](https://img.shields.io/badge/docs-site-blue)](https://younghwan91.github.io/kiwoom-client/en/)
-
-- **182 REST endpoints + 4 condition-search calls + 19 real-time types** across 15 modules. The figure below is counted from the code: one tile, one endpoint.
-- **MCP server built in**: Claude Code and Cursor call quotes, account and orders through tools like `stock_info_basic_stock_info`. Against a live account the order tools are **not even registered** until you set `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true`.
-- **Bots don't die on an expired token**: refreshed before expiry, reissued on 401. A per-TR rate limiter keeps you under the 429 line and backs off and retries if one slips through.
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/hero-dark.png">
-  <img alt="Mosaic of the 182 Kiwoom REST endpoints and 23 WebSocket calls wrapped by kiwoom-client, grouped by domain" src="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/hero-light.png" width="100%">
-</picture>
-
-## Quick start
-
-```bash
-pip install kiwoom-client
-```
-
-```python
-from kiwoom_client import KiwoomAPI
-
-api = KiwoomAPI.from_env(is_mock=True)  # KIWOOM_APP_KEY / KIWOOM_APP_SECRET env vars (or from_env(".env"))
-# or explicitly: KiwoomAPI(app_key="YOUR_APP_KEY", app_secret="YOUR_APP_SECRET", is_mock=True)
-
-info = api.stock_info.basic_stock_info(stk_cd=api.stock_code("삼성전자"))  # name -> 005930
-chart = api.chart.stock_daily_chart(stk_cd="005930", base_dt="20260326", upd_stkpc_tp="1")  # daily chart
-print(info["stk_nm"])
-```
-
-No login step: the access token is issued on the first call and refreshed before it expires.
-Get an app key/secret at the [Kiwoom REST API portal](https://openapi.kiwoom.com) and start on the mock server (`is_mock=True`).
-
-### From an AI agent (MCP)
-
-```bash
-pip install 'kiwoom-client[mcp]'
-claude mcp add --transport stdio \
-  --env KIWOOM_APP_KEY=YOUR_APP_KEY --env KIWOOM_APP_SECRET=YOUR_APP_SECRET --env KIWOOM_IS_MOCK=true \
-  kiwoom-client -- kiwoom-client-mcp
-```
-
-Now ask Claude Code "What's Samsung Electronics trading at?". Other clients such as Cursor, and the environment variables, are in [Using as an MCP server](#using-as-an-mcp-server).
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/demo-mcp-en-dark.png">
-  <img alt="Example: an MCP client quotes Samsung Electronics with the stock_info_basic_stock_info tool, then declines a buy on the live server because no order tools are registered" src="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/demo-mcp-en-light.png" width="100%">
-</picture>
-
-<sub>Illustration made without calling the live server (prices are made up). On a live account the order tools are not registered until `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true`, so the agent has no way to place an order.</sub>
-
-Further reading: [Why kiwoom-client — compared with OpenAPI+, pykiwoom and other REST wrappers](https://younghwan91.github.io/kiwoom-client/en/why/) · [Endpoint reference](https://younghwan91.github.io/kiwoom-client/en/endpoints/)
-
-## What it does
-
-- **Cross-platform**: REST-based, so it runs on Windows, macOS, Linux and headless servers. No COM/OCX.
-- **Sync and async**: `KiwoomAPI` and `AsyncKiwoomAPI` expose the same endpoints.
-- **Auto token management**: issue, proactive refresh and 401 reissue are handled for you.
-- **Built-in rate limiter**: per-TR (api_id) token bucket (1 req/s, burst 2) with automatic retry on 429.
-- **Auto pagination**: `request_all()` follows `cont-yn`/`next-key` to the last page.
-- **Usable responses**: `to_dataframe()` turns `"+70000"`-style strings into numbers and hands you a DataFrame.
-- **Tick-size snapping**: `round_to_tick()` makes limit prices valid KRX ticks.
-- **Real-time WebSocket**: 19 subscription types with PING, reconnect and re-subscribe handled. Condition search rides the same socket.
-- **MCP server**: every REST endpoint in the 15 modules plus the 4 condition-search calls, exposed as MCP tools.
-
-Unlike the legacy Kiwoom OpenAPI+ (OCX/COM) or `pykiwoom`, there is no 32-bit/Windows-only constraint, no GUI dependency, and installation is one `pip install`.
-For a comparison that includes Kiwoom's official repository and other REST wrappers, see [Why kiwoom-client](https://younghwan91.github.io/kiwoom-client/en/why/); to port OpenAPI+ code, see the [migration table](https://younghwan91.github.io/kiwoom-client/en/migration-from-openapi-plus/).
-
-## Installation and prerequisites
-
-```bash
-pip install kiwoom-client            # base
-pip install 'kiwoom-client[pandas]'  # adds to_dataframe()
-pip install 'kiwoom-client[mcp]'     # adds the MCP server
-uv add kiwoom-client                 # if you use uv
-```
-
-- Python **3.10+**.
-- Apply for API access at the [Kiwoom REST API portal](https://openapi.kiwoom.com) to get your `app_key` and `app_secret`. See [`.env.example`](https://github.com/younghwan91/kiwoom-client/blob/main/.env.example) for environment variables.
-- Mock and live keys are different pairs. Authentication fails if `is_mock` doesn't match the key.
-
-| | Live | Mock |
-|---|---|---|
-| `is_mock` | `False` (default) | `True` |
-| REST URL | `https://api.kiwoom.com` | `https://mockapi.kiwoom.com` |
-| WebSocket URL | `wss://api.kiwoom.com:10000` | `wss://mockapi.kiwoom.com:10000` |
+<!-- toc -->
+- [Usage](#usage)
+- [Using as an MCP server](#using-as-an-mcp-server)
+- [Architecture](#architecture)
+- [API categories](#api-categories)
+- [FAQ](#faq)
+<!-- /toc -->
 
 ## Usage
 
@@ -188,7 +99,7 @@ For chart responses, `to_ohlcv(resp)` gives an `open/high/low/close/volume` Data
 import asyncio
 from kiwoom_client import KiwoomAPI
 
-api = KiwoomAPI(app_key="YOUR_KEY", app_secret="YOUR_SECRET")
+api = KiwoomAPI(app_key="YOUR_KEY", app_secret="YOUR_SECRET", is_mock=True)
 ws = api.create_websocket()
 
 async def main():
@@ -244,9 +155,9 @@ Kiwoom enforces **independent per-TR (api_id)** rate limits:
 The library ships a **per-TR token-bucket limiter (1 req/s, burst 2)** with **backoff and retry on 429**:
 
 ```python
-api = KiwoomAPI(app_key="...", app_secret="...")                                               # defaults
-api = KiwoomAPI(app_key="...", app_secret="...", rate_limit=2.0, rate_burst=3, max_retries=5)  # custom
-api = KiwoomAPI(app_key="...", app_secret="...", rate_limit=None)                              # no client-side throttle
+api = KiwoomAPI(app_key="...", app_secret="...", is_mock=True)                                               # defaults
+api = KiwoomAPI(app_key="...", app_secret="...", is_mock=True, rate_limit=2.0, rate_burst=3, max_retries=5)  # custom
+api = KiwoomAPI(app_key="...", app_secret="...", is_mock=True, rate_limit=None)                              # no client-side throttle
 ```
 
 ### Error handling
@@ -356,29 +267,3 @@ The built-in limiter (1 req/s per TR, burst of 2) can still be exceeded if multi
 Only for `to_dataframe()`. The base install returns plain dicts/lists.
 
 More in the [FAQ](https://younghwan91.github.io/kiwoom-client/en/faq/) and, by error code, in [Troubleshooting](https://younghwan91.github.io/kiwoom-client/en/troubleshooting/). Still stuck? Open an [issue](https://github.com/younghwan91/kiwoom-client/issues).
-
-## Where it runs
-
-The daily collection DAGs in [quant-airflow](https://github.com/younghwan91/quant-airflow) use this library to load prices, supply/demand, margin and short-sale data into TimescaleDB every day.
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/pypi_downloads_dark.png">
-  <img alt="kiwoom-client cumulative PyPI downloads" src="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/pypi_downloads_light.png" width="640">
-</picture>
-
-## Contributing & issues
-
-- 🐛 Bugs & feature requests → [Issues](https://github.com/younghwan91/kiwoom-client/issues)
-- 🔧 Pull requests welcome → See [CONTRIBUTING.md](https://github.com/younghwan91/kiwoom-client/blob/main/CONTRIBUTING.md) for guidelines and dev setup.
-
-## License
-
-MIT
-
-kiwoom-client is an **unofficial open-source project, not affiliated with or endorsed by Kiwoom Securities**. "Kiwoom" is a trademark of Kiwoom Securities Co., Ltd.; this project is only a client for its public REST API.
-
-## Author
-
-**Younghwan Chae** · [GitHub @younghwan91](https://github.com/younghwan91) · [LinkedIn](https://www.linkedin.com/in/younghwan-chae/)
-
-See the full open-source quant stack on my [profile](https://github.com/younghwan91).

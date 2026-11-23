@@ -24,7 +24,7 @@ Kiwoom Securities; everything else is labelled with its source. Report a broken 
 
 | Resource | What you find there |
 |---|---|
-| [README](https://github.com/younghwan91/kiwoom-client/blob/main/README_EN.md) | Install, quick start, accounts and orders, asyncio, WebSocket, pagination, rate limits, MCP server |
+| [README](https://github.com/younghwan91/kiwoom-client/blob/main/README.en.md) | Install, quick start, accounts and orders, asyncio, WebSocket, pagination, rate limits, MCP server |
 | [Endpoint reference](endpoints.md) | api_id, Korean TR name and URL for all 182 methods; condition search; real-time types |
 | [Why kiwoom-client](why.md) | Comparison with OpenAPI+, pykiwoom and other REST wrappers |
 | [examples/](https://github.com/younghwan91/kiwoom-client/tree/main/examples) | Example scripts against the mock server |

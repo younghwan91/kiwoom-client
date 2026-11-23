@@ -74,7 +74,7 @@ Get an app key and secret at the [Kiwoom REST API portal](https://openapi.kiwoom
 
 | I want to | Go to |
 |---|---|
-| Read the full usage guide (sync/async, WebSocket, errors) | [README](https://github.com/younghwan91/kiwoom-client/blob/main/README_EN.md) |
+| Read the full usage guide (sync/async, WebSocket, errors) | [README](https://github.com/younghwan91/kiwoom-client/blob/main/README.en.md) |
 | Install and make a first call on macOS, Linux or a server | [macOS and Linux](macos-linux.md) |
 | Look up an api_id or TR name among the 182 methods | [Endpoint reference](endpoints.md) |
 | Connect it to Claude Code or Cursor | [MCP server](mcp.md) |

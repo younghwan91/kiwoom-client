@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-READMES = ["README.md", "README_EN.md"]
+READMES = ["README.md", "README.en.md"]
 
 _MD_LINK = re.compile(r"\]\(([^)\s]+)\)")
 _HTML_SRC = re.compile(r'\b(?:src|srcset|href)="([^"]+)"')
