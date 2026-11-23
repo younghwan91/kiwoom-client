@@ -83,6 +83,18 @@ class TestOffline:
         mock = diagnose(env={**keys, "KIWOOM_IS_MOCK": "true"})
         assert any("모의투자 — 실제 체결 없음" in text for _lvl, text in mock.lines)
 
+    def test_read_only_wins_over_mock_and_opt_in(self):
+        keys = {"KIWOOM_APP_KEY": "k", "KIWOOM_APP_SECRET": "s", "KIWOOM_MCP_READ_ONLY": "true"}
+        for extra in ({"KIWOOM_IS_MOCK": "true"}, {"KIWOOM_MCP_ALLOW_LIVE_ORDERS": "true"}):
+            report = diagnose(env={**keys, **extra})
+            assert any("읽기 전용" in text for _lvl, text in report.lines)
+            assert not any("실제 주문" in text for _lvl, text in report.lines)
+
+    def test_bad_read_only_value_is_an_error(self):
+        keys = {"KIWOOM_APP_KEY": "k", "KIWOOM_APP_SECRET": "s", "KIWOOM_MCP_READ_ONLY": "maybe"}
+        report = diagnose(env=keys)
+        assert any(lvl == "error" and "KIWOOM_MCP_READ_ONLY" in t for lvl, t in report.lines)
+
     def test_server_flags_apply(self, capsys, clean_env, monkeypatch):
         monkeypatch.setenv("KIWOOM_APP_KEY", "k")
         monkeypatch.setenv("KIWOOM_APP_SECRET", "s")

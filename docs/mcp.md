@@ -99,6 +99,7 @@ claude mcp add kiwoom -e KIWOOM_APP_KEY=YOUR_APP_KEY -e KIWOOM_APP_SECRET=YOUR_A
 | `KIWOOM_MCP_MODE` | `--full`, `--discovery` | `smart`·`full`·`discovery` (아래 "컨텍스트 줄이기") | `smart` |
 | `KIWOOM_MCP_MAX_ROWS` | `--max-rows` | 리스트 응답 기본 행 수 제한 | 제한 없음 |
 | `KIWOOM_MCP_ALLOW_LIVE_ORDERS` | (없음) | 실전 계좌에서 주문 도구 노출 | `false` |
+| `KIWOOM_MCP_READ_ONLY` | (없음) | `true` 면 주문 도구를 하나도 등록하지 않음(모의투자 포함) | `false` |
 | `KIWOOM_MCP_REQUIRE_CONFIRM` | (없음) | TR 주문 도구(`order_*`·`credit_order_*`)에 `confirm_token` 요구 | 실전 `true`, 모의 `false` |
 | `KIWOOM_MCP_MAX_ORDER_AMOUNT` | (없음) | 주문 1건(신규·정정) 금액 한도, 원 | 제한 없음 |
 | `KIWOOM_MCP_MAX_ORDER_QTY` | (없음) | 주문 1건(신규·정정) 수량 한도, 주 | 제한 없음 |
@@ -116,6 +117,7 @@ toolset 이름은 엔드포인트 모듈 이름과 같습니다: `account`, `sto
 - `KIWOOM_IS_MOCK=false`(실전)이고 `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true` 가 아니면 주문 도구(`order_*` 8개, `credit_order_*` 4개, `place_order`·`modify_order`·`cancel_order`)를 서버가 **등록하지 않습니다**. 도구 목록, `call_tool`, `search_tools`, `kiwoom://tools` 어디에도 나오지 않습니다.
 - toolset 필터·모드(smart·full·discovery)·편의 도구는 모두 가드가 남긴 도구만 봅니다. `--toolsets order` 로 골라도 opt-in 없이는 주문 도구가 생기지 않습니다. 이 동작은 회귀 테스트(`tests/test_mcp_live_order_regression.py`)로 고정돼 있습니다.
 - 모의투자(`KIWOOM_IS_MOCK=true`)는 실제 체결이 없으므로 가드 없이 주문 도구가 보입니다.
+- `KIWOOM_MCP_READ_ONLY=true` 면 모의투자든 opt-in 이 있든 주문 도구(`order_*`·`credit_order_*`·`place_order` 등)를 하나도 등록하지 않습니다. 조회만 시키려는 에이전트에 씁니다. `order_preview` 는 남지만 토큰을 만들지 않습니다.
 - 가드는 MCP 서버 경로에만 있습니다. 파이썬에서 `KiwoomAPI`/`AsyncKiwoomAPI` 를 직접 쓰면 막지 않습니다.
 
 주문 도구에는 `destructiveHint=true` annotation 이 붙습니다. 그래서 클라이언트는 실행 전에 확인을 받을 수 있습니다. 조회 도구는 `readOnlyHint=true` 입니다.

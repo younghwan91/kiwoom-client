@@ -159,6 +159,16 @@ class TestServe:
         assert "KIWOOM_MCP_REQUIRE_CONFIRM" in capsys.readouterr().err
         assert captured_run == []
 
+    def test_bad_read_only_env_exits(self, monkeypatch, capsys, no_keys, captured_run):
+        monkeypatch.setenv("KIWOOM_APP_KEY", "k")
+        monkeypatch.setenv("KIWOOM_APP_SECRET", "s")
+        monkeypatch.setenv("KIWOOM_MCP_READ_ONLY", "maybe")
+        with pytest.raises(SystemExit) as exc:
+            cli.main([])
+        assert exc.value.code == 1
+        assert "KIWOOM_MCP_READ_ONLY" in capsys.readouterr().err
+        assert captured_run == []
+
     def test_there_is_no_flag_that_enables_live_orders(self):
         help_text = cli.build_parser().format_help()
         assert "--allow-live-orders" not in help_text

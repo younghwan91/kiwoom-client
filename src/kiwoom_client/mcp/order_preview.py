@@ -171,8 +171,8 @@ def _exchange(arguments: dict[str, Any], warnings: list[str]) -> str:
 def _disabled_warning(order_tools_enabled: bool, warnings: list[str]) -> None:
     if not order_tools_enabled:
         warnings.append(
-            "이 서버에는 주문 도구가 등록돼 있지 않습니다 (실전 계좌는 "
-            "KIWOOM_MCP_ALLOW_LIVE_ORDERS opt-in 필요)"
+            "이 서버에는 주문 도구가 등록돼 있지 않습니다 (읽기 전용 모드 "
+            "KIWOOM_MCP_READ_ONLY 이거나, 실전 계좌에 KIWOOM_MCP_ALLOW_LIVE_ORDERS opt-in 이 없음)"
         )
 
 
