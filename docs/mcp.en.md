@@ -97,6 +97,7 @@ The snippet goes to stdout and the "where to put it" note goes to stderr, so `> 
 | `KIWOOM_MCP_MAX_ORDER_QTY` | (none) | largest quantity of one new order or change, shares | no limit |
 | `KIWOOM_MCP_ALLOWED_STOCKS` | (none) | stock codes orders may name, comma-separated | no limit |
 | `KIWOOM_MCP_DAILY_ORDER_LIMIT` | (none) | orders this server process may send per day (KST) | no limit |
+| `KIWOOM_MCP_DUPLICATE_WINDOW` | (none) | refuse the exact same order sent again within this many seconds. `0` = off | `10` |
 
 CLI options win over environment variables. The live-order opt-in deliberately has no CLI option.
 
@@ -156,6 +157,10 @@ Set any of the four variables above and the server enforces it. `order_preview` 
 - Cancels skip the quantity and amount limits. The allowed stocks and the daily count apply to cancels too.
 - The daily count is the orders (new, change, cancel) this process sent to Kiwoom. Refused attempts don't count; a restart or a new day (KST) starts from zero.
 - Unset means no limit (the previous behaviour).
+
+### Duplicate orders
+
+An order with the same TR tool and request fields as one just sent is refused, unsent, if it arrives within `KIWOOM_MCP_DUPLICATE_WINDOW` (default 10 s) — even with a fresh token from a new preview. This stops a retry loop, or an instruction handled twice, from placing the same order twice. The preview warns in that case; refused orders are not remembered.
 
 ## Tools
 

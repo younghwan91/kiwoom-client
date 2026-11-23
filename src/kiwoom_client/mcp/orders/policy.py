@@ -28,6 +28,9 @@ MAX_ORDER_QTY_ENV = "KIWOOM_MCP_MAX_ORDER_QTY"
 ALLOWED_STOCKS_ENV = "KIWOOM_MCP_ALLOWED_STOCKS"
 #: Orders (new, change and cancel) this server process may send per day (KST).
 DAILY_ORDER_LIMIT_ENV = "KIWOOM_MCP_DAILY_ORDER_LIMIT"
+#: Seconds within which the exact same order is refused as a duplicate. 0 = off.
+DUPLICATE_WINDOW_ENV = "KIWOOM_MCP_DUPLICATE_WINDOW"
+DEFAULT_DUPLICATE_WINDOW = 10
 
 
 def _bool(env: Mapping[str, str], name: str, default: bool) -> bool:
@@ -41,6 +44,15 @@ def _positive_int(env: Mapping[str, str], name: str) -> int | None:
         return None
     if not value.isdigit() or int(value) <= 0:
         raise ValueError(f"{name}={env.get(name)!r} 는 양의 정수여야 합니다 (비우면 제한 없음)")
+    return int(value)
+
+
+def _seconds(env: Mapping[str, str], name: str, default: int) -> int:
+    value = env.get(name, "").strip()
+    if not value:
+        return default
+    if not value.isdigit():
+        raise ValueError(f"{name}={env.get(name)!r} 는 0 이상의 정수(초)여야 합니다 (0 = 끔)")
     return int(value)
 
 
@@ -65,6 +77,8 @@ class OrderPolicy:
     max_order_qty: int | None = None
     allowed_stocks: frozenset[str] | None = None
     daily_order_limit: int | None = None
+    #: Refuse the exact same order again within this many seconds (0 = off).
+    duplicate_window: int = DEFAULT_DUPLICATE_WINDOW
 
     @classmethod
     def from_env(cls, *, is_mock: bool, env: Mapping[str, str] | None = None) -> OrderPolicy:
@@ -81,4 +95,5 @@ class OrderPolicy:
             max_order_qty=_positive_int(source, MAX_ORDER_QTY_ENV),
             allowed_stocks=_stocks(source, ALLOWED_STOCKS_ENV),
             daily_order_limit=_positive_int(source, DAILY_ORDER_LIMIT_ENV),
+            duplicate_window=_seconds(source, DUPLICATE_WINDOW_ENV, DEFAULT_DUPLICATE_WINDOW),
         )

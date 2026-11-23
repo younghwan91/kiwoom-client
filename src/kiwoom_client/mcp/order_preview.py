@@ -453,7 +453,13 @@ async def build_preview(
         if checks.facts:
             result["checks"] = checks.facts
     if gate is not None:
-        result["errors"] += await gate.problems(OrderCall(result["would_call"], result["params"]))
+        call = OrderCall(result["would_call"], result["params"])
+        result["errors"] += await gate.problems(call)
+        ago = gate.duplicate_of_recent(call)
+        if ago is not None:
+            result["warnings"].append(
+                f"같은 주문을 {ago:.0f}초 전에 보냈습니다 — 지금 다시 보내면 중복으로 거부됩니다"
+            )
     if result["errors"]:
         result["warnings"].append(
             "errors 가 있어 confirm_token 을 만들지 않았습니다 — 주문을 고치세요"

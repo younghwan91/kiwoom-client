@@ -42,7 +42,7 @@ def normalize_params(params: Mapping[str, Any]) -> dict[str, str]:
     return normalized
 
 
-def _canonical(tool: str, params: Mapping[str, Any]) -> bytes:
+def canonical(tool: str, params: Mapping[str, Any]) -> bytes:
     body = {"tool": tool, "params": normalize_params(params)}
     return json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
 
@@ -65,7 +65,7 @@ class ConfirmTokens:
         self._used: dict[str, float] = {}  # nonce -> expiry
 
     def _mac(self, expires: int, nonce: str, tool: str, params: Mapping[str, Any]) -> str:
-        message = f"{expires}.{nonce}.".encode() + _canonical(tool, params)
+        message = f"{expires}.{nonce}.".encode() + canonical(tool, params)
         return hmac.new(self._secret, message, hashlib.sha256).hexdigest()
 
     def issue(self, tool: str, params: Mapping[str, Any]) -> str:
