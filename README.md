@@ -16,7 +16,7 @@ OpenAPI+의 COM/OCX 없이 Windows · macOS · Linux 어디서나 동작하는 �
 [![CI](https://github.com/younghwan91/kiwoom-client/actions/workflows/ci.yml/badge.svg)](https://github.com/younghwan91/kiwoom-client/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/github/license/younghwan91/kiwoom-client)](https://github.com/younghwan91/kiwoom-client/blob/main/LICENSE)
 
-[문서 사이트](https://younghwan91.github.io/kiwoom-client/) · [사용 가이드](https://younghwan91.github.io/kiwoom-client/guide/) · [엔드포인트](https://younghwan91.github.io/kiwoom-client/endpoints/) · [English](https://github.com/younghwan91/kiwoom-client/blob/main/README.en.md)
+[문서 사이트](https://younghwan91.github.io/kiwoom-client/) · [사용 가이드](https://younghwan91.github.io/kiwoom-client/guide/) · [엔드포인트](https://younghwan91.github.io/kiwoom-client/endpoints/) · [블로그](https://velog.io/@younghwan91/ai-%EC%97%90%EC%9D%B4%EC%A0%84%ED%8A%B8%EC%97%90%EA%B2%8C-%ED%82%A4%EC%9B%80-%EC%A3%BC%EB%AC%B8%EC%9D%84-%EB%A7%A1%EA%B8%B0%EA%B8%B0-%EC%A0%84%EC%97%90-kiwoom-client-mcp-%EC%84%9C%EB%B2%84%EC%99%80-%EC%8B%A4%EC%A3%BC%EB%AC%B8-%EA%B0%80%EB%93%9C) · [English](https://github.com/younghwan91/kiwoom-client/blob/main/README.en.md)
 
 </div>
 

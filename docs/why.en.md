@@ -95,6 +95,8 @@ Only things you can check in the code and tests.
 If you want an MIT-licensed `pip install` library for the domestic REST API with the same sync and async surface, and an
 MCP server from the same package, kiwoom-client fits.
 
+The background is in two Korean velog posts: [why the REST client was built](https://velog.io/@younghwan91/%ED%82%A4%EC%9B%80-OCX32bit-%EC%97%86%EC%9D%B4-Python%EC%9C%BC%EB%A1%9C-%EC%9E%90%EB%8F%99%EB%A7%A4%EB%A7%A4-kiwoom-rest-api%EB%A5%BC-%EB%A7%8C%EB%93%A0-%EC%9D%B4%EC%9C%A0) and [guarding live orders from AI agents](https://velog.io/@younghwan91/ai-%EC%97%90%EC%9D%B4%EC%A0%84%ED%8A%B8%EC%97%90%EA%B2%8C-%ED%82%A4%EC%9B%80-%EC%A3%BC%EB%AC%B8%EC%9D%84-%EB%A7%A1%EA%B8%B0%EA%B8%B0-%EC%A0%84%EC%97%90-kiwoom-client-mcp-%EC%84%9C%EB%B2%84%EC%99%80-%EC%8B%A4%EC%A3%BC%EB%AC%B8-%EA%B0%80%EB%93%9C).
+
 If something here is wrong or a project is missing, [open an issue](https://github.com/younghwan91/kiwoom-client/issues)
 and it will be fixed.
 
