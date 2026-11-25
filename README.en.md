@@ -27,6 +27,17 @@ An unofficial open-source client that runs on Windows, macOS, and Linux without 
 
 <p align="center"><sub>182 REST endpoints, 4 condition-search calls, and 19 real-time types across 15 modules. One tile, one endpoint.</sub></p>
 
+<p align="center">
+  <img alt="Mock demo: an agent asks for quotes with get_quotes and drafts an order with order_preview (fake Kiwoom server, nothing sent)" src="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/demo-mock.gif" width="100%">
+</p>
+
+<p align="center"><sub><b>Mock demo</b> — the real MCP server wired to a fake Kiwoom server (made-up prices), with the tool calls replayed from a script. No order is sent.</sub></p>
+
+```bash
+uvx --from 'kiwoom-client[mcp]' kiwoom-client-mcp            # start the MCP server (needs KIWOOM_APP_KEY / KIWOOM_APP_SECRET)
+uv run --extra mcp python scripts/demo_mock_session.py      # replay the mock demo above, no keys (repo root)
+```
+
 ## Quick start
 
 ```bash
@@ -47,14 +58,52 @@ The access token is issued on the first call and refreshed before it expires. Ge
 
 ### From an AI agent (MCP)
 
+With [uv](https://docs.astral.sh/uv/) it starts in one line, no install:
+
 ```bash
-pip install 'kiwoom-client[mcp]'
-claude mcp add --transport stdio \
-  --env KIWOOM_APP_KEY=YOUR_APP_KEY --env KIWOOM_APP_SECRET=YOUR_APP_SECRET --env KIWOOM_IS_MOCK=true \
-  kiwoom-client -- kiwoom-client-mcp
+uvx --from 'kiwoom-client[mcp]' kiwoom-client-mcp
 ```
 
-Ask Claude Code "What's Samsung Electronics trading at?" to query live quotes. Setup for Cursor, Codex, and all environment variables is in the [MCP server docs](https://younghwan91.github.io/kiwoom-client/en/mcp/).
+Add it to Claude Code (paper-trading keys, `KIWOOM_IS_MOCK=true`):
+
+```bash
+claude mcp add kiwoom -e KIWOOM_APP_KEY=YOUR_APP_KEY -e KIWOOM_APP_SECRET=YOUR_APP_SECRET \
+  -e KIWOOM_IS_MOCK=true -- uvx --from 'kiwoom-client[mcp]' kiwoom-client-mcp
+```
+
+<details>
+<summary>Claude Desktop · Cursor · Codex config</summary>
+
+**Claude Desktop** — merge into `mcpServers` in `claude_desktop_config.json`.
+
+```json
+{
+  "mcpServers": {
+    "kiwoom": {
+      "command": "uvx",
+      "args": ["--from", "kiwoom-client[mcp]", "kiwoom-client-mcp"],
+      "env": { "KIWOOM_APP_KEY": "YOUR_APP_KEY", "KIWOOM_APP_SECRET": "YOUR_APP_SECRET", "KIWOOM_IS_MOCK": "true" }
+    }
+  }
+}
+```
+
+**Cursor** — the same JSON in `~/.cursor/mcp.json` or `<project>/.cursor/mcp.json`.
+
+**Codex** — add to `~/.codex/config.toml`.
+
+```toml
+[mcp_servers.kiwoom]
+command = "uvx"
+args = ["--from", "kiwoom-client[mcp]", "kiwoom-client-mcp"]
+env = { KIWOOM_APP_KEY = "YOUR_APP_KEY", KIWOOM_APP_SECRET = "YOUR_APP_SECRET", KIWOOM_IS_MOCK = "true" }
+```
+
+`kiwoom-client-mcp config <claude-code|claude-desktop|cursor|codex|vscode|gemini-cli>` prints the same config.
+
+</details>
+
+Ask Claude Code "What's Samsung Electronics trading at?" to query live quotes. Environment variables and the tool list are in the [MCP server docs](https://younghwan91.github.io/kiwoom-client/en/mcp/).
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/demo-mcp-en-dark.png">
@@ -94,6 +143,20 @@ Requires Python **3.10+**. See [`.env.example`](https://github.com/younghwan91/k
 - **Defaults to the live server**: `KiwoomAPI(...)` defaults to `is_mock=False`. Direct Python calls have no order guard, so pass `is_mock=True` while testing.
 - **Mock trading supports KRX only**: Live and mock app keys are separate pairs; match `is_mock` to your key.
 - **WebSocket REAL item fields are unconfirmed**: LOGIN, PING, and REG are confirmed against the live server, while `item`/`values` field names need market-hours verification.
+
+## Order safety
+
+- **MCP server**: on the live server, order tools are not registered until `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true`. Once on, the server still enforces checks such as `order_preview` confirm tokens, limits, an allow-list and de-duplication ([live-order guard](https://younghwan91.github.io/kiwoom-client/en/mcp/#live-order-guard)).
+- **[kiwoom-order-guard](https://github.com/younghwan91/kiwoom-order-guard)** (Korean): a Claude Code hook that checks the amount, stock and count of orders sent through Kiwoom's official MCP or plugin before they go out. It works for agents that don't use kiwoom-client too.
+
+## Works well with
+
+| Repo | In one line |
+|---|---|
+| [krx-news-client](https://github.com/younghwan91/krx-news-client) | DART filings and Toss Securities news in one schema (Python) |
+| [krx-fundamentals-client](https://github.com/younghwan91/krx-fundamentals-client) | Korean company fundamentals from DART, KRX and Naver as Pydantic models |
+| [fin-checkup](https://github.com/younghwan91/fin-checkup) | MCP server that reads 17 financial-statement ratios as traffic lights, with formula and thresholds |
+| [sector-flow](https://github.com/younghwan91/sector-flow) | Which sectors each investor group bought and sold today, on one map |
 
 ## Docs
 
