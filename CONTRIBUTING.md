@@ -102,6 +102,8 @@ uv run python scripts/build_stubs.py     # src/kiwoom_client/domestic/*.pyi
 
 ## 이슈 · 보안
 
+- 처음 기여한다면 [`good first issue`](https://github.com/younghwan91/kiwoom-client/labels/good%20first%20issue) 목록에서 시작하세요.
+  이슈마다 볼 파일·줄, 완료 기준, 로컬 테스트 명령이 적혀 있습니다.
 - 버그·기능·엔드포인트 요청: [Issues](https://github.com/younghwan91/kiwoom-client/issues/new/choose)
 - 사용법 질문·아이디어: [Discussions](https://github.com/younghwan91/kiwoom-client/discussions)
 - 보안 문제(실주문 가드 우회, 키 유출 등)는 공개 이슈 대신 [SECURITY.md](SECURITY.md) 의 비공개 경로로.
