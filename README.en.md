@@ -16,7 +16,7 @@ An unofficial open-source client that runs on Windows, macOS, and Linux without 
 [![CI](https://github.com/younghwan91/kiwoom-client/actions/workflows/ci.yml/badge.svg)](https://github.com/younghwan91/kiwoom-client/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/github/license/younghwan91/kiwoom-client)](https://github.com/younghwan91/kiwoom-client/blob/main/LICENSE)
 
-[Docs](https://younghwan91.github.io/kiwoom-client/en/) · [Guide](https://younghwan91.github.io/kiwoom-client/en/guide/) · [Endpoints](https://younghwan91.github.io/kiwoom-client/en/endpoints/) · [한국어](https://github.com/younghwan91/kiwoom-client/blob/main/README.md)
+[Docs](https://younghwan91.github.io/kiwoom-client/en/) · [Guide](https://younghwan91.github.io/kiwoom-client/en/guide/) · [Endpoints](https://younghwan91.github.io/kiwoom-client/en/endpoints/) · [Blog (Korean)](https://velog.io/@younghwan91/ai-%EC%97%90%EC%9D%B4%EC%A0%84%ED%8A%B8%EC%97%90%EA%B2%8C-%ED%82%A4%EC%9B%80-%EC%A3%BC%EB%AC%B8%EC%9D%84-%EB%A7%A1%EA%B8%B0%EA%B8%B0-%EC%A0%84%EC%97%90-kiwoom-client-mcp-%EC%84%9C%EB%B2%84%EC%99%80-%EC%8B%A4%EC%A3%BC%EB%AC%B8-%EA%B0%80%EB%93%9C) · [한국어](https://github.com/younghwan91/kiwoom-client/blob/main/README.md)
 
 </div>
 
