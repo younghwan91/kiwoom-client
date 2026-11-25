@@ -124,7 +124,7 @@ README 두 벌, 문서 사이트 푸터, PyPI 설명에 같은 뜻으로 들어�
 
 ## 소셜 프리뷰
 
-`docs/images/social-preview.png` (1280×640) — 다크 배경에 워드마크, 추천 태그라인(영·한), 코드에서 센 숫자,
+`docs/images/social-preview.png` (1280×640) — 다크 배경에 워드마크, README 첫 줄의 한 줄 소개(한국어 크게, 영어 작게), 코드에서 센 숫자,
 설치 명령, 비공식 고지. 링크를 공유할 때 GitHub 가 보여 주는 카드입니다.
 
 - 다시 만들기: `uv run --extra mcp --with cairosvg --with fonttools python scripts/make_social.py`

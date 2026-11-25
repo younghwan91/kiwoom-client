@@ -52,9 +52,10 @@ def svg() -> str:
         f'<tspan font-weight="700" fill="{p["ink"]}">kiwoom</tspan>'
         f'<tspan font-weight="400" fill="{p["ink2"]}">-client</tspan></text>',
         # 태그라인
-        t(m, 284, "The Kiwoom REST API,", 54, p["ink"], 700),
-        t(m, 350, "from Python and AI agents.", 54, p["ink"], 700),
-        t(m, 408, "키움 REST API, 파이썬과 AI 에이전트로.", 30, p["ink2"]),
+        # 한 줄 소개는 README 첫 줄 그대로(한국어 우선), 영어는 README.en.md 의 문구
+        t(m, 284, "키움 REST API,", 56, p["ink"], 700),
+        t(m, 352, "파이썬과 AI 에이전트로.", 56, p["ink"], 700),
+        t(m, 408, "The Kiwoom REST API, from Python and AI agents.", 30, p["ink2"]),
     ]
     # 사실 줄 (숫자는 코드에서 센 값)
     facts = [f"{n_rest} REST endpoints", f"{n_rt} real-time types", "MCP server", "live-order guard"]
