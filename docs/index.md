@@ -69,6 +69,20 @@ print(info["stk_nm"])
     `KiwoomAPI(...)` 의 기본값은 `is_mock=False`(실전투자)입니다. 실전 키로 `api.order.*`·`api.credit_order.*` 를
     부르면 그대로 실주문이 나갑니다. MCP 실주문 가드는 MCP 서버 경로에만 있고 파이썬 직접 호출은 막지 않습니다.
 
+## AI 에이전트에서 (MCP)
+
+[uv](https://docs.astral.sh/uv/)가 있으면 설치 없이 한 줄로 띄웁니다.
+
+```bash
+uvx --from 'kiwoom-client[mcp]' kiwoom-client-mcp
+```
+
+Claude Code 에는 `claude mcp add kiwoom -e KIWOOM_APP_KEY=YOUR_APP_KEY -e KIWOOM_APP_SECRET=YOUR_APP_SECRET -e KIWOOM_IS_MOCK=true -- uvx --from 'kiwoom-client[mcp]' kiwoom-client-mcp` 로 붙입니다. Claude Desktop·Cursor·Codex 설정은 [MCP 서버](mcp.md#설정-스니펫)에 있습니다.
+
+![모의 데모: 에이전트가 get_quotes 로 시세를 묻고 order_preview 로 주문 초안을 만드는 터미널 화면](images/demo-mock.gif)
+
+<small>**모의 데모** — 진짜 MCP 서버에 가짜 키움 서버(가상 시세)를 붙이고 도구 호출을 스크립트로 재생했습니다. 주문은 나가지 않습니다. 레포 루트에서 `uv run --extra mcp python scripts/demo_mock_session.py` 로 키 없이 다시 볼 수 있습니다.</small>
+
 ## 어디로 갈까
 
 | 하고 싶은 것 | 갈 곳 |

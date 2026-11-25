@@ -27,6 +27,17 @@ OpenAPI+의 COM/OCX 없이 Windows · macOS · Linux 어디서나 동작하는 �
 
 <p align="center"><sub>REST 엔드포인트 182개, 조건검색 4종, 실시간 19종을 15개 모듈로 감쌌습니다. 타일 하나가 엔드포인트 하나입니다.</sub></p>
 
+<p align="center">
+  <img alt="모의 데모: 에이전트가 get_quotes 로 시세를 묻고 order_preview 로 주문 초안을 만드는 터미널 화면(가짜 키움 서버, 주문 전송 없음)" src="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/demo-mock.gif" width="100%">
+</p>
+
+<p align="center"><sub><b>모의 데모</b> — 진짜 MCP 서버에 가짜 키움 서버(가상 시세)를 붙이고 도구 호출을 스크립트로 재생했습니다. 주문은 나가지 않습니다.</sub></p>
+
+```bash
+uvx --from 'kiwoom-client[mcp]' kiwoom-client-mcp            # MCP 서버 시작 (KIWOOM_APP_KEY·KIWOOM_APP_SECRET 필요)
+uv run --extra mcp python scripts/demo_mock_session.py      # 위 모의 데모를 키 없이 재생 (레포 루트)
+```
+
 ## 빠른 시작
 
 ```bash
@@ -49,14 +60,52 @@ print(info["stk_nm"])
 
 <!-- mcp-name: io.github.younghwan91/kiwoom-client (MCP 레지스트리 PyPI 소유 확인용, server.json 참고) -->
 
+[uv](https://docs.astral.sh/uv/)가 있으면 설치 없이 한 줄로 띄웁니다.
+
 ```bash
-pip install 'kiwoom-client[mcp]'
-claude mcp add --transport stdio \
-  --env KIWOOM_APP_KEY=발급받은_앱키 --env KIWOOM_APP_SECRET=발급받은_시크릿키 --env KIWOOM_IS_MOCK=true \
-  kiwoom-client -- kiwoom-client-mcp
+uvx --from 'kiwoom-client[mcp]' kiwoom-client-mcp
 ```
 
-이제 Claude Code에서 "삼성전자 지금 얼마야?"라고 물으면 시세를 조회합니다. Cursor·Codex 설정과 환경변수는 [MCP 서버 문서](https://younghwan91.github.io/kiwoom-client/mcp/)를 참고하세요.
+Claude Code 에는 이렇게 붙입니다(키는 모의투자 키, `KIWOOM_IS_MOCK=true`).
+
+```bash
+claude mcp add kiwoom -e KIWOOM_APP_KEY=YOUR_APP_KEY -e KIWOOM_APP_SECRET=YOUR_APP_SECRET \
+  -e KIWOOM_IS_MOCK=true -- uvx --from 'kiwoom-client[mcp]' kiwoom-client-mcp
+```
+
+<details>
+<summary>Claude Desktop · Cursor · Codex 설정</summary>
+
+**Claude Desktop** — `claude_desktop_config.json` 의 `mcpServers` 에 병합합니다.
+
+```json
+{
+  "mcpServers": {
+    "kiwoom": {
+      "command": "uvx",
+      "args": ["--from", "kiwoom-client[mcp]", "kiwoom-client-mcp"],
+      "env": { "KIWOOM_APP_KEY": "YOUR_APP_KEY", "KIWOOM_APP_SECRET": "YOUR_APP_SECRET", "KIWOOM_IS_MOCK": "true" }
+    }
+  }
+}
+```
+
+**Cursor** — 같은 JSON 을 `~/.cursor/mcp.json` 또는 `<프로젝트>/.cursor/mcp.json` 에 넣습니다.
+
+**Codex** — `~/.codex/config.toml` 에 추가합니다.
+
+```toml
+[mcp_servers.kiwoom]
+command = "uvx"
+args = ["--from", "kiwoom-client[mcp]", "kiwoom-client-mcp"]
+env = { KIWOOM_APP_KEY = "YOUR_APP_KEY", KIWOOM_APP_SECRET = "YOUR_APP_SECRET", KIWOOM_IS_MOCK = "true" }
+```
+
+`kiwoom-client-mcp config <claude-code|claude-desktop|cursor|codex|vscode|gemini-cli>` 가 같은 설정을 출력합니다.
+
+</details>
+
+이제 Claude Code에서 "삼성전자 지금 얼마야?"라고 물으면 시세를 조회합니다. 환경변수와 도구 목록은 [MCP 서버 문서](https://younghwan91.github.io/kiwoom-client/mcp/)를 참고하세요.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/demo-mcp-ko-dark.png">
@@ -96,6 +145,20 @@ Python **3.10 이상**이 필요합니다. 환경변수 목록은 [`.env.example
 - **기본값은 실전투자 서버입니다**: `KiwoomAPI(...)`의 기본값은 `is_mock=False`입니다. 파이썬 직접 호출에는 주문 가드가 없으므로 테스트 시 `is_mock=True`를 사용하세요.
 - **모의투자는 KRX만 지원합니다**: 실전투자와 모의투자의 앱키·시크릿키는 서로 다르므로 `is_mock`과 맞춰야 합니다.
 - **WebSocket REAL 항목 필드명은 미확정입니다**: LOGIN · PING · REG 응답은 실서버에서 확인했으나 `item`/`values` 필드명은 장중 검증이 필요합니다.
+
+## 주문 안전장치
+
+- **MCP 서버**: 실전투자 서버에서는 `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true` 를 켜기 전까지 주문 도구가 등록되지 않습니다. 켠 뒤에도 `order_preview` 확인 토큰·한도·허용 종목·중복 방지 같은 장치가 서버에서 동작합니다([실주문 가드](https://younghwan91.github.io/kiwoom-client/mcp/#실주문-가드)).
+- **[kiwoom-order-guard](https://github.com/younghwan91/kiwoom-order-guard)**: 키움 공식 MCP·플러그인으로 내는 주문도 전송 전에 금액·종목·횟수를 검사하는 Claude Code 훅입니다. kiwoom-client 를 쓰지 않는 에이전트에도 붙일 수 있습니다.
+
+## 같이 쓰면 좋은 것
+
+| 레포 | 한 줄 소개 |
+|---|---|
+| [krx-news-client](https://github.com/younghwan91/krx-news-client) | DART 공시와 토스증권 뉴스를 한 스키마로 받는 파이썬 클라이언트 |
+| [krx-fundamentals-client](https://github.com/younghwan91/krx-fundamentals-client) | DART·KRX·네이버의 기업 펀더멘탈을 Pydantic 모델로 돌려주는 라이브러리 |
+| [fin-checkup](https://github.com/younghwan91/fin-checkup) | 상장사 재무제표 지표 17개를 계산식·경계값과 함께 신호등으로 보여 주는 MCP 서버 |
+| [sector-flow](https://github.com/younghwan91/sector-flow) | 투자 주체별 순매매로 오늘 어느 섹터에 돈이 들고 났는지 한 장의 지도로 보여 줍니다 |
 
 ## 문서
 
