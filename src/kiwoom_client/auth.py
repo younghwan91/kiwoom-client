@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import threading
 import time
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
 import httpx
 
+from kiwoom_client import _token_file
 from kiwoom_client._errors import KiwoomError, error_hint, parse_error_code
 from kiwoom_client._redact import mask_secret, token_state
 
@@ -90,10 +93,33 @@ class _TokenCache:
 
     DEFAULT_EXPIRY_MARGIN = 60.0
 
-    def __init__(self, expiry_margin: float = DEFAULT_EXPIRY_MARGIN) -> None:
+    def __init__(
+        self,
+        expiry_margin: float = DEFAULT_EXPIRY_MARGIN,
+        token_cache: str | os.PathLike[str] | None = None,
+    ) -> None:
         self.expiry_margin = expiry_margin
         self._token: str | None = None
         self._expires_at: float | None = None
+        self.token_cache: Path | None = (
+            Path(token_cache).expanduser() if token_cache is not None else None
+        )
+
+    def _cache_key(self) -> str:
+        return _token_file.entry_id(getattr(self, "base_url", ""), getattr(self, "app_key", ""))
+
+    def _load_cached(self) -> bool:
+        """Adopt a still-valid token from ``token_cache``; True if one was found."""
+        if self.token_cache is None or self._token is not None:
+            return False
+        found = _token_file.load(self.token_cache, self._cache_key())
+        if found is None:
+            return False
+        self._token, self._expires_at = found
+        if self._is_expiring():
+            self._token = self._expires_at = None
+            return False
+        return True
 
     def __repr__(self) -> str:
         # Never the secret or the token: see kiwoom_client._redact.
@@ -124,11 +150,28 @@ class _TokenCache:
             )
         self._token = token
         self._expires_at = self._parse_expiry(data)
+        if self.token_cache is not None:
+            if self._expires_at is None:
+                # Without an expiry a later process could not tell if it is still good.
+                _token_file.drop(self.token_cache, self._cache_key())
+            else:
+                _token_file.save(self.token_cache, self._cache_key(), token, self._expires_at)
         return token
+
+    def _forget(self, token: str) -> None:
+        """After revoking ``token``: drop it from memory and from ``token_cache``."""
+        if token == self._token:
+            self._clear()
+        elif self.token_cache is not None:
+            found = _token_file.load(self.token_cache, self._cache_key())
+            if found is not None and found[0] == token:
+                _token_file.drop(self.token_cache, self._cache_key())
 
     def _clear(self) -> None:
         self._token = None
         self._expires_at = None
+        if self.token_cache is not None:
+            _token_file.drop(self.token_cache, self._cache_key())
 
     def _is_expiring(self) -> bool:
         """True if the token is within the margin of expiry.
@@ -193,6 +236,10 @@ class KiwoomAuth(_TokenCache):
         base_url: API base URL.
         expiry_margin: Reissue this many seconds before actual expiry.
         timeout: HTTP timeout for the token endpoints (default 30s).
+        token_cache: Optional path of a JSON file to keep the token in, so the
+            next process with the same app key reuses it instead of asking
+            Kiwoom for a new one. Written with mode 0600; holds the token but
+            never the app key or secret. None (default) keeps it in memory only.
     """
 
     def __init__(
@@ -203,8 +250,9 @@ class KiwoomAuth(_TokenCache):
         expiry_margin: float = _TokenCache.DEFAULT_EXPIRY_MARGIN,
         *,
         timeout: float | httpx.Timeout = 30.0,
+        token_cache: str | os.PathLike[str] | None = None,
     ):
-        super().__init__(expiry_margin)
+        super().__init__(expiry_margin, token_cache)
         self.app_key = app_key
         self.app_secret = app_secret
         self.base_url = base_url.rstrip("/")
@@ -269,8 +317,7 @@ class KiwoomAuth(_TokenCache):
         except httpx.HTTPError as exc:
             raise _http_failure("토큰 폐기 요청 실패", exc, self.base_url) from exc
 
-        if token == self._token:
-            self._clear()
+        self._forget(token)
         return data
 
     # --- TokenProvider protocol ---
@@ -279,6 +326,9 @@ class KiwoomAuth(_TokenCache):
         """Return a currently-valid token, issuing or reissuing as needed."""
         with self._lock:
             if self._token is not None and not self._is_expiring():
+                return self._token
+            if self._load_cached():
+                assert self._token is not None
                 return self._token
             self.issue_token()
             assert self._token is not None  # issue_token raises otherwise
@@ -305,6 +355,10 @@ class AsyncKiwoomAuth(_TokenCache):
         base_url: API base URL.
         expiry_margin: Reissue this many seconds before actual expiry.
         timeout: HTTP timeout for the token endpoints (default 30s).
+        token_cache: Optional path of a JSON file to keep the token in, so the
+            next process with the same app key reuses it instead of asking
+            Kiwoom for a new one. Written with mode 0600; holds the token but
+            never the app key or secret. None (default) keeps it in memory only.
     """
 
     def __init__(
@@ -315,8 +369,9 @@ class AsyncKiwoomAuth(_TokenCache):
         expiry_margin: float = _TokenCache.DEFAULT_EXPIRY_MARGIN,
         *,
         timeout: float | httpx.Timeout = 30.0,
+        token_cache: str | os.PathLike[str] | None = None,
     ):
-        super().__init__(expiry_margin)
+        super().__init__(expiry_margin, token_cache)
         self.app_key = app_key
         self.app_secret = app_secret
         self.base_url = base_url.rstrip("/")
@@ -369,8 +424,7 @@ class AsyncKiwoomAuth(_TokenCache):
         except httpx.HTTPError as exc:
             raise _http_failure("토큰 폐기 요청 실패", exc, self.base_url) from exc
 
-        if token == self._token:
-            self._clear()
+        self._forget(token)
         return data
 
     # --- AsyncTokenProvider protocol ---
@@ -379,6 +433,9 @@ class AsyncKiwoomAuth(_TokenCache):
         """Return a currently-valid token, issuing or reissuing as needed."""
         async with self._lock:
             if self._token is not None and not self._is_expiring():
+                return self._token
+            if self._load_cached():
+                assert self._token is not None
                 return self._token
             await self.issue_token()
             assert self._token is not None

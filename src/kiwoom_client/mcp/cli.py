@@ -23,6 +23,7 @@ import sys
 from collections.abc import Mapping, Sequence
 
 from kiwoom_client import __version__
+from kiwoom_client._console import tolerate_legacy_encoding
 from kiwoom_client._env import ENV_IS_MOCK, parse_bool
 from kiwoom_client.mcp.client_config import CLIENTS, LAUNCHERS, render
 from kiwoom_client.mcp.guard import ENV_VAR as LIVE_ORDERS_ENV_VAR
@@ -250,6 +251,7 @@ def _print_config(args: argparse.Namespace) -> None:
 
 def main(argv: Sequence[str] | None = None) -> None:
     """Entry point for the ``kiwoom-client-mcp`` console script."""
+    tolerate_legacy_encoding()
     args = build_parser().parse_args(argv)
 
     if args.command == "config":

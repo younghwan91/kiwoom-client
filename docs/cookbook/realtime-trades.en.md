@@ -74,6 +74,9 @@ asyncio.run(main())
   (the error is logged).
 - `subscribe(..., refresh="1")` (the default) keeps existing registrations and adds to them. With `"0"` it clears the
   existing registrations and keeps only this one.
+- To get Korean field names instead of FID numbers, `ws.on("0B", on_trade, named=True)` — the callback's `values` keys
+  become `"현재가"` (current price), `"체결시간"` (trade time) and so on (values stay strings; FIDs the spec does not know
+  keep their number). Other callbacks for the same type still get FID keys.
 - To remove a registration, `await ws.unsubscribe("0B", "005930")`.
 - To see every frame, `ws.on_message(callback)` — when a REAL frame arrives you get the whole `data` list.
 - The field names of the items (`item`/`values`) match the official spec's example, but this library has not yet

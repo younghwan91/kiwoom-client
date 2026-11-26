@@ -95,7 +95,15 @@ def no_network(monkeypatch):
     def _blocked(*_args, **_kwargs):
         raise AssertionError("order_preview must not touch the network")
 
-    monkeypatch.setattr(socket.socket, "connect", _blocked)
+    real_connect = socket.socket.connect
+
+    def _connect(sock, address, *args, **kwargs):
+        # Windows' event loop wires itself up over a loopback socket pair.
+        if isinstance(address, tuple) and address[0] in ("127.0.0.1", "::1"):
+            return real_connect(sock, address, *args, **kwargs)
+        raise AssertionError("order_preview must not touch the network")
+
+    monkeypatch.setattr(socket.socket, "connect", _connect)
     monkeypatch.setattr(httpx.AsyncClient, "send", _blocked)
     monkeypatch.setattr(httpx.Client, "send", _blocked)
 

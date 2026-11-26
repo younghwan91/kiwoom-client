@@ -166,3 +166,23 @@ def test_ordinary_commands_are_allowed(command, tree):
 def test_non_bash_tools_are_ignored(tree):
     out = run_hook({"tool_name": "Read", "tool_input": {"file_path": ENV}, "cwd": str(tree)})
     assert out.strip() == ""
+
+
+@pytest.mark.parametrize("encoding", ["cp1252", "cp949"])
+def test_deny_survives_legacy_console_encoding(encoding):
+    """The deny reason is Korean. On a cp1252 console printing it used to raise, the
+    hook's catch-all swallowed the error and the command was allowed (fail-open)."""
+    import os
+
+    payload = {
+        "tool_name": "Bash",
+        # Hangul in the command too: stdin must be read as UTF-8 whatever the locale.
+        "tool_input": {"command": "echo 주문 && export KIWOOM_MCP_ALLOW_LIVE_ORDERS=true"},
+        "cwd": ".",
+    }
+    proc = subprocess.run(
+        [sys.executable, str(HOOK)], input=json.dumps(payload, ensure_ascii=False).encode(),
+        capture_output=True, timeout=10, check=True,
+        env={**os.environ, "PYTHONIOENCODING": encoding},
+    )
+    assert json.loads(proc.stdout)["hookSpecificOutput"]["permissionDecision"] == "deny"

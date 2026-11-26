@@ -25,7 +25,7 @@ This file is generated from the code by `scripts/gen_docs.py`; the signatures an
 ### `KiwoomAPI`
 
 ```
-class KiwoomAPI(app_key: str, app_secret: str, base_url: str | None = None, is_mock: bool = False, rate_limit: float | None = 1.0, rate_burst: int = 2, max_retries: int = 3, retry_backoff: float = 1.1, expiry_margin: float = 60.0, validate_params: bool | str = False, *, timeout: float | httpx.Timeout = 30.0)
+class KiwoomAPI(app_key: str, app_secret: str, base_url: str | None = None, is_mock: bool = False, rate_limit: float | None = 1.0, rate_burst: int = 2, max_retries: int = 3, retry_backoff: float = 1.1, expiry_margin: float = 60.0, validate_params: bool | str = False, *, timeout: float | httpx.Timeout = 30.0, token_cache: str | os.PathLike[str] | None = None)
 ```
 
 Unified facade for all Kiwoom REST API endpoints.
@@ -54,6 +54,11 @@ Args:
         :class:`~kiwoom_client.spec.validation.KiwoomParamError` and sends nothing.
     timeout: HTTP timeout in seconds (or an ``httpx.Timeout``) for API and
         token requests. Defaults to 30s.
+    token_cache: Path of a JSON file to keep the access token in, so the
+        next script, cron job or ``kiwoom`` CLI run with the same app key
+        reuses it instead of issuing a new one. Mode 0600; never holds the
+        app key or secret. ``from_env()`` reads ``KIWOOM_TOKEN_CACHE``.
+        None (default) keeps the token in memory only.
 
 ### `KiwoomAPI.close`
 
@@ -171,7 +176,7 @@ Same endpoints as `KiwoomAPI`; every call is awaited.
 ### `AsyncKiwoomAPI`
 
 ```
-class AsyncKiwoomAPI(app_key: str, app_secret: str, base_url: str | None = None, is_mock: bool = False, rate_limit: float | None = 1.0, rate_burst: int = 2, max_retries: int = 3, retry_backoff: float = 1.1, expiry_margin: float = 60.0, validate_params: bool | str = False, *, timeout: float | httpx.Timeout = 30.0)
+class AsyncKiwoomAPI(app_key: str, app_secret: str, base_url: str | None = None, is_mock: bool = False, rate_limit: float | None = 1.0, rate_burst: int = 2, max_retries: int = 3, retry_backoff: float = 1.1, expiry_margin: float = 60.0, validate_params: bool | str = False, *, timeout: float | httpx.Timeout = 30.0, token_cache: str | os.PathLike[str] | None = None)
 ```
 
 Asyncio facade for all Kiwoom REST API endpoints.
@@ -197,6 +202,11 @@ Args:
         :class:`~kiwoom_client.spec.validation.KiwoomParamError` and sends nothing.
     timeout: HTTP timeout in seconds (or an ``httpx.Timeout``) for API and
         token requests. Defaults to 30s.
+    token_cache: Path of a JSON file to keep the access token in, so the
+        next script, cron job or ``kiwoom`` CLI run with the same app key
+        reuses it instead of issuing a new one. Mode 0600; never holds the
+        app key or secret. ``from_env()`` reads ``KIWOOM_TOKEN_CACHE``.
+        None (default) keeps the token in memory only.
 
 ### `AsyncKiwoomAPI.close`
 
@@ -347,17 +357,25 @@ keeps running when a callback raises.
 ### `ws.on`
 
 ```
-def on(data_type: str, callback: Callback) -> None
+def on(data_type: str, callback: Callback, *, named: bool = False) -> None
 ```
 
 Register a callback for a real-time data type.
 
 The callback receives one entry of the REAL frame's ``data`` list —
-a dict carrying ``type``, ``item`` and ``values``.
+a dict carrying ``type``, ``item`` and ``values``. ``values`` is keyed
+by Kiwoom FID numbers (``"10"`` = 현재가) unless ``named=True``::
+
+    ws.on("0B", lambda d: print(d["values"]["현재가"]), named=True)
+    # {'체결시간': '165208', '현재가': '-20800', '거래량': '+120', ...}
 
 Args:
     data_type: Real-time data type code (e.g., "0B" for 주식체결).
     callback: Sync or async function called for each matching item.
+    named: Hand the callback a copy whose ``values`` keys are the
+        Korean field names from Kiwoom's spec
+        (:func:`kiwoom_client.spec.label`). FIDs the spec does not
+        know keep their number. Other callbacks still get FID keys.
 
 ### `ws.on_message`
 

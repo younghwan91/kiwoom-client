@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 
@@ -9,6 +10,12 @@ import pytest
 
 from kiwoom_client.mcp import cli, doctor
 from kiwoom_client.mcp.doctor import ENV_VARS, Overrides, diagnose
+
+# A minimal env on Windows still needs SYSTEMROOT (asyncio/sockets fail without it),
+# and UTF-8 output so the test can read Korean text back.
+_WINDOWS_ENV = {"PYTHONIOENCODING": "utf-8"} | {
+    k: os.environ[k] for k in ("SYSTEMROOT", "SystemRoot") if k in os.environ
+}
 
 MOCK_TOKEN_URL = "https://mockapi.kiwoom.com/oauth2/token"
 SECRET = "SECRET-VALUE-do-not-print"
@@ -117,9 +124,10 @@ class TestOffline:
             "if n == 'mcp' else real(n); "
             "from kiwoom_client.mcp.cli import main; main(['doctor'])"
         )
-        env = {"KIWOOM_APP_KEY": "k", "KIWOOM_APP_SECRET": "s", "PATH": ""}
+        env = {"KIWOOM_APP_KEY": "k", "KIWOOM_APP_SECRET": "s", "PATH": "", **_WINDOWS_ENV}
         proc = subprocess.run(
-            [sys.executable, "-c", script], capture_output=True, text=True, env=env
+            [sys.executable, "-c", script], capture_output=True, text=True, env=env,
+            encoding="utf-8",
         )
         assert proc.returncode == 1, proc.stderr
         assert "mcp 패키지 없음" in proc.stdout

@@ -219,6 +219,76 @@ class TestRealDispatch:
             await ws.disconnect()
             listener.cancel()
 
+    async def test_named_callback_gets_korean_field_names(self):
+        async with FakeKiwoomServer() as server:
+            ws = KiwoomWebSocket("tok", ws_url=server.url)
+            named: list[dict] = []
+            raw: list[dict] = []
+            ws.on("0B", named.append, named=True)
+            ws.on("0B", raw.append)
+            await ws.connect()
+            listener = asyncio.create_task(ws.listen())
+
+            await server.push({
+                "trnm": "REAL",
+                "data": [{
+                    "type": "0B", "name": "주식체결", "item": "005930",
+                    "values": {"20": "165208", "10": "-20800", "15": "+120", "99999": "x"},
+                }],
+            })
+            await _drain(listener, lambda: len(named) == 1 and len(raw) == 1)
+
+            item = named[0]
+            assert item["type"] == "0B" and item["item"] == "005930"
+            assert item["values"] == {
+                "체결시간": "165208", "현재가": "-20800", "거래량": "+120", "99999": "x",
+            }
+            # The other callback still sees FID keys: named=True works on a copy.
+            assert raw[0]["values"]["10"] == "-20800"
+            await ws.disconnect()
+            listener.cancel()
+
+    async def test_named_unknown_type_passes_values_through(self):
+        async with FakeKiwoomServer() as server:
+            ws = KiwoomWebSocket("tok", ws_url=server.url)
+            seen: list[dict] = []
+            ws.on("ZZ", seen.append, named=True)
+            await ws.connect()
+            listener = asyncio.create_task(ws.listen())
+
+            await server.push({
+                "trnm": "REAL", "data": [{"type": "ZZ", "item": "1", "values": {"10": "1"}}],
+            })
+            await server.push({"trnm": "REAL", "data": [{"type": "ZZ", "item": "2"}]})
+            await _drain(listener, lambda: len(seen) == 2)
+
+            assert seen[0]["values"] == {"10": "1"}
+            assert "values" not in seen[1]
+            await ws.disconnect()
+            listener.cancel()
+
+    async def test_named_async_callback_is_awaited(self):
+        async with FakeKiwoomServer() as server:
+            ws = KiwoomWebSocket("tok", ws_url=server.url)
+            seen: list[dict] = []
+
+            async def handler(data: dict) -> None:
+                await asyncio.sleep(0)
+                seen.append(data)
+
+            ws.on("0D", handler, named=True)
+            await ws.connect()
+            listener = asyncio.create_task(ws.listen())
+            await server.push({
+                "trnm": "REAL",
+                "data": [{"type": "0D", "item": "005930", "values": {"41": "70100"}}],
+            })
+            await _drain(listener, lambda: len(seen) == 1)
+
+            assert seen[0]["values"] == {"매도호가1": "70100"}
+            await ws.disconnect()
+            listener.cancel()
+
     async def test_unregistered_type_is_ignored(self):
         async with FakeKiwoomServer() as server:
             ws = KiwoomWebSocket("tok", ws_url=server.url)
