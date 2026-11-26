@@ -68,7 +68,7 @@ def test_every_rest_tr_answers_with_catalog_fields(api_id):
     data = _post(backend, api_id, _body(tr))
     assert data[DEMO_KEY] == DEMO_NOTICE
     if api_id in ORDER_API_IDS:
-        assert data["return_code"] != 0  # refused here; paper trading answers the cash ones
+        assert data["return_code"] != 0  # ord_qty "0" is refused; credit/gold always are
         return
     assert data["return_code"] == 0, data
     for f in tr.response:

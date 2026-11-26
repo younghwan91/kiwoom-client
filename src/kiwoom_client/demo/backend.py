@@ -36,7 +36,16 @@ from kiwoom_client.demo.market import (
     aggregate,
     business_days,
 )
-from kiwoom_client.demo.paper import ACCOUNT_NO, PaperAccount, commission, sell_tax
+from kiwoom_client.demo.paper import (
+    ACCOUNT_NO,
+    TRADE_TYPE_NAMES,
+    OrderRefused,
+    PaperAccount,
+    PaperBook,
+    PaperOrder,
+    commission,
+    sell_tax,
+)
 from kiwoom_client.tick_size import tick_size
 
 #: Key and text of the marker every demo response carries.
@@ -48,12 +57,14 @@ DEMO_NOTICE = "가상 데이터 — 실제 시세·계좌가 아닙니다"
 DEMO_BASE_URL = "https://demo.kiwoom-client.invalid"
 
 OK_MSG = "정상적으로 처리되었습니다 (데모)"
+ORDER_MSG = "주문이 접수되었습니다 (데모 — 메모리 안의 가상 주문, 키움에 전송하지 않음)"
 
 #: Rows per page for long lists, so continuation (cont-yn/next-key) is exercised.
 CHART_PAGE = 300
 MINUTE_PAGE = 900
 
-#: Order TRs. Paper trading handles the cash ones; the rest are refused.
+#: Order TRs. Paper trading (:class:`~.paper.PaperBook`) handles the cash ones;
+#: credit and gold-spot orders are refused.
 ORDER_API_IDS = frozenset({
     "kt10000", "kt10001", "kt10002", "kt10003",  # 주식 매수·매도·정정·취소
     "kt10006", "kt10007", "kt10008", "kt10009",  # 신용
@@ -110,6 +121,7 @@ class DemoBackend:
 
         self.market = Market(DEFAULT_SEED if seed is None else seed, today)
         self.account = PaperAccount()
+        self.book = PaperBook(self.account)
         self.requests: list[str] = []
         self._lock = threading.Lock()
         self._handlers: dict[str, Handler] = {
@@ -130,9 +142,13 @@ class DemoBackend:
             "kt00001": self._deposit,
             "kt00011": self._orderable_qty,
             "kt00018": self._balance,
-            "ka10075": self._empty_list("oso"),
-            "ka10076": self._empty_list("cntr"),
-            "kt00007": self._empty_list("acnt_ord_cntr_prps_dtl"),
+            "kt10000": self._new_order("buy"),
+            "kt10001": self._new_order("sell"),
+            "kt10002": self._modify_order,
+            "kt10003": self._cancel_order,
+            "ka10075": self._open_orders,
+            "ka10076": self._filled_orders,
+            "kt00007": self._order_history,
         }
 
     # --- transport ----------------------------------------------------------
@@ -197,9 +213,10 @@ class DemoBackend:
         if handler is not None:
             try:
                 data, more = handler(body, next_key)
-            except DemoRefusal as exc:
+            except (DemoRefusal, OrderRefused) as exc:
                 return self._refuse(str(exc)), ""
-            return {**self._shape(api_id, data), "return_code": 0, "return_msg": OK_MSG}, more
+            message = ORDER_MSG if api_id in ORDER_API_IDS else OK_MSG
+            return {**self._shape(api_id, data), "return_code": 0, "return_msg": message}, more
         if api_id in ORDER_API_IDS:
             return self._refuse(
                 f"데모 모드는 {api_id} 주문을 지원하지 않습니다 — 아무것도 전송하지 않았습니다"
@@ -619,8 +636,8 @@ class DemoBackend:
                 "cur_prc": str(bar.close),
                 "pred_buyq": "0",
                 "pred_sellq": "0",
-                "tdy_buyq": "0",
-                "tdy_sellq": "0",
+                "tdy_buyq": str(self._today_qty(code, "buy")),
+                "tdy_sellq": str(self._today_qty(code, "sell")),
                 "pur_amt": str(purchase),
                 "pur_cmsn": str(buy_fee),
                 "evlt_amt": str(value),
@@ -633,6 +650,14 @@ class DemoBackend:
                 "crd_loan_dt": "",
             })  # fmt: skip
         return rows
+
+    def _today_qty(self, code: str, side: str) -> int:
+        today = self._stamp()[0]
+        return sum(
+            o.filled_qty
+            for o in self.book.orders
+            if o.code == code and o.side == side and o.date == today
+        )
 
     def _balance(self, _body: dict[str, Any], _next: str) -> tuple[dict[str, Any], str]:
         rows = self._holding_rows()
@@ -697,12 +722,133 @@ class DemoBackend:
             out[f"profa_{pct}tdy_reu_amt"] = "0"
         return out, ""
 
-    @staticmethod
-    def _empty_list(key: str) -> Handler:
-        def handler(_body: dict[str, Any], _next: str) -> tuple[dict[str, Any], str]:
-            return {key: []}, ""
+    # --- paper trading ------------------------------------------------------
+
+    def _stamp(self) -> tuple[str, str]:
+        now = datetime.now(KST)
+        return now.strftime("%Y%m%d"), now.strftime("%H%M%S")
+
+    def _new_order(self, side: str) -> Handler:
+        def handler(body: dict[str, Any], _next: str) -> tuple[dict[str, Any], str]:
+            stock = self._require_stock(body.get("stk_cd"))
+            trade_type = str(body.get("trde_tp") or "0")
+            price = _int(body.get("ord_uv"))
+            current = self.market.price(stock.code)
+            if trade_type == "0":
+                self._check_limit_price(stock.code, price)
+            order = self.book.place(
+                side=side, code=stock.code, qty=_int(body.get("ord_qty")),
+                price=price or None, trade_type=trade_type, current=current,
+                stamp=self._stamp(), exchange=_exchange(body),
+            )  # fmt: skip
+            return {"ord_no": order.no, "dmst_stex_tp": order.exchange}, ""
 
         return handler
+
+    def _check_limit_price(self, code: str, price: int) -> None:
+        upper, lower = self.market.limits(code)
+        if price <= 0:
+            raise DemoRefusal("지정가 주문은 주문단가(ord_uv)가 필요합니다")
+        if not lower <= price <= upper:
+            raise DemoRefusal(f"주문단가가 하한가({lower:,})~상한가({upper:,}) 밖입니다: {price:,}")
+        if price % int(tick_size(price)):
+            raise DemoRefusal(
+                f"호가단위({int(tick_size(price))}원)에 맞지 않는 단가입니다: {price:,}"
+            )
+
+    def _modify_order(self, body: dict[str, Any], _next: str) -> tuple[dict[str, Any], str]:
+        stock = self._require_stock(body.get("stk_cd"))
+        price = _int(body.get("mdfy_uv"))
+        self._check_limit_price(stock.code, price)
+        order = self.book.modify(
+            str(body.get("orig_ord_no") or ""), stock.code, _int(body.get("mdfy_qty")), price,
+            self.market.price(stock.code), self._stamp(),
+        )  # fmt: skip
+        return {
+            "ord_no": order.no,
+            "base_orig_ord_no": order.orig_no,
+            "mdfy_qty": str(order.qty),
+            "dmst_stex_tp": order.exchange,
+        }, ""
+
+    def _cancel_order(self, body: dict[str, Any], _next: str) -> tuple[dict[str, Any], str]:
+        stock = self._require_stock(body.get("stk_cd"))
+        order = self.book.cancel(
+            str(body.get("orig_ord_no") or ""), stock.code, _int(body.get("cncl_qty")),
+            self._stamp(),
+        )  # fmt: skip
+        return {
+            "ord_no": order.no,
+            "base_orig_ord_no": order.orig_no,
+            "cncl_qty": str(order.qty),
+        }, ""
+
+    def _orders(self, body: dict[str, Any], side_key: str, code_flag: str) -> list[PaperOrder]:
+        today = self._stamp()[0]
+        side = {"1": "sell", "2": "buy"}.get(str(body.get(side_key) or "0"))
+        code = str(body.get("stk_cd") or "").strip()
+        filter_code = str(body.get(code_flag) or "0") == "1" and code
+        return [
+            o for o in reversed(self.book.orders)  # newest first
+            if o.date == today and (side is None or o.side == side)
+            and (not filter_code or o.code == code)
+        ]  # fmt: skip
+
+    def _order_row(self, o: PaperOrder) -> dict[str, Any]:
+        stock = BY_CODE[o.code]
+        current = self.market.price(o.code)
+        return {
+            "acnt_no": ACCOUNT_NO,
+            "ord_no": o.no,
+            "stk_cd": o.code,
+            "stk_nm": stock.name,
+            "ord_stt": o.status,
+            "ord_qty": str(o.qty),
+            "ord_pric": str(o.price),
+            "oso_qty": str(o.open_qty),
+            "cntr_tot_amt": str(o.filled_qty * o.filled_price),
+            "orig_ord_no": o.orig_no,
+            "io_tp_nm": o.label,
+            "trde_tp": TRADE_TYPE_NAMES.get(o.trade_type, o.trade_type),
+            "tm": o.time,
+            "ord_tm": o.time,
+            "cntr_qty": str(o.filled_qty),
+            "cntr_pric": str(o.filled_price),
+            "cur_prc": str(current),
+            "tdy_trde_cmsn": str(o.fee),
+            "tdy_trde_tax": str(o.tax),
+            "stex_tp": "1" if o.exchange == "KRX" else "2",
+            "stex_tp_txt": o.exchange,
+            "sor_yn": "N",
+            "stop_pric": "0",
+        }
+
+    def _open_orders(self, body: dict[str, Any], _next: str) -> tuple[dict[str, Any], str]:
+        orders = [o for o in self._orders(body, "trde_tp", "all_stk_tp") if o.open_qty > 0]
+        return {"oso": [self._order_row(o) for o in orders]}, ""
+
+    def _filled_orders(self, body: dict[str, Any], _next: str) -> tuple[dict[str, Any], str]:
+        orders = [o for o in self._orders(body, "sell_tp", "qry_tp") if o.filled_qty > 0]
+        return {"cntr": [self._order_row(o) for o in orders]}, ""
+
+    def _order_history(self, body: dict[str, Any], _next: str) -> tuple[dict[str, Any], str]:
+        if str(body.get("ord_dt") or "") != self._stamp()[0]:
+            return {"acnt_ord_cntr_prps_dtl": []}, ""  # the paper account starts fresh today
+        orders = self._orders({**body, "code_flag": "1"}, "sell_tp", "code_flag")
+        rows = [
+            {
+                "ord_no": o.no, "stk_cd": o.code, "stk_nm": BY_CODE[o.code].name,
+                "trde_tp": TRADE_TYPE_NAMES.get(o.trade_type, o.trade_type), "crd_tp": "보통",
+                "ord_qty": str(o.qty), "ord_uv": str(o.price), "cnfm_qty": str(o.qty),
+                "acpt_tp": "접수", "rsrv_tp": "", "ord_tm": o.time, "ori_ord": o.orig_no,
+                "io_tp_nm": o.label, "loan_dt": "", "cntr_qty": str(o.filled_qty),
+                "cntr_uv": str(o.filled_price), "ord_remnq": str(o.open_qty),
+                "comm_ord_tp": "", "mdfy_cncl": _MODIFY_CANCEL.get(o.kind, ""),
+                "cnfm_tm": o.time, "dmst_stex_tp": o.exchange, "cond_uv": "0",
+            }
+            for o in orders
+        ]  # fmt: skip
+        return {"acnt_ord_cntr_prps_dtl": rows}, ""
 
     # --- helpers ------------------------------------------------------------
 
@@ -715,6 +861,24 @@ class DemoBackend:
                 f"데모 종목 예: {listed} …"
             )
         return stock
+
+
+_MODIFY_CANCEL = {"modify": "정정", "cancel": "취소"}
+
+
+def _int(value: Any) -> int:
+    text = str(value or "").strip().replace(",", "")
+    try:
+        return int(float(text)) if text else 0
+    except ValueError as exc:
+        raise DemoRefusal(f"숫자가 아닙니다: {value!r}") from exc
+
+
+def _exchange(body: dict[str, Any]) -> str:
+    exchange = str(body.get("dmst_stex_tp") or "KRX").strip().upper()
+    if exchange not in ("KRX", "NXT", "SOR"):
+        raise DemoRefusal(f"국내거래소구분(dmst_stex_tp)을 확인하세요: {exchange!r}")
+    return exchange
 
 
 def _children(fields: Iterable[spec.Field]) -> dict[str, list[spec.Field]]:
