@@ -85,8 +85,6 @@ MCP 만 놓고 보면, 공식 실행용 서버는 명령 목록(`kiwoom_commands
 
 반대로 MIT 라이선스의 `pip install` 라이브러리로 국내주식 REST 를 sync·async 양쪽에서 쓰고, 같은 패키지로 MCP 서버까지 띄우고 싶다면 kiwoom-client 가 맞습니다.
 
-만든 배경은 [키움 OCX·32bit 없이 Python으로 자동매매, kiwoom REST API를 만든 이유](https://velog.io/@younghwan91/%ED%82%A4%EC%9B%80-OCX32bit-%EC%97%86%EC%9D%B4-Python%EC%9C%BC%EB%A1%9C-%EC%9E%90%EB%8F%99%EB%A7%A4%EB%A7%A4-kiwoom-rest-api%EB%A5%BC-%EB%A7%8C%EB%93%A0-%EC%9D%B4%EC%9C%A0), 에이전트에게 주문을 맡길 때의 가드는 [AI 에이전트에게 키움 주문을 맡기기 전에](https://velog.io/@younghwan91/ai-%EC%97%90%EC%9D%B4%EC%A0%84%ED%8A%B8%EC%97%90%EA%B2%8C-%ED%82%A4%EC%9B%80-%EC%A3%BC%EB%AC%B8%EC%9D%84-%EB%A7%A1%EA%B8%B0%EA%B8%B0-%EC%A0%84%EC%97%90-kiwoom-client-mcp-%EC%84%9C%EB%B2%84%EC%99%80-%EC%8B%A4%EC%A3%BC%EB%AC%B8-%EA%B0%80%EB%93%9C)(둘 다 velog, 한국어)에 적었습니다.
-
 비교에 틀린 내용이 있거나 빠진 프로젝트가 있으면 [이슈](https://github.com/younghwan91/kiwoom-client/issues)로 알려 주세요. 바로 고치겠습니다.
 
 <small>kiwoom-client 는 키움증권과 무관한 비공식 오픈소스 프로젝트입니다.</small>
