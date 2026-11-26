@@ -7,6 +7,7 @@
 
 ### Added
 
+- CLI `kiwoom --demo` — 키 없이 `quote`·`chart`·`balance`·`find` 를 가상 데이터로 실행합니다. 출력 첫 줄에 `[데모] 가상 데이터` 배너가 붙고(`--json` 이면 stderr), 환경의 실제 앱키는 경고와 함께 무시합니다
 - `KiwoomAPI.demo()` / `AsyncKiwoomAPI.demo()` — 키·계좌·네트워크 없이 데모 백엔드에 붙은 클라이언트를 만듭니다(`seed=` 로 합성 데이터 고정). 주문은 메모리 안의 종이 거래가 되고 `create_websocket()` 은 데모 WebSocket 을 돌려줍니다. `api.is_demo`·`api.demo_backend` 로 확인합니다
 - 데모 WebSocket `kiwoom_client.demo.DemoWebSocket` — 소켓 없이 LOGIN·실시간 등록(REG/REMOVE)·0B 체결 푸시(합성 가격 주변의 가상 체결)·조건검색(CNSRLST/CNSRREQ, 가상 조건식 4개)을 흉내 냅니다. `KiwoomWebSocket` 의 `subscribe`·`listen`·콜백과 MCP 세션이 그대로 동작합니다
 - 데모 종이 거래 — 데모 백엔드가 주식 매수·매도·정정·취소(kt10000~kt10003)를 메모리 안에서 체결·미체결로 시뮬레이션하고, 미체결(ka10075)·체결(ka10076)·주문내역(kt00007)·잔고·예수금에 반영합니다. 키움으로는 아무것도 전송하지 않으며, 신용·금현물 주문은 거부합니다
