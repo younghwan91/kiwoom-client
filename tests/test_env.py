@@ -72,7 +72,7 @@ class TestResolveCredentials:
         creds = resolve_credentials(
             environ={"KIWOOM_APP_KEY": "k", "KIWOOM_APP_SECRET": "s", "KIWOOM_IS_MOCK": "1"}
         )
-        assert creds == ("k", "s", True)
+        assert creds == ("k", "s", True, None)
 
     def test_environ_wins_over_file(self, tmp_path):
         path = tmp_path / ".env"
@@ -83,7 +83,7 @@ class TestResolveCredentials:
         creds = resolve_credentials(
             path, environ={"KIWOOM_APP_KEY": "env_key", "KIWOOM_IS_MOCK": "true"}
         )
-        assert creds == ("env_key", "file_secret", True)
+        assert creds == ("env_key", "file_secret", True, None)
 
     def test_blank_environ_falls_back_to_file(self, tmp_path):
         path = tmp_path / ".env"
@@ -176,3 +176,11 @@ class TestFromEnv:
     def test_missing_credentials_raise(self):
         with pytest.raises(ValueError):
             KiwoomAPI.from_env()
+
+
+def test_token_cache_variable():
+    creds = resolve_credentials(
+        is_mock=True,
+        environ={"KIWOOM_APP_KEY": "k", "KIWOOM_APP_SECRET": "s", "KIWOOM_TOKEN_CACHE": "/t.json"},
+    )
+    assert creds.token_cache == "/t.json"

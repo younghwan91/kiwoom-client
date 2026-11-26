@@ -22,6 +22,7 @@ logger = logging.getLogger("kiwoom_client")
 ENV_APP_KEY = "KIWOOM_APP_KEY"
 ENV_APP_SECRET = "KIWOOM_APP_SECRET"
 ENV_IS_MOCK = "KIWOOM_IS_MOCK"
+ENV_TOKEN_CACHE = "KIWOOM_TOKEN_CACHE"
 
 _TRUE = frozenset({"1", "true", "yes", "y", "on"})
 _FALSE = frozenset({"0", "false", "no", "n", "off"})
@@ -31,6 +32,8 @@ class EnvCredentials(NamedTuple):
     app_key: str
     app_secret: str
     is_mock: bool
+    #: ``KIWOOM_TOKEN_CACHE`` — path of the on-disk token cache, or None.
+    token_cache: str | None = None
 
 
 def read_env_file(path: str | os.PathLike[str]) -> dict[str, str]:
@@ -141,4 +144,4 @@ def resolve_credentials(
         else:
             is_mock = parse_bool(raw_mock)
 
-    return EnvCredentials(app_key, app_secret, is_mock)
+    return EnvCredentials(app_key, app_secret, is_mock, lookup(ENV_TOKEN_CACHE))

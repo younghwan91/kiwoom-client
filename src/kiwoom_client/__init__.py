@@ -157,6 +157,11 @@ class KiwoomAPI(ModuleRegistry[dict[str, Any]]):
             :class:`~kiwoom_client.spec.validation.KiwoomParamError` and sends nothing.
         timeout: HTTP timeout in seconds (or an ``httpx.Timeout``) for API and
             token requests. Defaults to 30s.
+        token_cache: Path of a JSON file to keep the access token in, so the
+            next script, cron job or ``kiwoom`` CLI run with the same app key
+            reuses it instead of issuing a new one. Mode 0600; never holds the
+            app key or secret. ``from_env()`` reads ``KIWOOM_TOKEN_CACHE``.
+            None (default) keeps the token in memory only.
     """
 
     def __init__(
@@ -173,6 +178,7 @@ class KiwoomAPI(ModuleRegistry[dict[str, Any]]):
         validate_params: bool | str = False,
         *,
         timeout: float | httpx.Timeout = BaseClient.DEFAULT_TIMEOUT,
+        token_cache: str | os.PathLike[str] | None = None,
     ):
         self._base_client = BaseClient(
             app_key, app_secret, base_url, is_mock,
@@ -182,7 +188,7 @@ class KiwoomAPI(ModuleRegistry[dict[str, Any]]):
         self._client = _with_validation(self._base_client, validate_params)
         self._auth = KiwoomAuth(
             app_key, app_secret, self._base_client.base_url,
-            expiry_margin=expiry_margin, timeout=timeout,
+            expiry_margin=expiry_margin, timeout=timeout, token_cache=token_cache,
         )
         # Token lifecycle is delegated to the auth object from the start.
         self._base_client.token_provider = self._auth
@@ -224,6 +230,8 @@ class KiwoomAPI(ModuleRegistry[dict[str, Any]]):
             FileNotFoundError: If ``env_file`` is given but does not exist.
         """
         creds = resolve_credentials(env_file, is_mock=is_mock)
+        if creds.token_cache is not None:
+            kwargs.setdefault("token_cache", creds.token_cache)
         return cls(creds.app_key, creds.app_secret, is_mock=creds.is_mock, **kwargs)
 
     def __repr__(self) -> str:
@@ -359,6 +367,11 @@ class AsyncKiwoomAPI(ModuleRegistry[Awaitable[dict[str, Any]]]):
             :class:`~kiwoom_client.spec.validation.KiwoomParamError` and sends nothing.
         timeout: HTTP timeout in seconds (or an ``httpx.Timeout``) for API and
             token requests. Defaults to 30s.
+        token_cache: Path of a JSON file to keep the access token in, so the
+            next script, cron job or ``kiwoom`` CLI run with the same app key
+            reuses it instead of issuing a new one. Mode 0600; never holds the
+            app key or secret. ``from_env()`` reads ``KIWOOM_TOKEN_CACHE``.
+            None (default) keeps the token in memory only.
     """
 
     def __init__(
@@ -375,6 +388,7 @@ class AsyncKiwoomAPI(ModuleRegistry[Awaitable[dict[str, Any]]]):
         validate_params: bool | str = False,
         *,
         timeout: float | httpx.Timeout = AsyncBaseClient.DEFAULT_TIMEOUT,
+        token_cache: str | os.PathLike[str] | None = None,
     ):
         self._base_client = AsyncBaseClient(
             app_key, app_secret, base_url, is_mock,
@@ -384,7 +398,7 @@ class AsyncKiwoomAPI(ModuleRegistry[Awaitable[dict[str, Any]]]):
         self._client = _with_validation(self._base_client, validate_params)
         self._auth = AsyncKiwoomAuth(
             app_key, app_secret, self._base_client.base_url,
-            expiry_margin=expiry_margin, timeout=timeout,
+            expiry_margin=expiry_margin, timeout=timeout, token_cache=token_cache,
         )
         self._base_client.token_provider = self._auth
         self._is_mock = is_mock
@@ -405,6 +419,8 @@ class AsyncKiwoomAPI(ModuleRegistry[Awaitable[dict[str, Any]]]):
         as the sync facade.
         """
         creds = resolve_credentials(env_file, is_mock=is_mock)
+        if creds.token_cache is not None:
+            kwargs.setdefault("token_cache", creds.token_cache)
         return cls(creds.app_key, creds.app_secret, is_mock=creds.is_mock, **kwargs)
 
     def __repr__(self) -> str:
