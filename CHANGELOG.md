@@ -7,6 +7,7 @@
 
 ### Added
 
+- 데모 WebSocket `kiwoom_client.demo.DemoWebSocket` — 소켓 없이 LOGIN·실시간 등록(REG/REMOVE)·0B 체결 푸시(합성 가격 주변의 가상 체결)·조건검색(CNSRLST/CNSRREQ, 가상 조건식 4개)을 흉내 냅니다. `KiwoomWebSocket` 의 `subscribe`·`listen`·콜백과 MCP 세션이 그대로 동작합니다
 - 데모 종이 거래 — 데모 백엔드가 주식 매수·매도·정정·취소(kt10000~kt10003)를 메모리 안에서 체결·미체결로 시뮬레이션하고, 미체결(ka10075)·체결(ka10076)·주문내역(kt00007)·잔고·예수금에 반영합니다. 키움으로는 아무것도 전송하지 않으며, 신용·금현물 주문은 거부합니다
 - 데모 백엔드 `kiwoom_client.demo.DemoBackend` — 키움 계좌·앱키·네트워크 없이 도는 프로세스 안 가짜 키움 서버(`httpx.MockTransport`)입니다. 실제 종목명·코드 20개에 시드 고정 합성 시세(오늘 기준 과거 영업일)를 주고, 응답 키는 TR 카탈로그를 따르며 모든 응답에 `"_demo"` 표시가 붙습니다. 가격은 실제 시세가 아닙니다
 - 토큰 파일 캐시 — `KiwoomAPI(..., token_cache="경로")`(async 도 같음, `from_env()` 는 `KIWOOM_TOKEN_CACHE`)를 주면

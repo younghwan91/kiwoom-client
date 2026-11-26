@@ -157,6 +157,12 @@ class DemoBackend:
         """An httpx transport answering from this backend (sync and async clients)."""
         return httpx.MockTransport(self.handle)
 
+    def websocket(self) -> Any:
+        """A :class:`~kiwoom_client.demo.websocket.DemoWebSocket` on this backend."""
+        from kiwoom_client.demo.websocket import DemoWebSocket
+
+        return DemoWebSocket(self)
+
     def attach(self, api: Any) -> Any:
         """Point a ``KiwoomAPI``/``AsyncKiwoomAPI`` at this backend and return it.
 
