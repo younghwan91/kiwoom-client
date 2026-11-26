@@ -101,7 +101,9 @@ class _TokenCache:
         self.expiry_margin = expiry_margin
         self._token: str | None = None
         self._expires_at: float | None = None
-        self.token_cache: Path | None = Path(token_cache) if token_cache is not None else None
+        self.token_cache: Path | None = (
+            Path(token_cache).expanduser() if token_cache is not None else None
+        )
 
     def _cache_key(self) -> str:
         return _token_file.entry_id(getattr(self, "base_url", ""), getattr(self, "app_key", ""))

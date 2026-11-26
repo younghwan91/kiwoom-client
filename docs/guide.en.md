@@ -160,6 +160,24 @@ api = KiwoomAPI(app_key="...", app_secret="...", is_mock=True, rate_limit=2.0, r
 api = KiwoomAPI(app_key="...", app_secret="...", is_mock=True, rate_limit=None)                              # no client-side throttle
 ```
 
+### Sharing the token across processes
+
+By default the token lives in memory only, so a cron job, a short script or each `kiwoom` CLI run asks for a new one.
+Give `token_cache=` a file path and the token is kept there; the next process with the same app key that points at the
+file reuses it until it expires.
+
+```python
+api = KiwoomAPI(app_key="...", app_secret="...", is_mock=True, token_cache="~/.cache/kiwoom/token.json")
+api = KiwoomAPI.from_env(is_mock=True)   # or set KIWOOM_TOKEN_CACHE=<path> (the CLI reads it too)
+```
+
+- The file is written with mode 0600 and holds only the token and its expiry — never the app key or secret. Entries
+  are kept per server (live/mock) and per app key.
+- A token within 60 s of expiry is not reused. If a cached token is rejected (401), the client reissues as usual and
+  updates the file.
+- If the file cannot be read or written, a warning is logged and the client carries on with the in-memory token.
+- Treat the file like a password: on a shared machine keep it in a path only you can read.
+
 ### Error handling
 
 ```python

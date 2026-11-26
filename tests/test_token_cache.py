@@ -229,3 +229,12 @@ class TestAsyncTokenCache:
             async with AsyncKiwoomAPI("key", "secret", is_mock=True, token_cache=cache) as api:
                 await api.stock_info.basic_stock_info(stk_cd="005930")
         assert _token_requests(httpx_mock) == 1
+
+
+def test_tilde_is_expanded(httpx_mock, tmp_path, monkeypatch):
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path))  # Windows
+    httpx_mock.add_response(url=TOKEN_URL, json=_token_reply("tok"))
+    with KiwoomAuth("key", "secret", BASE, token_cache="~/kiwoom/token.json") as auth:
+        auth.get_valid_token()
+    assert (tmp_path / "kiwoom" / "token.json").exists()

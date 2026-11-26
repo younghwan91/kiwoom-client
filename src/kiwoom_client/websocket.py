@@ -18,6 +18,7 @@ against a live account yet.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import inspect
 import json
 import logging
@@ -56,6 +57,22 @@ REALTIME_TYPES = {
     "0w": "종목프로그램매매",
     "1h": "VI발동/해제",
 }
+
+
+def _with_named_values(callback: Callback) -> Callback:
+    """Wrap ``callback`` so it receives ``values`` keyed by Korean field names."""
+    from kiwoom_client import spec  # loads the TR catalog; only when asked for
+
+    def named(item: dict[str, Any]) -> Any | Awaitable[Any]:
+        values = item.get("values")
+        if isinstance(values, dict):
+            # A type the catalog does not have keeps its FID keys.
+            with contextlib.suppress(KeyError):
+                values = spec.label(str(item.get("type", "")), values)
+            item = {**item, "values": values}
+        return callback(item)
+
+    return named
 
 
 class KiwoomWebSocketError(KiwoomError):
@@ -161,16 +178,26 @@ class KiwoomWebSocket:
 
     # --- callbacks ---
 
-    def on(self, data_type: str, callback: Callback) -> None:
+    def on(self, data_type: str, callback: Callback, *, named: bool = False) -> None:
         """Register a callback for a real-time data type.
 
         The callback receives one entry of the REAL frame's ``data`` list —
-        a dict carrying ``type``, ``item`` and ``values``.
+        a dict carrying ``type``, ``item`` and ``values``. ``values`` is keyed
+        by Kiwoom FID numbers (``"10"`` = 현재가) unless ``named=True``::
+
+            ws.on("0B", lambda d: print(d["values"]["현재가"]), named=True)
+            # {'체결시간': '165208', '현재가': '-20800', '거래량': '+120', ...}
 
         Args:
             data_type: Real-time data type code (e.g., "0B" for 주식체결).
             callback: Sync or async function called for each matching item.
+            named: Hand the callback a copy whose ``values`` keys are the
+                Korean field names from Kiwoom's spec
+                (:func:`kiwoom_client.spec.label`). FIDs the spec does not
+                know keep their number. Other callbacks still get FID keys.
         """
+        if named:
+            callback = _with_named_values(callback)
         self._callbacks.setdefault(data_type, []).append(callback)
 
     def on_trnm(self, trnm: str, callback: Callback) -> None:
