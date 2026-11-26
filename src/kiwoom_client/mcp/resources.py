@@ -89,6 +89,13 @@ INSTRUCTIONS = (
     "자세한 규칙: kiwoom://guide"
 )
 
+#: Prepended to :data:`INSTRUCTIONS` when the server runs in demo mode.
+DEMO_INSTRUCTIONS = (
+    "[데모 모드] 이 서버의 시세·차트·계좌·주문은 전부 가상 데이터다 — 키움에 연결하지 않고, "
+    "주문은 메모리 안의 종이 거래라 실제로 나가지 않는다. 결과를 전할 때마다 실제 시세·계좌가 "
+    "아닌 가상 데이터임을 사용자에게 분명히 밝힌다(모든 응답의 _demo 필드). "
+)
+
 
 @dataclass(frozen=True)
 class _Resource:

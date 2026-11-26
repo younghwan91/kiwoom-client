@@ -3,6 +3,7 @@
 ::
 
     kiwoom-client-mcp                      # stdio MCP 서버 실행 (기본)
+    kiwoom-client-mcp --demo               # 키 없이 가상 데이터로 (연결 없음)
     kiwoom-client-mcp --mock --toolsets market,chart
     kiwoom-client-mcp config claude-code   # 클라이언트 설정 스니펫 출력
     kiwoom-client-mcp doctor               # 설정 점검 (키·네트워크 없이)
@@ -26,6 +27,8 @@ from kiwoom_client import __version__
 from kiwoom_client._console import tolerate_legacy_encoding
 from kiwoom_client._env import ENV_IS_MOCK, parse_bool
 from kiwoom_client.mcp.client_config import CLIENTS, LAUNCHERS, render
+from kiwoom_client.mcp.demo import ENV_VAR as DEMO_ENV_VAR
+from kiwoom_client.mcp.demo import demo_from_env
 from kiwoom_client.mcp.guard import ENV_VAR as LIVE_ORDERS_ENV_VAR
 from kiwoom_client.mcp.guard import READ_ONLY_ENV, read_only
 from kiwoom_client.mcp.masking import ENV_VAR as MASK_ENV_VAR
@@ -43,6 +46,8 @@ _EPILOG = f"""\
   KIWOOM_APP_KEY / KIWOOM_APP_SECRET   앱키·시크릿 (서버 실행 시 필수)
   KIWOOM_IS_MOCK=true                  모의투자 서버 (--mock 과 같음, 기본 false = 실전;
                                        true/false·1/0·yes/no 외의 값은 시작 시 에러)
+  {DEMO_ENV_VAR}=true              데모 모드 (--demo 와 같음): 키 불필요, 가상 데이터,
+                                       어디에도 연결하지 않음, 주문은 메모리 안 종이 거래
   {TOOLSETS_ENV_VAR}=market,chart     노출할 모듈 (--toolsets 와 같음, 기본 전부)
   {MODE_ENV_VAR}=smart                기본. 고수준 도구 + 메타 도구 3개(search_tools 등)
   {MODE_ENV_VAR}=full                 TR 도구 ~180개 전부 노출 (--full 과 같음, 0.5.x 기본)
@@ -114,6 +119,14 @@ def build_parser() -> argparse.ArgumentParser:
         "--mock",
         action="store_true",
         help="모의투자 서버에 연결 (KIWOOM_IS_MOCK=true 와 같음)",
+    )
+    parser.add_argument(
+        "--demo",
+        action="store_true",
+        help=(
+            f"키 없이 가상 데이터로 체험 ({DEMO_ENV_VAR}=true 와 같음). 어디에도 연결하지 않고 "
+            "주문은 메모리 안의 종이 거래. 키가 설정돼 있어도 쓰지 않는다"
+        ),
     )
     parser.add_argument(
         "--toolsets",
@@ -260,21 +273,38 @@ def main(argv: Sequence[str] | None = None) -> None:
     if args.command == "doctor":
         _doctor(args)
 
-    app_key = os.environ.get("KIWOOM_APP_KEY")
-    app_secret = os.environ.get("KIWOOM_APP_SECRET")
-    if not app_key or not app_secret:
-        print(
-            "Error: KIWOOM_APP_KEY and KIWOOM_APP_SECRET environment variables must be set.\n"
-            "설정 예시는 `kiwoom-client-mcp config claude-code` 로 볼 수 있습니다.",
-            file=sys.stderr,
-        )
-        sys.exit(1)
-
     try:
-        is_mock = resolve_is_mock(flag=args.mock)
+        demo = args.demo or demo_from_env()
     except ValueError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         sys.exit(1)
+
+    app_key = os.environ.get("KIWOOM_APP_KEY")
+    app_secret = os.environ.get("KIWOOM_APP_SECRET")
+    if demo:
+        if app_key or app_secret:
+            print(
+                "kiwoom-client-mcp: 데모 모드라 설정된 앱키는 쓰지 않습니다 (데모가 우선, "
+                "키움에 연결하지 않음).",
+                file=sys.stderr,
+            )
+        app_key = app_secret = ""
+        is_mock = True  # paper semantics; the demo client connects nowhere
+    else:
+        if not app_key or not app_secret:
+            print(
+                "Error: KIWOOM_APP_KEY and KIWOOM_APP_SECRET environment variables must be set.\n"
+                "설정 예시는 `kiwoom-client-mcp config claude-code` 로 볼 수 있습니다.\n"
+                "키 없이 가상 데이터로 체험하려면: kiwoom-client-mcp --demo",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+
+        try:
+            is_mock = resolve_is_mock(flag=args.mock)
+        except ValueError as exc:
+            print(f"Error: {exc}", file=sys.stderr)
+            sys.exit(1)
     toolsets: frozenset[str] | None
     if args.toolsets is not None:
         toolsets = None if args.toolsets == set(TOOLSET_NAMES) else args.toolsets
@@ -328,4 +358,5 @@ def main(argv: Sequence[str] | None = None) -> None:
         toolsets=toolsets,
         max_rows=max_rows,
         mode=mode,
+        **({"demo": True} if demo else {}),
     )

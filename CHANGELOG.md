@@ -7,6 +7,7 @@
 
 ### Added
 
+- MCP 데모 모드 — `kiwoom-client-mcp --demo`(또는 `KIWOOM_MCP_DEMO=true`)는 키 없이 데모 백엔드로 뜹니다. smart 모드의 의도 도구 전부와 `order_preview`→확인 토큰→`place_order` 흐름이 종이 거래로 동작하고, 서버 instructions 가 가상 데이터임을 밝히라고 지시하며 모든 도구 응답 첫 키가 `_demo` 입니다(오류는 `[데모]` 접두). 실제 키가 있어도 경고하고 쓰지 않으며, 데모 주문은 기본적으로 감사 로그에 남기지 않습니다
 - CLI `kiwoom --demo` — 키 없이 `quote`·`chart`·`balance`·`find` 를 가상 데이터로 실행합니다. 출력 첫 줄에 `[데모] 가상 데이터` 배너가 붙고(`--json` 이면 stderr), 환경의 실제 앱키는 경고와 함께 무시합니다
 - `KiwoomAPI.demo()` / `AsyncKiwoomAPI.demo()` — 키·계좌·네트워크 없이 데모 백엔드에 붙은 클라이언트를 만듭니다(`seed=` 로 합성 데이터 고정). 주문은 메모리 안의 종이 거래가 되고 `create_websocket()` 은 데모 WebSocket 을 돌려줍니다. `api.is_demo`·`api.demo_backend` 로 확인합니다
 - 데모 WebSocket `kiwoom_client.demo.DemoWebSocket` — 소켓 없이 LOGIN·실시간 등록(REG/REMOVE)·0B 체결 푸시(합성 가격 주변의 가상 체결)·조건검색(CNSRLST/CNSRREQ, 가상 조건식 4개)을 흉내 냅니다. `KiwoomWebSocket` 의 `subscribe`·`listen`·콜백과 MCP 세션이 그대로 동작합니다
