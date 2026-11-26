@@ -8,6 +8,7 @@
 ### Added
 
 - `kiwoom-client-mcp config <client> --demo` — 키 자리표시자 없이 `--demo` 로 띄우는 설정을 출력합니다. `KIWOOM_MCP_DEMO=auto` 는 앱키·시크릿이 없을 때만 데모로 뜹니다. Claude Desktop 번들(.mcpb)은 키 입력을 선택으로 바꾸고 `데모 모드`(기본 `auto`) 항목을 더해, 키 없이 설치하면 바로 데모로 동작하고 키를 넣으면 실제 서버에 연결합니다. `kiwoom-client-mcp --demo doctor` 도 데모를 인식해 키를 요구하지 않고 인증 확인(네트워크)을 건너뜁니다
+- 문서: 튜토리얼 [10분 만에 조건검색 알림 봇](docs/tutorials/condition-alert-bot.md)(·영문) — `KiwoomAPI.demo()` 로 키 없이 바로 돌아가는 조건검색 + 실시간 가격 알림 봇입니다. 주문은 하지 않고, 실제 계좌는 클라이언트 한 줄만 바꿉니다. 코드 블록은 테스트가 데모 백엔드로 실제 실행합니다
 - MCP 데모 모드 — `kiwoom-client-mcp --demo`(또는 `KIWOOM_MCP_DEMO=true`)는 키 없이 데모 백엔드로 뜹니다. smart 모드의 의도 도구 전부와 `order_preview`→확인 토큰→`place_order` 흐름이 종이 거래로 동작하고, 서버 instructions 가 가상 데이터임을 밝히라고 지시하며 모든 도구 응답 첫 키가 `_demo` 입니다(오류는 `[데모]` 접두). 실제 키가 있어도 경고하고 쓰지 않으며, 데모 주문은 기본적으로 감사 로그에 남기지 않습니다
 - CLI `kiwoom --demo` — 키 없이 `quote`·`chart`·`balance`·`find` 를 가상 데이터로 실행합니다. 출력 첫 줄에 `[데모] 가상 데이터` 배너가 붙고(`--json` 이면 stderr), 환경의 실제 앱키는 경고와 함께 무시합니다
 - `KiwoomAPI.demo()` / `AsyncKiwoomAPI.demo()` — 키·계좌·네트워크 없이 데모 백엔드에 붙은 클라이언트를 만듭니다(`seed=` 로 합성 데이터 고정). 주문은 메모리 안의 종이 거래가 되고 `create_websocket()` 은 데모 WebSocket 을 돌려줍니다. `api.is_demo`·`api.demo_backend` 로 확인합니다
