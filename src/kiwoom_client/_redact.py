@@ -32,7 +32,9 @@ def token_state(token: str | None) -> str:
 
 
 def server_label(base_url: str) -> str:
-    """``"mock"``, ``"live"`` or ``"custom"`` for a REST base URL."""
+    """``"mock"``, ``"live"``, ``"demo"`` or ``"custom"`` for a REST base URL."""
+    if "kiwoom-client.invalid" in base_url:
+        return "demo"  # kiwoom_client.demo.DEMO_BASE_URL
     if "mockapi.kiwoom.com" in base_url:
         return "mock"
     if "api.kiwoom.com" in base_url:

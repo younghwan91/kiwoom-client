@@ -194,6 +194,8 @@ class KiwoomAPI(ModuleRegistry[dict[str, Any]]):
         self._base_client.token_provider = self._auth
         self._is_mock = is_mock
         self._stock_cache = StockCache()
+        #: Set by :meth:`demo` (``DemoBackend.attach``); None for a real client.
+        self._demo_backend: Any = None
         self._init_modules()
 
     @classmethod
@@ -233,6 +235,43 @@ class KiwoomAPI(ModuleRegistry[dict[str, Any]]):
         if creds.token_cache is not None:
             kwargs.setdefault("token_cache", creds.token_cache)
         return cls(creds.app_key, creds.app_secret, is_mock=creds.is_mock, **kwargs)
+
+    @classmethod
+    def demo(
+        cls: type[_SyncT], *, seed: int | None = None, validate_params: bool | str = False
+    ) -> _SyncT:
+        """A client on the built-in demo backend — no Kiwoom account, key or network.
+
+        Every request is answered in the process by
+        :class:`kiwoom_client.demo.DemoBackend`: real stock names and codes,
+        **synthetic prices** (deterministic for a ``seed``), a made-up account
+        and paper-trading orders kept in memory. Every response carries
+        ``"_demo": "가상 데이터 — 실제 시세·계좌가 아닙니다"``. Nothing connects to
+        the live server, the mock server or anywhere else, and no key is read::
+
+            with KiwoomAPI.demo() as api:
+                api.stock_info.basic_stock_info(stk_cd="005930")
+
+        Order TRs (``api.order.*``) become paper trades; :meth:`create_websocket`
+        returns a :class:`kiwoom_client.demo.DemoWebSocket`.
+        """
+        from kiwoom_client.demo import DEMO_BASE_URL, DemoBackend
+
+        api = cls(
+            "demo-app-key", "demo-app-secret", base_url=DEMO_BASE_URL,
+            rate_limit=None, validate_params=validate_params,
+        )  # fmt: skip
+        return DemoBackend(seed=seed).attach(api)
+
+    @property
+    def is_demo(self) -> bool:
+        """True for a client made by :meth:`demo` (synthetic data, nothing sent)."""
+        return self._demo_backend is not None
+
+    @property
+    def demo_backend(self) -> Any:
+        """The :class:`~kiwoom_client.demo.DemoBackend` of a demo client, else None."""
+        return self._demo_backend
 
     def __repr__(self) -> str:
         # Never the secret or the token: see kiwoom_client._redact.
@@ -282,6 +321,8 @@ class KiwoomAPI(ModuleRegistry[dict[str, Any]]):
         Returns:
             KiwoomWebSocket instance configured with current auth.
         """
+        if self._demo_backend is not None:
+            return self._demo_backend.websocket()
         return KiwoomWebSocket(self._auth.get_valid_token(), self._is_mock)
 
     # --- 종목 검색 (ka10099 종목정보 리스트, cached) ---
@@ -403,6 +444,8 @@ class AsyncKiwoomAPI(ModuleRegistry[Awaitable[dict[str, Any]]]):
         self._base_client.token_provider = self._auth
         self._is_mock = is_mock
         self._stock_cache = StockCache()
+        #: Set by :meth:`demo` (``DemoBackend.attach``); None for a real client.
+        self._demo_backend: Any = None
         self._init_modules()
 
     @classmethod
@@ -422,6 +465,36 @@ class AsyncKiwoomAPI(ModuleRegistry[Awaitable[dict[str, Any]]]):
         if creds.token_cache is not None:
             kwargs.setdefault("token_cache", creds.token_cache)
         return cls(creds.app_key, creds.app_secret, is_mock=creds.is_mock, **kwargs)
+
+    @classmethod
+    def demo(
+        cls: type[_AsyncT], *, seed: int | None = None, validate_params: bool | str = False
+    ) -> _AsyncT:
+        """A client on the built-in demo backend — see :meth:`KiwoomAPI.demo`.
+
+        No Kiwoom account, key or network; synthetic prices, paper orders,
+        ``"_demo"`` in every response::
+
+            async with AsyncKiwoomAPI.demo() as api:
+                await api.stock_info.basic_stock_info(stk_cd="005930")
+        """
+        from kiwoom_client.demo import DEMO_BASE_URL, DemoBackend
+
+        api = cls(
+            "demo-app-key", "demo-app-secret", base_url=DEMO_BASE_URL,
+            rate_limit=None, validate_params=validate_params,
+        )  # fmt: skip
+        return DemoBackend(seed=seed).attach(api)
+
+    @property
+    def is_demo(self) -> bool:
+        """True for a client made by :meth:`demo` (synthetic data, nothing sent)."""
+        return self._demo_backend is not None
+
+    @property
+    def demo_backend(self) -> Any:
+        """The :class:`~kiwoom_client.demo.DemoBackend` of a demo client, else None."""
+        return self._demo_backend
 
     def __repr__(self) -> str:
         # Never the secret or the token: see kiwoom_client._redact.
@@ -464,6 +537,8 @@ class AsyncKiwoomAPI(ModuleRegistry[Awaitable[dict[str, Any]]]):
         Returns:
             KiwoomWebSocket instance configured with current auth.
         """
+        if self._demo_backend is not None:
+            return self._demo_backend.websocket()
         return KiwoomWebSocket(await self._auth.get_valid_token(), self._is_mock)
 
     # --- 종목 검색 (ka10099 종목정보 리스트, cached) — see KiwoomAPI ---
