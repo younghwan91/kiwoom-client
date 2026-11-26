@@ -10,10 +10,15 @@
     kiwoom find 하이닉스
     kiwoom endpoints 체결            # 어떤 메서드가 어떤 TR 인지 (키 필요 없음)
     kiwoom --json quote 005930       # 원 응답 JSON
+    kiwoom --demo quote 삼성전자     # 키 없이 가상 데이터로 체험
 
 Credentials come from ``KIWOOM_APP_KEY`` / ``KIWOOM_APP_SECRET`` /
 ``KIWOOM_IS_MOCK`` (see :meth:`KiwoomAPI.from_env`), optionally from
 ``--env-file``. ``--mock`` / ``--live`` override ``KIWOOM_IS_MOCK``.
+
+``--demo`` needs no key and connects nowhere (:meth:`KiwoomAPI.demo`): the
+prices are synthetic, and the first line of output says so. A key in the
+environment is ignored, with a warning.
 
 There is deliberately **no order command** and nothing that revokes a token:
 every subcommand is a query. Orders belong in code you can review.
@@ -24,6 +29,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 import re
 import sys
 from collections.abc import Callable, Sequence
@@ -99,9 +105,17 @@ def _print_json(data: Any) -> None:
     print(json.dumps(data, ensure_ascii=False, indent=2))
 
 
+#: First line of every ``--demo`` run, so synthetic prices are never mistaken for quotes.
+DEMO_BANNER = "[데모] 가상 데이터 — 실제 시세·계좌가 아닙니다 (키움 서버에 연결하지 않음)"
+
+
 def _open_api(args: argparse.Namespace) -> Any:
     from kiwoom_client import KiwoomAPI
 
+    if getattr(args, "demo", False):
+        if os.environ.get("KIWOOM_APP_KEY") or getattr(args, "env_file", None):
+            print("kiwoom: --demo 라서 설정된 앱키는 쓰지 않습니다 (데모가 우선).", file=sys.stderr)
+        return KiwoomAPI.demo()
     is_mock: bool | None = None
     if getattr(args, "mock", False):
         is_mock = True
@@ -251,6 +265,8 @@ def _common(suppress: bool) -> argparse.ArgumentParser:
                         help="모의투자 서버 (KIWOOM_IS_MOCK 무시)")
     server.add_argument("--live", action="store_true", default=flag_default,
                         help="실전투자 서버 (KIWOOM_IS_MOCK 무시)")
+    server.add_argument("--demo", action="store_true", default=flag_default,
+                        help="키 없이 가상 데이터로 체험 (어디에도 연결하지 않음, 시세는 가짜)")
     common.add_argument("--env-file", metavar="PATH", default=default,
                         help=".env 파일 경로 (환경변수가 우선)")
     common.add_argument("--json", action="store_true", default=flag_default,
@@ -264,7 +280,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="kiwoom",
         description="키움 REST API 조회용 CLI (주문 기능 없음). "
-                    "키: KIWOOM_APP_KEY / KIWOOM_APP_SECRET / KIWOOM_IS_MOCK",
+                    "키: KIWOOM_APP_KEY / KIWOOM_APP_SECRET / KIWOOM_IS_MOCK. "
+                    "키 없이 체험: kiwoom --demo quote 삼성전자",
         parents=[_common(suppress=False)],
     )
     sub = parser.add_subparsers(dest="command", required=True, metavar="COMMAND")
@@ -317,6 +334,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.command == "endpoints":
             _cmd_endpoints(args)
             return 0
+        if args.demo:
+            # With --json, stdout stays valid JSON (each response carries "_demo").
+            print(DEMO_BANNER, file=sys.stderr if args.json else sys.stdout)
         with _open_api(args) as api:
             _COMMANDS[args.command](api, args)
         return 0
