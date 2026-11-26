@@ -27,15 +27,22 @@ REST 에 아직 없을 수 있으니, 꼭 필요한 TR 은 [키움 REST API 가�
 
 ## 파이썬 라이브러리 한눈에
 
-2026-11-21 PyPI 메타데이터와 각 프로젝트 README 에 적힌 내용 기준입니다. 버전과 기능은 바뀌므로 고르기 전에 각 프로젝트 페이지를 확인하세요.
+2026-11-26 PyPI·npm 메타데이터, 공식 MCP 레지스트리, 각 프로젝트 README(일부는 소스) 기준입니다. 버전과 기능은 바뀌므로 고르기 전에 각 프로젝트 페이지를 확인하세요.
 
 ### 키움증권 공식
 
 | 저장소 / 패키지 | 최신 (올린 날) | 파이썬 | 라이선스 | README 에 적힌 내용 |
 |---|---|---|---|---|
-| [Kiwoom-Securities/Kiwoom-REST-API](https://github.com/Kiwoom-Securities/Kiwoom-REST-API) · PyPI `kwcli` | `kwcli` 1.0.3 (2026-09) | ≥ 3.13 | 키움증권 자체 라이선스(키움 OpenAPI 이용 목적으로 사용 허락) | API 337종 스펙(국내주식·**미국주식**), 함수별 예제 362개, Postman 컬렉션, CLI `kiwoomcli`, MCP 서버 2종(스펙 검색용·실행용 — 주문은 명시 허용 시에만) |
+| [Kiwoom-Securities/Kiwoom-REST-API](https://github.com/Kiwoom-Securities/Kiwoom-REST-API) · PyPI `kwcli` | `kwcli` 1.0.3 (2026-09) | ≥ 3.13 | 키움증권 자체 라이선스(키움 OpenAPI 이용 목적으로 사용 허락) | API 337종 스펙(국내주식·**미국주식**), 함수별 예제 362개, Postman 컬렉션, CLI `kiwoomcli`(설정·doctor, 프로필, 실시간 `--named` 출력), MCP 서버 2종(키 없이 쓰는 스펙 검색용·실행용 — 주문은 명시 허용 시에만). 토큰은 디스크에 캐시해 프로세스끼리 나눠 쓰고, 클라이언트 쪽 호출 속도 조절은 없이 간격을 두라고 안내 |
 
 키움증권이 직접 내는 저장소라 API 스펙의 정본에 가장 가깝고, 미국주식까지 다룹니다. 아래 비교는 이 공식 도구와 겹치는 부분이 있다는 것을 전제로 읽어 주세요.
+
+### MCP 서버
+
+| 저장소 / 패키지 | 최신 (올린 날) | 설치 | 라이선스 | README 에 적힌 내용 |
+|---|---|---|---|---|
+| [ChunSam/kiwoom-mcp-server](https://github.com/ChunSam/kiwoom-mcp-server) (공식 MCP 레지스트리 등록) | 0.52.6 (2026-08) | `npx`, Node ≥ 22 | MIT | 종목명으로 받는 조회 전용 도구 약 49개(시세·수급·ETF·공매도·관심종목·계좌, ISA 절세 계산 등), 주문 도구 없음, Streamable HTTP + OAuth 로 claude.ai 웹·모바일 커넥터 가능. **README 에 2026-11-02 유지보수 중단 공지** |
+| [kiwoom-mcp](https://github.com/gejyn14/kiwoom-plugin) (kiwoom-cli 저자) | 0.1.2 (2026-07) | `uvx` | Apache-2.0 | 범용 도구 6개(`kiwoom_find`·`kiwoom_run` 등), `--allow-orders` 일 때만 주문 도구, Claude Code 플러그인 2종(조회용·매매용)과 스킬 7개 |
 
 MCP 만 놓고 보면, 공식 실행용 서버는 명령 목록(`kiwoom_commands`)·도움말(`kiwoom_help`)·실행(`kiwoom_query`) 도구로 명령을 찾아 부르는 구조이고 Claude Desktop 용 `.mcpb` 번들을 냅니다. kiwoom-client 의 MCP 서버는 기본 모드에서 종목명으로 받는 고수준 도구(시세·차트·계좌·주문 미리보기)를 먼저 올리고 나머지 TR 은 `search_tools` 로 찾게 하며, 역시 `.mcpb` 번들을 냅니다([MCP 서버](mcp.md)).
 
@@ -52,10 +59,11 @@ MCP 만 놓고 보면, 공식 실행용 서버는 명령 목록(`kiwoom_commands
 | 패키지 | 최신 버전 (올린 날) | 파이썬 | 라이선스 | README 에 적힌 특징 |
 |---|---|---|---|---|
 | **kiwoom-client** (이 프로젝트) | PyPI 참고 | ≥ 3.10 | MIT | sync·async 같은 표면, 토큰 자동 갱신, TR별 Rate Limiter, 실시간 WebSocket, MCP 서버(실주문 opt-in) |
-| [pykiwoom-rest](https://github.com/unohee/pykiwoom-rest) | 2.2.0 (2026-07) | ≥ 3.8 (MCP 는 ≥ 3.10) | MIT | 라이브러리 + `kiwoom` CLI + MCP 서버, pandas 출력 |
-| [kiwoom-cli](https://github.com/gejyn14/kiwoom-cli) / [kiwoom-mcp](https://github.com/gejyn14/kiwoom-plugin) | 2.14.0 / 0.1.2 (2026-07) | ≥ 3.10 | 자체 라이선스 / Apache-2.0 | CLI 중심. MCP 는 `--allow-orders` 일 때만 주문 도구 등록, 주문 사전점검·dry-run |
+| [pykiwoom-rest](https://github.com/unohee/pykiwoom-rest) | 2.2.0 (2026-07) | ≥ 3.8 (MCP 는 ≥ 3.10) | MIT | 라이브러리 + `kiwoom` CLI + MCP 서버(공개 메서드 자동 노출), pandas 출력, 앱키 단위 토큰 버킷(20/s)·429 백오프·**여러 앱키 순환** |
+| [kiwoom-cli](https://github.com/gejyn14/kiwoom-cli) | 2.14.0 (2026-07) | ≥ 3.10 | v2.0 부터 소스 공개형(기업은 상용 라이선스) | CLI 중심. API 236종(미국주식 29종 포함), 숫자로 정규화한 JSON 출력, 주문 검증·dry-run·멱등 주문 ID, 실시간 NDJSON(이름 붙은 필드)·기록·sqlite/parquet 내보내기 |
 | [kiwoompy](https://github.com/meonji-gogo/kiwoompy) | 0.1.6 (2026-03) | ≥ 3.12 | MIT | 응답을 속성으로 읽는 모델(`balance.tot_evlt_amt`), 문서 사이트 |
-| [kiwoom-rest-api](https://pypi.org/project/kiwoom-rest-api/) | 0.1.12 (2025-06) | ≥ 3.9 | 명시 없음 | 모듈별 클래스 + CLI |
+| [kiwoom-rest-api](https://pypi.org/project/kiwoom-rest-api/) | 0.1.12 (2025-06) | ≥ 3.9 | MIT(GitHub 저장소 기준) | 모듈별 클래스 + CLI |
+| [kiwoom-restful](https://github.com/breadum/kiwoom-restful) | 0.4.0 | ≥ 3.10 | MIT | async 전용, 초당 호출 제한 자동, 실시간 파싱에 orjson/msgspec |
 
 ## kiwoom-client 가 다른 점
 
@@ -66,7 +74,11 @@ MCP 만 놓고 보면, 공식 실행용 서버는 명령 목록(`kiwoom_commands
 - **sync 와 async 가 같은 표면.** `KiwoomAPI` 와 `AsyncKiwoomAPI` 는 같은 모듈·같은 메서드를 갖습니다. 스크립트로 시작해
   `asyncio.gather` 로 넘어갈 때 코드를 다시 짜지 않아도 됩니다.
 - **오래 도는 봇을 위한 기본값.** 토큰은 만료 전에 갱신되고 401 이면 재발급 후 재시도합니다. Rate Limit 은 실측한 TR별 한도
-  (약 1 req/s, 버스트 2)에 맞춘 토큰 버킷이고, 429 가 나면 백오프 후 다시 보냅니다.
+  (약 1 req/s, 버스트 2)에 맞춘 토큰 버킷이고, 429 가 나면 백오프 후 다시 보냅니다. 토큰 버킷 자체는 pykiwoom-rest 에도 있지만
+  그쪽은 앱키 단위(20/s)이고, 키움 한도가 TR 마다 따로라는 점에 맞춘 것은 이쪽입니다.
+- **짧은 프로세스끼리 토큰 공유.** `token_cache="경로"`(또는 `KIWOOM_TOKEN_CACHE`)를 주면 크론·스크립트·CLI 가 실행마다
+  토큰을 새로 받지 않고 같은 파일의 토큰을 씁니다(0600, 앱키·시크릿 미저장 — [가이드](guide.md#토큰을-프로세스끼리-나눠-쓰기)).
+- **실시간을 한글 필드명으로.** `ws.on("0B", cb, named=True)` 면 `values["10"]` 대신 `values["현재가"]` 로 받습니다.
 - **에이전트가 실주문을 모르게.** 내장 MCP 서버는 실전투자 서버에서 `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true` 를 켜기 전까지
   주문 도구 12개를 **등록하지 않습니다**. 모의투자에서는 항상 쓸 수 있습니다.
   키움 공식 MCP·플러그인을 쓰면서 주문 **내용**(금액·수량 상한, 시장가 매수, 반복 전송, 하루 횟수)까지 막고 싶다면
@@ -74,12 +86,14 @@ MCP 만 놓고 보면, 공식 실행용 서버는 명령 목록(`kiwoom_commands
 - **계산 가능한 응답.** `to_dataframe()`·`to_number()` 가 `"+70000"`, `"1,234,567"` 같은 문자열을 숫자로 바꾸고,
   종목코드처럼 앞자리 0 이 의미 있는 값은 문자열로 남깁니다. `round_to_tick()` 은 지정가를 KRX 호가단위에 맞춥니다.
 - **타입 정보 포함.** `py.typed` 를 배포하고 CI 에서 mypy 를 돌립니다.
+- **Windows 에서도 CI.** 단위 테스트를 Linux·Windows·macOS 에서 돌리고, cp949 콘솔에서 CLI 가 죽지 않는지도 봅니다.
 
 ## 다른 것을 고를 때
 
-- **터미널에서 바로 조회·주문하는 CLI** 가 주목적이면 kiwoom-cli 나 pykiwoom-rest 의 CLI 가 더 맞습니다. kiwoom-client 는 라이브러리와 MCP 서버만 제공합니다.
+- **터미널에서 바로 조회·주문하는 CLI** 가 주목적이면 kiwoom-cli 나 pykiwoom-rest 의 CLI 가 더 맞습니다. kiwoom-client 의 `kiwoom` CLI 는 시세·차트·잔고·종목 찾기만 하는 조회 전용이고, 주문·실시간 스트리밍 명령은 일부러 두지 않았습니다.
+- **claude.ai 웹·모바일에서 원격 커넥터**로 쓰려면 HTTP + OAuth 를 지원하는 ChunSam/kiwoom-mcp-server 를 보세요(유지보수 중단 공지 확인). kiwoom-client 의 MCP 서버는 로컬 stdio 전용입니다.
 - **응답을 속성 접근 모델로** 받고 싶다면 kiwoompy 를 보세요. kiwoom-client 는 키움 응답 JSON(dict) 을 그대로 돌려주고, 필요하면 `to_dataframe()` 으로 바꿉니다.
-- **키움증권이 직접 관리하는 도구**, 또는 **미국주식 API** 가 필요하다면 [키움 공식 저장소](https://github.com/Kiwoom-Securities/Kiwoom-REST-API)와 `kwcli` 를 쓰세요. kiwoom-client 는 국내주식 REST 만 감쌉니다.
+- **키움증권이 직접 관리하는 도구**, 또는 **미국주식 API** 가 필요하다면 [키움 공식 저장소](https://github.com/Kiwoom-Securities/Kiwoom-REST-API)와 `kwcli`(또는 미국주식 29종을 감싼 kiwoom-cli)를 쓰세요. kiwoom-client 는 국내주식 REST 만 감쌉니다.
 - **OpenAPI+ 에만 있는 기능**에 의존한다면 아직은 pykiwoom 같은 OCX 래퍼가 필요할 수 있습니다.
 - **파이썬 3.8·3.9** 를 써야 한다면 kiwoom-client(≥ 3.10)는 맞지 않습니다.
 

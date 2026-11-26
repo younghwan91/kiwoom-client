@@ -27,17 +27,24 @@ not exist in REST yet, so look up the TRs you rely on in the
 
 ## Python libraries at a glance
 
-As of 2026-11-21, from PyPI metadata and each project's README. Versions and features change; check each project before
+As of 2026-11-26, from PyPI and npm metadata, the official MCP registry and each project's README (source code for a few). Versions and features change; check each project before
 you choose.
 
 ### Official, from Kiwoom Securities
 
 | Repository / package | Latest (uploaded) | Python | License | Stated in its README |
 |---|---|---|---|---|
-| [Kiwoom-Securities/Kiwoom-REST-API](https://github.com/Kiwoom-Securities/Kiwoom-REST-API) · PyPI `kwcli` | `kwcli` 1.0.3 (2026-09) | ≥ 3.13 | Kiwoom's own license (use limited to Kiwoom OpenAPI) | Specs for 337 APIs (Korean **and US** stocks), 362 per-function examples, Postman collection, `kiwoomcli` CLI, two MCP servers (spec search and execution; orders only when explicitly allowed) |
+| [Kiwoom-Securities/Kiwoom-REST-API](https://github.com/Kiwoom-Securities/Kiwoom-REST-API) · PyPI `kwcli` | `kwcli` 1.0.3 (2026-09) | ≥ 3.13 | Kiwoom's own license (use limited to Kiwoom OpenAPI) | Specs for 337 APIs (Korean **and US** stocks), 362 per-function examples, Postman collection, `kiwoomcli` CLI (setup and doctor, profiles, real-time `--named` output), two MCP servers (credential-free spec search, and execution; orders only when explicitly allowed). Tokens are cached on disk and shared across processes; no client-side throttling, the docs ask you to space calls out |
 
 Published by Kiwoom itself, so it is the closest thing to the source of truth for the API, and it covers US stocks. Read
 the comparison below knowing that it overlaps with these official tools.
+
+### MCP servers
+
+| Repository / package | Latest (uploaded) | Install | License | Stated in its README |
+|---|---|---|---|---|
+| [ChunSam/kiwoom-mcp-server](https://github.com/ChunSam/kiwoom-mcp-server) (in the official MCP registry) | 0.52.6 (2026-08) | `npx`, Node ≥ 22 | MIT | About 49 read-only tools that take a stock name (quotes, flows, ETFs, short selling, watchlists, account, an ISA tax calculator), no order tools, Streamable HTTP + OAuth so it works as a claude.ai web/mobile connector. **README announces maintenance stopped on 2026-11-02** |
+| [kiwoom-mcp](https://github.com/gejyn14/kiwoom-plugin) (by the kiwoom-cli author) | 0.1.2 (2026-07) | `uvx` | Apache-2.0 | Six generic tools (`kiwoom_find`, `kiwoom_run`, …), order tools only with `--allow-orders`, two Claude Code plugins (read-only and trading) with seven skills |
 
 On MCP alone: the official execution server finds and runs commands through a command list (`kiwoom_commands`), help
 (`kiwoom_help`) and run (`kiwoom_query`) tools, and ships a `.mcpb` bundle for Claude Desktop. kiwoom-client's MCP server
@@ -57,10 +64,11 @@ other TRs through `search_tools`, and also ships a `.mcpb` bundle ([MCP server](
 | Package | Latest (uploaded) | Python | License | Features stated in its README |
 |---|---|---|---|---|
 | **kiwoom-client** (this project) | see PyPI | ≥ 3.10 | MIT | Same sync/async surface, auto token refresh, per-TR rate limiter, real-time WebSocket, MCP server with opt-in live orders |
-| [pykiwoom-rest](https://github.com/unohee/pykiwoom-rest) | 2.2.0 (2026-07) | ≥ 3.8 (MCP ≥ 3.10) | MIT | Library + `kiwoom` CLI + MCP server, pandas output |
-| [kiwoom-cli](https://github.com/gejyn14/kiwoom-cli) / [kiwoom-mcp](https://github.com/gejyn14/kiwoom-plugin) | 2.14.0 / 0.1.2 (2026-07) | ≥ 3.10 | own license / Apache-2.0 | CLI first. MCP registers order tools only with `--allow-orders`; order pre-check and dry-run |
+| [pykiwoom-rest](https://github.com/unohee/pykiwoom-rest) | 2.2.0 (2026-07) | ≥ 3.8 (MCP ≥ 3.10) | MIT | Library + `kiwoom` CLI + MCP server (every public method exposed), pandas output, per-app-key token bucket (20/s), 429 backoff, **rotation across several app keys** |
+| [kiwoom-cli](https://github.com/gejyn14/kiwoom-cli) | 2.14.0 (2026-07) | ≥ 3.10 | source-available since v2.0 (companies need a commercial license) | CLI first. 236 APIs (29 US-stock ones), JSON output with normalized numbers, order validate / dry-run / idempotent order IDs, real-time NDJSON with named fields, recording and sqlite/parquet export |
 | [kiwoompy](https://github.com/meonji-gogo/kiwoompy) | 0.1.6 (2026-03) | ≥ 3.12 | MIT | Attribute-style response models (`balance.tot_evlt_amt`), docs site |
-| [kiwoom-rest-api](https://pypi.org/project/kiwoom-rest-api/) | 0.1.12 (2025-06) | ≥ 3.9 | not stated | Per-module classes + CLI |
+| [kiwoom-rest-api](https://pypi.org/project/kiwoom-rest-api/) | 0.1.12 (2025-06) | ≥ 3.9 | MIT (per its GitHub repo) | Per-module classes + CLI |
+| [kiwoom-restful](https://github.com/breadum/kiwoom-restful) | 0.4.0 | ≥ 3.10 | MIT | Async only, automatic per-second limits, orjson/msgspec real-time parsing |
 
 ## What kiwoom-client does differently
 
@@ -72,7 +80,13 @@ Only things you can check in the code and tests.
 - **Same surface for sync and async.** `KiwoomAPI` and `AsyncKiwoomAPI` have the same modules and methods, so moving a
   script to `asyncio.gather` is not a rewrite.
 - **Defaults for long-running bots.** Tokens refresh before expiry and are reissued on 401. The rate limiter is a per-TR
-  token bucket tuned to the measured limit (about 1 req/s, burst 2) and backs off and retries on 429.
+  token bucket tuned to the measured limit (about 1 req/s, burst 2) and backs off and retries on 429. pykiwoom-rest has a
+  token bucket too, but per app key (20/s); this one follows Kiwoom's limit being separate for each TR.
+- **Short-lived processes share one token.** With `token_cache="<path>"` (or `KIWOOM_TOKEN_CACHE`) cron jobs, scripts and
+  the CLI reuse the token in that file instead of asking for a new one each run (mode 0600, no key or secret stored —
+  [guide](guide.md#sharing-the-token-across-processes)).
+- **Real-time fields by name.** `ws.on("0B", cb, named=True)` gives you `values["현재가"]` (current price) instead of
+  `values["10"]`.
 - **Agents never see live orders by default.** On the live server the built-in MCP server does **not register** its 12
   order tools until `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true`. On the mock server they are always available.
   If you use Kiwoom's official MCP server or plugin and also want the order *content* checked (amount and quantity caps,
@@ -81,14 +95,18 @@ Only things you can check in the code and tests.
 - **Responses you can compute with.** `to_dataframe()` and `to_number()` turn `"+70000"` and `"1,234,567"` into numbers
   and keep codes with meaningful leading zeros as strings. `round_to_tick()` snaps limit prices to KRX ticks.
 - **Typed.** Ships `py.typed`; CI runs mypy.
+- **CI on Windows too.** Unit tests run on Linux, Windows and macOS, including a check that the CLIs survive a cp949
+  console.
 
 ## When to pick something else
 
-- You mainly want a **CLI** to query and trade from the terminal: kiwoom-cli or pykiwoom-rest. kiwoom-client is a library
-  plus an MCP server only.
+- You mainly want a **CLI** to query and trade from the terminal: kiwoom-cli or pykiwoom-rest. kiwoom-client's `kiwoom`
+  CLI only queries (quotes, charts, balance, stock lookup); it deliberately has no order or streaming commands.
+- You want a **remote connector for claude.ai web or mobile**: ChunSam/kiwoom-mcp-server supports HTTP + OAuth (check its
+  maintenance notice). kiwoom-client's MCP server is local stdio only.
 - You want **attribute-style response models**: look at kiwoompy. kiwoom-client returns Kiwoom's JSON as dicts and
   converts on request with `to_dataframe()`.
-- You want **tools maintained by Kiwoom itself**, or the **US-stock APIs**: use the [official repository](https://github.com/Kiwoom-Securities/Kiwoom-REST-API) and `kwcli`. kiwoom-client wraps the domestic (Korean) REST API only.
+- You want **tools maintained by Kiwoom itself**, or the **US-stock APIs**: use the [official repository](https://github.com/Kiwoom-Securities/Kiwoom-REST-API) and `kwcli` (or kiwoom-cli, which wraps 29 US-stock APIs). kiwoom-client wraps the domestic (Korean) REST API only.
 - You depend on something **only OpenAPI+ has**: you may still need an OCX wrapper such as pykiwoom.
 - You are on **Python 3.8 or 3.9**: kiwoom-client needs 3.10+.
 
