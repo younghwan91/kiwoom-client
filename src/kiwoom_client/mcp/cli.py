@@ -47,7 +47,8 @@ _EPILOG = f"""\
   KIWOOM_IS_MOCK=true                  모의투자 서버 (--mock 과 같음, 기본 false = 실전;
                                        true/false·1/0·yes/no 외의 값은 시작 시 에러)
   {DEMO_ENV_VAR}=true              데모 모드 (--demo 와 같음): 키 불필요, 가상 데이터,
-                                       어디에도 연결하지 않음, 주문은 메모리 안 종이 거래
+                                       어디에도 연결하지 않음, 주문은 메모리 안 종이 거래.
+                                       auto = 앱키·시크릿이 없을 때만 데모
   {TOOLSETS_ENV_VAR}=market,chart     노출할 모듈 (--toolsets 와 같음, 기본 전부)
   {MODE_ENV_VAR}=smart                기본. 고수준 도구 + 메타 도구 3개(search_tools 등)
   {MODE_ENV_VAR}=full                 TR 도구 ~180개 전부 노출 (--full 과 같음, 0.5.x 기본)
@@ -190,6 +191,12 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_false",
         help="KIWOOM_IS_MOCK=false (실전 조회용) 로 출력. 주문 도구는 여전히 꺼진 상태",
     )
+    mode.add_argument(
+        "--demo",
+        dest="config_demo",
+        action="store_true",
+        help="키 없이 가상 데이터로 도는 --demo 설정 출력 (키 자리표시자 없음)",
+    )
     config.add_argument(
         "--toolsets",
         dest="config_toolsets",
@@ -244,6 +251,7 @@ def _doctor(args: argparse.Namespace) -> None:
         toolsets_all=args.toolsets == set(TOOLSET_NAMES),
         mode=args.mode,
         max_rows=args.max_rows,
+        demo=args.demo,
     )
     sys.exit(run(env=os.environ, flags=flags, check_auth=args.check_auth))
 
@@ -257,6 +265,7 @@ def _print_config(args: argparse.Namespace) -> None:
         toolsets=toolsets,
         launcher=args.launcher,
         mode=args.config_mode,
+        demo=args.config_demo,
     )
     print(snippet.note, file=sys.stderr)
     sys.stdout.write(snippet.body)
@@ -273,14 +282,14 @@ def main(argv: Sequence[str] | None = None) -> None:
     if args.command == "doctor":
         _doctor(args)
 
+    app_key = os.environ.get("KIWOOM_APP_KEY")
+    app_secret = os.environ.get("KIWOOM_APP_SECRET")
     try:
-        demo = args.demo or demo_from_env()
+        demo = args.demo or demo_from_env(have_keys=bool(app_key and app_secret))
     except ValueError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         sys.exit(1)
 
-    app_key = os.environ.get("KIWOOM_APP_KEY")
-    app_secret = os.environ.get("KIWOOM_APP_SECRET")
     if demo:
         if app_key or app_secret:
             print(
