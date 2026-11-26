@@ -24,6 +24,8 @@ export KIWOOM_APP_KEY=...  KIWOOM_APP_SECRET=...   # 모의투자용 키
 | [조건검색 결과를 실시간으로](condition-search-realtime.md) | `CNSRLST`·`CNSRREQ`·`CNSRCLR` |
 | [호출 제한(429) 다루기](rate-limits.md) | `rate_limit`·`max_retries`, `KiwoomRateLimitError` |
 
+처음이라면 키 없이 데모로 바로 돌아가는 [10분 만에 조건검색 알림 봇](../tutorials/condition-alert-bot.md)부터 해 보세요.
+
 필요한 TR 을 찾을 때는 [엔드포인트 전체 목록](../endpoints.md), 필드는 [필드 레퍼런스](../reference/index.md)를 보세요.
 요청 필드 이름을 잘못 넣는 실수는 `KiwoomAPI.from_env(is_mock=True, validate_params="warn")` 로 보내기 전에 잡을 수 있습니다.
 

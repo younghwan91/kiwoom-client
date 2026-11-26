@@ -24,6 +24,8 @@ export KIWOOM_APP_KEY=...  KIWOOM_APP_SECRET=...   # a mock-trading key
 | [Condition search results in real time](condition-search-realtime.md) | `CNSRLST`·`CNSRREQ`·`CNSRCLR` |
 | [Handling rate limits (429)](rate-limits.md) | `rate_limit`·`max_retries`, `KiwoomRateLimitError` |
 
+New here? Start with the [condition-search alert bot in 10 minutes](../tutorials/condition-alert-bot.md), which runs right away on demo data with no key.
+
 To find the TR you need, see the [endpoint reference](../endpoints.md); for fields, the
 [field reference](../reference/index.md). Wrong request field names can be caught before sending with
 `KiwoomAPI.from_env(is_mock=True, validate_params="warn")`.
