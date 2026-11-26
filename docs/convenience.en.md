@@ -157,7 +157,7 @@ kiwoom --demo quote 005930        # synthetic data with no key (connects nowhere
 
 Keys are read from environment variables, like `from_env()`, and `--env-file` points to a `.env`. `--mock`/`--live`
 take precedence over `KIWOOM_IS_MOCK`.
-`--demo` needs no key: it uses the [demo backend](mcp.md#demo-mode-try-it-without-a-key) and prints a `[데모] 가상 데이터`
+`--demo` needs no key: it uses the demo backend ("Demo mode" in the [MCP server docs](mcp.md)) and prints a `[데모] 가상 데이터`
 ("demo, synthetic data") banner as the first line (on stderr with `--json`). The prices are not real.
 **It only queries** — there are deliberately no commands for orders or token revocation. `python -m kiwoom_client`
 runs it too.
