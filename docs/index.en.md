@@ -80,9 +80,9 @@ uvx --from 'kiwoom-client[mcp]' kiwoom-client-mcp
 
 Add it to Claude Code with `claude mcp add kiwoom -e KIWOOM_APP_KEY=YOUR_APP_KEY -e KIWOOM_APP_SECRET=YOUR_APP_SECRET -e KIWOOM_IS_MOCK=true -- uvx --from 'kiwoom-client[mcp]' kiwoom-client-mcp`. Claude Desktop, Cursor and Codex config is in [MCP server](mcp.md).
 
-![Mock demo: an agent asks for quotes with get_quotes and drafts an order with order_preview](images/demo-mock.gif)
+![Demo mode: an agent summarizes the portfolio with get_portfolio, works out rebalance quantities with rebalance_plan, then previews an order with order_preview](images/demo-mock.gif)
 
-<small>**Mock demo** — the real MCP server wired to a fake Kiwoom server (made-up prices), with the tool calls replayed from a script. No order is sent. Replay it without keys from the repo root: `uv run --extra mcp python scripts/demo_mock_session.py`.</small>
+<small>**Demo mode** — the real MCP server started with `--demo` (synthetic data, no key), with the tool calls replayed from a script. No order is sent. Replay it without keys from the repo root: `uv run --extra mcp python scripts/demo_mock_session.py`.</small>
 
 ## Where to next
 
