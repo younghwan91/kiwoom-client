@@ -19,7 +19,7 @@
 - Windows: 출력이 파이프·파일로 가면 쓰이는 레거시 코드 페이지(cp949·cp1252)에서 `kiwoom --help`·
   `kiwoom-client-mcp --help` 등이 `UnicodeEncodeError` 로 죽던 것. 인코딩할 수 없는 글자(cp949 의 `—` 등)는 `?` 로 찍는다
 - 개발용 Claude Code 훅 `live_order_guard.py` 가 cp1252·cp949 콘솔에서 차단 메시지를 못 찍어 명령을 그대로
-  통과시키던 것(fail-open). 응답을 ASCII JSON 으로 쓰고 stdin 은 UTF-8 로 읽는다
+  통과시키던 것(fail-open). 응답을 ASCII JSON 으로 쓰고 stdin 은 UTF-8 로 읽는다. Windows 경로(`C:\...\x.py`)로 가리킨 스크립트도 읽는다
 
 - MCP: 2단계 주문 — `order_preview` 가 그 주문에만 쓸 수 있는 1회용 `confirm_token`(HMAC, 120초)을 돌려주고,
   종목명·수량·단가로 주문하는 `place_order`·`modify_order`·`cancel_order` 는 토큰이 없거나 파라미터가 다르거나

@@ -32,7 +32,8 @@ EXECS = re.compile(r"\b(?:python3?|ipython|uv\s+run|uvx|pytest|kiwoom-client-mcp
 # opt-in 을 '켜는' 위치만: 명령 앞 환경변수 대입이나 export. grep 패턴·커밋 메시지·문서 heredoc 은 아님.
 MCP_LIVE = re.compile(r"(?:^|[;&|\n(]\s*|\bexport\s+|\benv\s+)(?:[A-Za-z_]\w*=\S*\s+)*KIWOOM_MCP_ALLOW_LIVE_ORDERS=['\"]?true", re.I)
 HEREDOC = re.compile(r"<<-?\s*(['\"]?)(\w+)\1[^\n]*\n(.*?)\n\2(?:\n|$)", re.S)
-PYFILE = re.compile(r"(?:^|[\s'\"=])([\w./~-]+\.py)\b")
+# Windows 경로(`C:\Users\...\live.py`)도 잡도록 백슬래시·콜론 포함.
+PYFILE = re.compile(r"(?:^|[\s'\"=])([\w./\\:~-]+\.py)\b")
 CD = re.compile(r"\bcd\s+([^\s;&|]+)")
 
 HOW = (
