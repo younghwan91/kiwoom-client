@@ -4,8 +4,8 @@
   "name": "kiwoom-client",
   "display_name": "kiwoom-client — 키움증권 REST API (비공식)",
   "version": "0.5.0",
-  "description": "키움증권 REST API 로 시세·차트·순위·계좌를 조회하는 MCP 서버(비공식 오픈소스). 실전 계좌의 주문 도구는 등록되지 않습니다.",
-  "long_description": "[kiwoom-client](https://github.com/younghwan91/kiwoom-client) 의 MCP 서버를 Claude Desktop 에 바로 설치하는 번들입니다. 키움증권이 만든 것이 아닌 비공식 오픈소스입니다.\n\n- 앱키·시크릿은 [키움 REST API 포털](https://openapi.kiwoom.com)에서 발급합니다. 모의투자 키와 실전 키는 서로 다릅니다.\n- 기본은 **모의투자** 서버입니다. 끄면 실전 서버에 조회만 합니다 — 이 번들로는 실전 계좌의 주문 도구가 등록되지 않습니다.\n- 기본 모드(smart)는 편의 도구와 `search_tools`·`describe_tool`·`call_tool` 만 목록에 올려 컨텍스트를 아낍니다.\n- 서버 코드는 번들에 들어 있지 않습니다. 처음 실행할 때 uv 가 PyPI 의 `kiwoom-client[mcp]` 를 이 번들과 같은 버전으로 받습니다.",
+  "description": "키움증권 REST API 로 시세·차트·순위·계좌를 조회하는 MCP 서버(비공식 오픈소스). 키 없이 설치하면 가상 데이터 데모로 바로 동작합니다. 실전 계좌의 주문 도구는 등록되지 않습니다.",
+  "long_description": "[kiwoom-client](https://github.com/younghwan91/kiwoom-client) 의 MCP 서버를 Claude Desktop 에 바로 설치하는 번들입니다. 키움증권이 만든 것이 아닌 비공식 오픈소스입니다.\n\n- **키 없이 설치하면 데모 모드**로 바로 동작합니다. 실제 종목명에 가상 시세·가상 계좌를 쓰고, 키움에 연결하지 않으며, 주문은 메모리 안의 종이 거래입니다. 실제 시세가 아니라는 표시가 모든 응답에 붙습니다. 앱키·시크릿을 넣으면 실제 서버에 연결합니다.\n- 앱키·시크릿은 [키움 REST API 포털](https://openapi.kiwoom.com)에서 발급합니다. 모의투자 키와 실전 키는 서로 다릅니다.\n- 기본은 **모의투자** 서버입니다. 끄면 실전 서버에 조회만 합니다 — 이 번들로는 실전 계좌의 주문 도구가 등록되지 않습니다.\n- 기본 모드(smart)는 편의 도구와 `search_tools`·`describe_tool`·`call_tool` 만 목록에 올려 컨텍스트를 아낍니다.\n- 서버 코드는 번들에 들어 있지 않습니다. 처음 실행할 때 uv 가 PyPI 의 `kiwoom-client[mcp]` 를 이 번들과 같은 버전으로 받습니다.",
   "author": {
     "name": "Younghwan Chae",
     "url": "https://github.com/younghwan91"
@@ -29,7 +29,8 @@
         "KIWOOM_APP_SECRET": "${user_config.app_secret}",
         "KIWOOM_IS_MOCK": "${user_config.is_mock}",
         "KIWOOM_MCP_MODE": "${user_config.mode}",
-        "KIWOOM_MCP_TOOLSETS": "${user_config.toolsets}"
+        "KIWOOM_MCP_TOOLSETS": "${user_config.toolsets}",
+        "KIWOOM_MCP_DEMO": "${user_config.demo}"
       }
     }
   },
@@ -56,16 +57,16 @@
     "app_key": {
       "type": "string",
       "title": "앱키 (App Key)",
-      "description": "키움 REST API 포털에서 발급한 앱키. 모의투자 서버를 쓰면 모의투자용 키를 넣습니다.",
+      "description": "키움 REST API 포털에서 발급한 앱키. 모의투자 서버를 쓰면 모의투자용 키를 넣습니다. 비워 두면 데모 모드(가상 데이터)로 동작합니다.",
       "sensitive": true,
-      "required": true
+      "required": false
     },
     "app_secret": {
       "type": "string",
       "title": "시크릿키 (App Secret)",
-      "description": "앱키와 함께 발급한 시크릿키.",
+      "description": "앱키와 함께 발급한 시크릿키. 비워 두면 데모 모드입니다.",
       "sensitive": true,
-      "required": true
+      "required": false
     },
     "is_mock": {
       "type": "boolean",
@@ -86,6 +87,13 @@
       "title": "노출할 모듈 (선택)",
       "description": "쉼표로 구분한 모듈 이름. 예: market,chart,account. 비우면 전부. 이름 목록: https://younghwan91.github.io/kiwoom-client/mcp/",
       "default": "",
+      "required": false
+    },
+    "demo": {
+      "type": "string",
+      "title": "데모 모드",
+      "description": "auto(기본): 앱키·시크릿이 비어 있으면 데모(가상 데이터, 연결 없음), 넣으면 실제 서버. true: 키가 있어도 항상 데모. false: 데모를 쓰지 않음(키 필수).",
+      "default": "auto",
       "required": false
     }
   }

@@ -22,6 +22,8 @@ from typing import Any
 
 from kiwoom_client import __version__
 from kiwoom_client._env import ENV_APP_KEY, ENV_APP_SECRET, ENV_IS_MOCK, parse_bool
+from kiwoom_client.mcp.demo import ENV_VAR as DEMO_ENV_VAR
+from kiwoom_client.mcp.demo import demo_from_env
 from kiwoom_client.mcp.guard import ENV_VAR as LIVE_ORDERS_ENV_VAR
 from kiwoom_client.mcp.guard import READ_ONLY_ENV, order_tools_allowed, read_only
 from kiwoom_client.mcp.modes import ENV_VAR as MODE_ENV_VAR
@@ -41,6 +43,7 @@ ENV_VARS: tuple[str, ...] = (
     MAX_ROWS_ENV_VAR,
     LIVE_ORDERS_ENV_VAR,
     READ_ONLY_ENV,
+    DEMO_ENV_VAR,
 )
 
 #: The ``mcp`` major version the server is written for (pyproject ``mcp>=2.0,<3``).
@@ -74,6 +77,7 @@ class Overrides:
     toolsets_all: bool = False
     mode: str | None = None
     max_rows: int | None = None
+    demo: bool = False
 
 
 def _mcp_version() -> str | None:
@@ -174,13 +178,24 @@ def diagnose(
         mcp_ok = True
         report.add(OK, f"mcp {mcp_version}")
 
+    keys_present = all(env.get(name, "").strip() for name in (ENV_APP_KEY, ENV_APP_SECRET))
+    try:
+        demo = flags.demo or demo_from_env(env, have_keys=keys_present)
+    except ValueError as exc:
+        report.add(ERROR, str(exc))
+        demo = False
     for name in ENV_VARS:
         present = bool(env.get(name, "").strip())
-        required = name in (ENV_APP_KEY, ENV_APP_SECRET)
+        required = name in (ENV_APP_KEY, ENV_APP_SECRET) and not demo
         level = (OK if present else ERROR) if required else INFO
         report.add(level, f"{name}: {'설정됨' if present else '없음'}")
-    keys_present = all(env.get(name, "").strip() for name in (ENV_APP_KEY, ENV_APP_SECRET))
-    if not keys_present:
+    if demo:
+        report.add(
+            OK,
+            "데모 모드 — 키 불필요, 가상 데이터, 어디에도 연결하지 않음"
+            + (" (설정된 앱키는 쓰지 않음)" if keys_present else ""),
+        )
+    elif not keys_present:
         report.add(
             ERROR,
             "앱키·시크릿이 없으면 서버가 시작하지 않습니다 — "
@@ -191,7 +206,7 @@ def diagnose(
     if settings is None:
         return report
 
-    is_mock = settings["is_mock"]
+    is_mock = settings["is_mock"] or demo  # demo orders are paper trades
     try:
         locked = read_only(dict(env))
     except ValueError as exc:
@@ -199,7 +214,7 @@ def diagnose(
         return report
     allow = order_tools_allowed(is_mock=is_mock, env=dict(env))
     server = "모의투자 (mockapi.kiwoom.com)" if is_mock else "실전 (api.kiwoom.com)"
-    report.add(OK, f"서버: {server}")
+    report.add(OK, f"서버: {'데모 (프로세스 안 가짜 서버, 연결 없음)' if demo else server}")
     toolsets = settings["toolsets"]
     chosen = ", ".join(sorted(toolsets)) if toolsets else "전부"
     report.add(OK, f"모드: {settings['mode']} · toolset: {chosen}")
@@ -207,6 +222,8 @@ def diagnose(
         report.add(OK, f"리스트 응답 기본 {settings['max_rows']}행")
     if locked:
         report.add(OK, f"주문 도구: 등록 안 됨 (읽기 전용 {READ_ONLY_ENV}=true)")
+    elif demo:
+        report.add(OK, "주문 도구: 등록 (데모 — 메모리 안의 종이 거래, 전송 없음)")
     elif is_mock:
         report.add(OK, "주문 도구: 등록 (모의투자 — 실제 체결 없음)")
     elif allow:
@@ -223,7 +240,9 @@ def diagnose(
         )
         report.add(OK, f"tools/list: 도구 {count}개, 약 {size / 1000:.1f} K 글자")
 
-    if not check_auth:
+    if demo:
+        report.add(INFO, "인증: 데모 모드라 확인하지 않습니다 (네트워크 호출 없음)")
+    elif not check_auth:
         report.add(INFO, "인증: 확인 안 함 (네트워크 호출 없음). 토큰 발급을 보려면 --check-auth")
     elif not keys_present:
         report.add(ERROR, "인증: 앱키·시크릿이 없어 확인할 수 없습니다")

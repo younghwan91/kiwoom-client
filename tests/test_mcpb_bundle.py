@@ -21,6 +21,8 @@ from kiwoom_client import __version__
 from kiwoom_client._env import ENV_IS_MOCK
 from kiwoom_client.mcp import cli
 from kiwoom_client.mcp import server as server_module
+from kiwoom_client.mcp.demo import AUTO as DEMO_AUTO
+from kiwoom_client.mcp.demo import ENV_VAR as DEMO_ENV_VAR
 from kiwoom_client.mcp.guard import ENV_VAR as LIVE_ORDERS_ENV_VAR
 from kiwoom_client.mcp.modes import DEFAULT_MODE, MODES
 from kiwoom_client.mcp.modes import ENV_VAR as MODE_ENV_VAR
@@ -80,14 +82,16 @@ def test_env_uses_the_package_variable_names():
         ENV_IS_MOCK,
         MODE_ENV_VAR,
         TOOLSETS_ENV_VAR,
+        DEMO_ENV_VAR,
     }
 
 
-def test_keys_are_sensitive_and_required():
+def test_keys_are_sensitive_and_optional_because_empty_means_demo():
     for key in ("app_key", "app_secret"):
         assert USER_CONFIG[key]["type"] == "string"
         assert USER_CONFIG[key]["sensitive"] is True
-        assert USER_CONFIG[key]["required"] is True
+        assert USER_CONFIG[key]["required"] is False
+    assert USER_CONFIG["demo"]["default"] == DEMO_AUTO
 
 
 def test_defaults_are_mock_and_smart():
@@ -143,6 +147,7 @@ def test_cli_reads_values_as_the_host_substitutes_them(
     monkeypatch.setattr(server_module, "run_server", lambda **kw: calls.append(kw))
     values = {"app_key": "k", "app_secret": "s", "is_mock": is_mock, "mode": mode}
     values["toolsets"] = toolsets
+    values["demo"] = DEMO_AUTO
     for name, template in ENV.items():
         key = re.fullmatch(r"\$\{user_config\.(\w+)\}", template)
         assert key, template
@@ -150,6 +155,26 @@ def test_cli_reads_values_as_the_host_substitutes_them(
     cli.main([])
     (call,) = calls
     assert (call["is_mock"], call["mode"], call["toolsets"]) == expected
+    assert "demo" not in call  # keys entered: the real server
+
+
+@pytest.mark.parametrize(("keys", "demo", "expected"), [
+    ("", DEMO_AUTO, True), ("k", DEMO_AUTO, False), ("k", "true", True), ("", "false", None),
+])  # fmt: skip
+def test_empty_keys_mean_demo(monkeypatch, keys, demo, expected):
+    calls: list[dict] = []
+    monkeypatch.setattr(server_module, "run_server", lambda **kw: calls.append(kw))
+    values = {"app_key": keys, "app_secret": keys, "is_mock": "true", "mode": "smart"}
+    values.update(toolsets="", demo=demo)
+    for name, template in ENV.items():
+        key = re.fullmatch(r"\$\{user_config\.(\w+)\}", template)
+        monkeypatch.setenv(name, values[key.group(1)])
+    if expected is None:
+        with pytest.raises(SystemExit):  # no keys and no demo: the usual error
+            cli.main([])
+        return
+    cli.main([])
+    assert calls[0].get("demo", False) is expected
 
 
 def test_entry_point_runs_the_cli():

@@ -4,6 +4,9 @@
 placeholders — this module never reads real credentials — and the snippets
 never turn on ``KIWOOM_MCP_ALLOW_LIVE_ORDERS``: enabling live orders stays a
 deliberate, manual edit.
+
+``demo=True`` gives a snippet with no key at all: the server starts with
+``--demo`` (synthetic data, connects nowhere).
 """
 
 from __future__ import annotations
@@ -43,12 +46,13 @@ APP_SECRET_PLACEHOLDER = "YOUR_APP_SECRET"
 LAUNCHERS: tuple[str, ...] = ("uvx", "installed")
 
 
-def launch_command(launcher: str) -> list[str]:
+def launch_command(launcher: str, *, demo: bool = False) -> list[str]:
     """argv that starts the server, e.g. ``["uvx", "--from", ..., "kiwoom-client-mcp"]``."""
+    flags = ["--demo"] if demo else []
     if launcher == "uvx":
-        return ["uvx", "--from", "kiwoom-client[mcp]", "kiwoom-client-mcp"]
+        return ["uvx", "--from", "kiwoom-client[mcp]", "kiwoom-client-mcp", *flags]
     if launcher == "installed":
-        return ["kiwoom-client-mcp"]
+        return ["kiwoom-client-mcp", *flags]
     raise ValueError(f"unknown launcher: {launcher!r} (choose from {', '.join(LAUNCHERS)})")
 
 
@@ -58,18 +62,24 @@ def server_env(
     toolsets: Sequence[str] | None = None,
     discovery: bool = False,
     mode: str | None = None,
+    demo: bool = False,
 ) -> dict[str, str]:
     """Environment block for the snippet — placeholders only.
 
     ``mode`` (``"full"``/``"discovery"``) is written as ``KIWOOM_MCP_MODE``;
     ``None`` leaves it out so the server uses its default (smart).
     ``discovery=True`` is the older spelling of ``mode="discovery"``.
+    ``demo=True`` leaves the key and server out (``--demo`` needs neither).
     """
-    env = {
-        "KIWOOM_APP_KEY": APP_KEY_PLACEHOLDER,
-        "KIWOOM_APP_SECRET": APP_SECRET_PLACEHOLDER,
-        "KIWOOM_IS_MOCK": "true" if mock else "false",
-    }
+    env: dict[str, str] = (
+        {}
+        if demo
+        else {
+            "KIWOOM_APP_KEY": APP_KEY_PLACEHOLDER,
+            "KIWOOM_APP_SECRET": APP_SECRET_PLACEHOLDER,
+            "KIWOOM_IS_MOCK": "true" if mock else "false",
+        }
+    )
     if toolsets:
         env["KIWOOM_MCP_TOOLSETS"] = ",".join(toolsets)
     if discovery:
@@ -95,12 +105,8 @@ def _toml_str(value: str) -> str:
 def _codex_toml(argv: list[str], env: dict[str, str]) -> str:
     args = ", ".join(_toml_str(a) for a in argv[1:])
     env_items = ", ".join(f"{k} = {_toml_str(v)}" for k, v in env.items())
-    return (
-        f"[mcp_servers.{SERVER_NAME}]\n"
-        f"command = {_toml_str(argv[0])}\n"
-        f"args = [{args}]\n"
-        f"env = {{ {env_items} }}\n"
-    )
+    text = f"[mcp_servers.{SERVER_NAME}]\ncommand = {_toml_str(argv[0])}\nargs = [{args}]\n"
+    return text + (f"env = {{ {env_items} }}\n" if env else "")
 
 
 @dataclass(frozen=True)
@@ -119,17 +125,41 @@ def render(
     launcher: str = "uvx",
     discovery: bool = False,
     mode: str | None = None,
+    demo: bool = False,
 ) -> Snippet:
     """Return the snippet for ``client`` (one of :data:`CLIENTS`)."""
-    argv = launch_command(launcher)
-    env = server_env(mock=mock, toolsets=toolsets, discovery=discovery, mode=mode)
+    snippet = _render(
+        client, mock=mock, toolsets=toolsets, launcher=launcher, discovery=discovery,
+        mode=mode, demo=demo,
+    )  # fmt: skip
+    if demo:
+        note = (
+            f"{snippet.note}\n데모 모드: 키 없이 가상 데이터로 동작하고 키움에 연결하지 않습니다 "
+            "(시세·계좌는 실제가 아님). 실제로 쓰려면 --demo 없이 다시 출력해 키를 넣으세요."
+        )
+        return Snippet(note=note, body=snippet.body)
+    return snippet
+
+
+def _render(
+    client: str,
+    *,
+    mock: bool,
+    toolsets: Sequence[str] | None,
+    launcher: str,
+    discovery: bool,
+    mode: str | None,
+    demo: bool,
+) -> Snippet:
+    argv = launch_command(launcher, demo=demo)
+    env = server_env(mock=mock, toolsets=toolsets, discovery=discovery, mode=mode, demo=demo)
 
     if client == "claude-code":
-        env_flags = " ".join(f"-e {shlex.quote(f'{k}={v}')}" for k, v in env.items())
+        env_flags = "".join(f"-e {shlex.quote(f'{k}={v}')} " for k, v in env.items())
         command = " ".join(shlex.quote(a) for a in argv)
         return Snippet(
             note="터미널에서 실행하세요. 팀과 공유하려면 --scope project (→ .mcp.json).",
-            body=f"claude mcp add {SERVER_NAME} {env_flags} -- {command}\n",
+            body=f"claude mcp add {SERVER_NAME} {env_flags}-- {command}\n",
         )
     if client == "claude-desktop":
         return Snippet(
@@ -154,7 +184,7 @@ def render(
             note=(
                 "VS Code (GitHub Copilot): 워크스페이스 루트 .mcp.json 또는 "
                 "~/.copilot/mcp-config.json 의 mcpServers 에 병합하세요.\n"
-                "  키를 파일에 두기 싫으면 값을 \"${KIWOOM_APP_KEY}\" 처럼 "
+                '  키를 파일에 두기 싫으면 값을 "${KIWOOM_APP_KEY}" 처럼 '
                 "환경변수 참조로 바꿉니다."
             ),
             body=_mcp_servers_json(argv, env, extra={"type": "stdio"}) + "\n",
