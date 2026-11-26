@@ -79,6 +79,27 @@ Create a WebSocket client for real-time data.
 Returns:
     KiwoomWebSocket instance configured with current auth.
 
+### `KiwoomAPI.demo`
+
+```
+def demo(*, seed: int | None = None, validate_params: bool | str = False) -> KiwoomAPI
+```
+
+A client on the built-in demo backend — no Kiwoom account, key or network.
+
+Every request is answered in the process by
+:class:`kiwoom_client.demo.DemoBackend`: real stock names and codes,
+**synthetic prices** (deterministic for a ``seed``), a made-up account
+and paper-trading orders kept in memory. Every response carries
+``"_demo": "가상 데이터 — 실제 시세·계좌가 아닙니다"``. Nothing connects to
+the live server, the mock server or anywhere else, and no key is read::
+
+    with KiwoomAPI.demo() as api:
+        api.stock_info.basic_stock_info(stk_cd="005930")
+
+Order TRs (``api.order.*``) become paper trades; :meth:`create_websocket`
+returns a :class:`kiwoom_client.demo.DemoWebSocket`.
+
 ### `KiwoomAPI.find_stock`
 
 ```
@@ -226,6 +247,20 @@ Create a WebSocket client for real-time data.
 
 Returns:
     KiwoomWebSocket instance configured with current auth.
+
+### `AsyncKiwoomAPI.demo`
+
+```
+def demo(*, seed: int | None = None, validate_params: bool | str = False) -> AsyncKiwoomAPI
+```
+
+A client on the built-in demo backend — see :meth:`KiwoomAPI.demo`.
+
+No Kiwoom account, key or network; synthetic prices, paper orders,
+``"_demo"`` in every response::
+
+    async with AsyncKiwoomAPI.demo() as api:
+        await api.stock_info.basic_stock_info(stk_cd="005930")
 
 ### `AsyncKiwoomAPI.find_stock`
 
