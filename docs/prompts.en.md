@@ -12,10 +12,10 @@ the agent calls and what comes back, in one line. Name a stock by its name or co
   the result makes that call.
 - Questions that involve an order stop at **a preview** (`order_preview`, nothing is sent). An order goes out only after the
   user has seen the preview and confirmed, and only when the order tools are registered. On a live account they do not exist
-  until you set `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true` ([live-order guard](mcp.md#live-order-guard)).
+  until you set `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true` (see "Live-order guard" in the [MCP server](mcp.md) page).
 - Start with a paper-trading key (`KIWOOM_IS_MOCK=true`). The values you get depend on the quotes and balances at the time.
 - The five prompts built into the server (`review_account`, `analyze_stock`, `market_today`, `rebalance`, `order_checklist`)
-  give the same steps. Pick them from your client's prompt menu ([Resources and prompts](mcp.md#resources-and-prompts)).
+  give the same steps. Pick them from your client's prompt menu (see "Resources and prompts" in the [MCP server](mcp.md) page).
 
 Stock names carry their Korean name in parentheses: the stock list (ka10099) is in Korean, so the Korean name finds the stock
 on the first try. The agent understands the question itself in either language.
