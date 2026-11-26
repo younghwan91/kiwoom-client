@@ -11,7 +11,8 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from collections.abc import Collection
+import os
+from collections.abc import Collection, Mapping
 from typing import Any
 
 from mcp import types
@@ -37,7 +38,7 @@ from kiwoom_client.mcp.modes import DEFAULT_MODE, DISCOVERY, FULL, MODES, SMART
 from kiwoom_client.mcp.order_preview import order_preview_tool
 from kiwoom_client.mcp.orders.checks import upper_limit_quote
 from kiwoom_client.mcp.orders.gate import OrderGate, with_token_argument
-from kiwoom_client.mcp.orders.policy import OrderPolicy
+from kiwoom_client.mcp.orders.policy import AUDIT_LOG_ENV, OrderPolicy
 from kiwoom_client.mcp.orders.tools import order_tools
 from kiwoom_client.mcp.response_size import ARGUMENT as MAX_ROWS_ARGUMENT
 from kiwoom_client.mcp.response_size import limit_rows, parse_max_rows, with_max_rows_argument
@@ -96,6 +97,7 @@ def build_server(
     mode: str | None = None,
     order_policy: OrderPolicy | None = None,
     mask_accounts: bool = True,
+    demo: bool = False,
 ) -> tuple[Server, list[RestToolSpec]]:
     """Assemble the MCP Server, wired with its ``tools/list``/``tools/call``
     handlers, and the filtered list of tool specs.
@@ -125,6 +127,11 @@ def build_server(
 
     ``order_policy`` sets the checks every order passes right before it is
     sent (:mod:`.orders.gate`). ``None`` means the strict live defaults.
+
+    ``demo`` marks a server whose ``api`` is a demo client
+    (:meth:`AsyncKiwoomAPI.demo`): the instructions say the data is
+    synthetic, and every tool result gets ``"_demo"`` (errors a ``[데모]``
+    prefix) so the agent can't present it as real.
     """
     mode = DISCOVERY if discovery else (mode or FULL)
     if mode not in MODES:
@@ -150,7 +157,11 @@ def build_server(
         "kiwoom-client",
         version=__version__,
         title="Kiwoom Securities REST API",
-        instructions=mcp_resources.INSTRUCTIONS,
+        instructions=(
+            mcp_resources.DEMO_INSTRUCTIONS + mcp_resources.INSTRUCTIONS
+            if demo
+            else mcp_resources.INSTRUCTIONS
+        ),
         website_url=WEBSITE_URL,
     )
 
@@ -221,12 +232,15 @@ def build_server(
         try:
             result = await call_listed_tool(params.name, params.arguments or {})
         except (KiwoomAPIError, ConditionSearchTimeout, ValueError) as exc:
+            text = f"[데모] {exc}" if demo else str(exc)
             return types.CallToolResult(
-                content=[types.TextContent(type="text", text=str(exc))],
+                content=[types.TextContent(type="text", text=text)],
                 is_error=True,
             )
         if mask_accounts:
             result = mask_account_fields(result)
+        if demo:
+            result = _with_demo_marker(result)
         return types.CallToolResult(
             content=[types.TextContent(type="text", text=json.dumps(result, ensure_ascii=False))]
         )
@@ -236,6 +250,15 @@ def build_server(
     app.add_request_handler("tools/call", types.CallToolRequestParams, on_call_tool)
 
     return app, all_specs
+
+
+def _with_demo_marker(result: Any) -> Any:
+    """Put ``"_demo"`` first in a demo tool result (wrapping non-dict results)."""
+    from kiwoom_client.demo import DEMO_KEY, DEMO_NOTICE
+
+    if isinstance(result, dict):
+        return {DEMO_KEY: DEMO_NOTICE, **{k: v for k, v in result.items() if k != DEMO_KEY}}
+    return {DEMO_KEY: DEMO_NOTICE, "result": result}
 
 
 def _local_tools(
@@ -349,19 +372,23 @@ def run_server(
     max_rows: int | None = None,
     mode: str | None = None,
     mask_accounts: bool | None = None,
+    demo: bool = False,
 ) -> None:
     """Start the stdio MCP server and block until the client disconnects.
 
     ``mode`` defaults to :data:`~kiwoom_client.mcp.modes.DEFAULT_MODE`
     (``"smart"``); ``discovery=True`` is the older spelling of ``"discovery"``.
+
+    ``demo=True`` ignores the key and the server choice and runs on
+    :meth:`AsyncKiwoomAPI.demo` — see :func:`client_and_order_settings`.
     """
     logging.basicConfig(level=logging.INFO)
 
-    order_policy = OrderPolicy.from_env(is_mock=is_mock)
+    api, allow_live_orders, order_policy = client_and_order_settings(
+        app_key=app_key, app_secret=app_secret, is_mock=is_mock, demo=demo
+    )
     if mask_accounts is None:
         mask_accounts = mask_from_env()
-    api = AsyncKiwoomAPI(app_key, app_secret, is_mock=is_mock)
-    allow_live_orders = order_tools_allowed(is_mock=is_mock)
     session = ConditionSearchSession(connect=lambda: _connect_condition_search(api))
     mode = DISCOVERY if discovery else (mode or DEFAULT_MODE)
     app, specs = build_server(
@@ -373,7 +400,13 @@ def run_server(
         mode=mode,
         order_policy=order_policy,
         mask_accounts=mask_accounts,
+        demo=demo,
     )
+    if demo:
+        logger.info(
+            "데모 모드 — 가상 데이터, 키움 서버에 연결하지 않습니다. 주문은 메모리 안의 "
+            "종이 거래입니다 (실제 전송 없음)."
+        )
     if not mask_accounts:
         logger.info("KIWOOM_MCP_MASK_ACCOUNTS=false — 응답에 계좌번호가 그대로 나갑니다.")
     if read_only():
@@ -406,6 +439,39 @@ def run_server(
             await api.close()
 
     asyncio.run(_run())
+
+
+def client_and_order_settings(
+    *,
+    app_key: str,
+    app_secret: str,
+    is_mock: bool,
+    demo: bool = False,
+    env: Mapping[str, str] | None = None,
+) -> tuple[AsyncKiwoomAPI, bool, OrderPolicy]:
+    """The client, whether order tools are registered, and the order policy.
+
+    Real mode: the live-order opt-in guard decides (:func:`order_tools_allowed`).
+
+    Demo mode never builds a client that could reach Kiwoom — the key and
+    ``is_mock`` are not used — so orders are paper trades and the order tools
+    are registered like on the paper-trading server (still not with
+    ``KIWOOM_MCP_READ_ONLY``). The order audit log defaults to off, so demo
+    orders don't land in the real log; setting ``KIWOOM_MCP_AUDIT_LOG`` keeps it.
+    """
+    if not demo:
+        policy = OrderPolicy.from_env(is_mock=is_mock, env=env)
+        api = AsyncKiwoomAPI(app_key, app_secret, is_mock=is_mock)
+        return api, order_tools_allowed(is_mock=is_mock, env=env), policy
+    demo_env = {AUDIT_LOG_ENV: "off", **(os.environ if env is None else env)}
+    api = AsyncKiwoomAPI.demo()
+    if not api.is_demo:  # never registers order tools on a client that could reach Kiwoom
+        raise RuntimeError("demo mode needs a demo client")
+    return (
+        api,
+        order_tools_allowed(is_mock=True, env=demo_env),
+        OrderPolicy.from_env(is_mock=True, env=demo_env),
+    )
 
 
 def main() -> None:
