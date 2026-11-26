@@ -103,7 +103,7 @@ env = { KIWOOM_APP_KEY = "YOUR_APP_KEY", KIWOOM_APP_SECRET = "YOUR_APP_SECRET", 
 
 </details>
 
-Ask Claude Code "What's Samsung Electronics trading at?" to query live quotes. Environment variables and the tool list are in the [MCP server docs](https://younghwan91.github.io/kiwoom-client/en/mcp/).
+Ask Claude Code "What's Samsung Electronics trading at?" to query live quotes. Environment variables and the tool list are in the [MCP server docs](https://younghwan91.github.io/kiwoom-client/en/mcp/). Questions to paste as-is are in the [prompt library](https://younghwan91.github.io/kiwoom-client/en/prompts/).
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/demo-mcp-en-dark.png">

@@ -105,7 +105,7 @@ env = { KIWOOM_APP_KEY = "YOUR_APP_KEY", KIWOOM_APP_SECRET = "YOUR_APP_SECRET", 
 
 </details>
 
-이제 Claude Code에서 "삼성전자 지금 얼마야?"라고 물으면 시세를 조회합니다. 환경변수와 도구 목록은 [MCP 서버 문서](https://younghwan91.github.io/kiwoom-client/mcp/)를 참고하세요.
+이제 Claude Code에서 "삼성전자 지금 얼마야?"라고 물으면 시세를 조회합니다. 환경변수와 도구 목록은 [MCP 서버 문서](https://younghwan91.github.io/kiwoom-client/mcp/)를 참고하세요. 그대로 붙여 넣을 질문은 [프롬프트 모음](https://younghwan91.github.io/kiwoom-client/prompts/)에 있습니다.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/demo-mcp-ko-dark.png">

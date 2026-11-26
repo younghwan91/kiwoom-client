@@ -25,6 +25,7 @@ description: "kiwoom-client-mcp 로 Claude Code·Claude Desktop·Cursor·Codex �
 
 - 의도 도구(위의 호출 1회짜리)는 늘어나는 중입니다. 지금 목록은 [도구](#도구)에 있습니다.
 - 주문 도구(`place_order` 등)는 모의투자에서, 또는 실전에서 `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true` 를 켰을 때만 있습니다([실주문 가드](#실주문-가드)).
+- 그대로 붙여 넣을 질문 19개와 결과 예시는 [프롬프트 모음](prompts.md)에 있습니다.
 - 프롬프트 `review_account`·`analyze_stock`·`market_today`·`rebalance`·`order_checklist` 를 고르면 위 순서를 에이전트에게 한 번에 지시합니다([resources 와 prompts](#resources-와-prompts)).
 
 ## 설치
