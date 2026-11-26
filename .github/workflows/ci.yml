@@ -92,6 +92,28 @@ jobs:
             uv run --extra dev --extra mcp coverage report --format=markdown
           } >> "${GITHUB_STEP_SUMMARY:-/dev/stdout}"
 
+  # 키움 REST 로 옮겨 오는 사용자 대부분이 Windows(OCX 시절의 PC)다. 단위 테스트를 Windows·macOS 에서도 돌려
+  # 경로·인코딩(cp949 콘솔)·이벤트 루프 차이를 CI 에서 먼저 잡는다. 키·키움 서버 없이 끝난다.
+  test-os:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d  # v10.4.0
+        with:
+          python-version: "3.12"
+          enable-cache: true
+          cache-dependency-glob: pyproject.toml
+
+      - name: Run tests
+        run: uv run --extra dev --extra mcp pytest tests/ -q
+
   # [mcp] extra 의 하한(pyproject `mcp>=2.0`)에서도 MCP 서버가 도는지 본다. 위 test 잡은 최신 mcp 만 깐다.
   # 하한을 올리면 이 핀도 같이 올린다 — tests/test_ci_mcp_floor.py 가 둘이 맞는지 본다.
   test-mcp-min:
