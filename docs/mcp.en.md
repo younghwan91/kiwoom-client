@@ -25,6 +25,7 @@ Common requests in the default (smart) mode and the tools the agent calls. No ap
 
 - More one-call intent tools are being added; the current list is under [Tools](#tools).
 - Order tools (`place_order` and the rest) exist on paper trading, or on a live account only with `KIWOOM_MCP_ALLOW_LIVE_ORDERS=true` ([Live-order guard](#live-order-guard)).
+- 19 questions to paste as-is, with what each returns, are in the [prompt library](prompts.md).
 - The prompts `review_account`, `analyze_stock`, `market_today`, `rebalance` and `order_checklist` give the agent these steps in one go ([Resources and prompts](#resources-and-prompts)).
 
 ## Install
