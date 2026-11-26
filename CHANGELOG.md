@@ -7,6 +7,7 @@
 
 ### Added
 
+- 문서: README(한·영) 빠른 시작에 "키 없이 체험"(`kiwoom-client-mcp --demo`, Claude Code 등록 한 줄)과 `KiwoomAPI.demo()` 안내를, MCP 문서에 데모 모드 절(가상 데이터 경고, 되는 것·안 되는 것, `KIWOOM_MCP_DEMO`·`config --demo`·번들 `데모 모드` 항목)을, 편의 기능 문서에 `kiwoom --demo` 를 더했습니다
 - `kiwoom-client-mcp config <client> --demo` — 키 자리표시자 없이 `--demo` 로 띄우는 설정을 출력합니다. `KIWOOM_MCP_DEMO=auto` 는 앱키·시크릿이 없을 때만 데모로 뜹니다. Claude Desktop 번들(.mcpb)은 키 입력을 선택으로 바꾸고 `데모 모드`(기본 `auto`) 항목을 더해, 키 없이 설치하면 바로 데모로 동작하고 키를 넣으면 실제 서버에 연결합니다. `kiwoom-client-mcp --demo doctor` 도 데모를 인식해 키를 요구하지 않고 인증 확인(네트워크)을 건너뜁니다
 - 문서: 튜토리얼 [10분 만에 조건검색 알림 봇](docs/tutorials/condition-alert-bot.md)(·영문) — `KiwoomAPI.demo()` 로 키 없이 바로 돌아가는 조건검색 + 실시간 가격 알림 봇입니다. 주문은 하지 않고, 실제 계좌는 클라이언트 한 줄만 바꿉니다. 코드 블록은 테스트가 데모 백엔드로 실제 실행합니다
 - MCP 데모 모드 — `kiwoom-client-mcp --demo`(또는 `KIWOOM_MCP_DEMO=true`)는 키 없이 데모 백엔드로 뜹니다. smart 모드의 의도 도구 전부와 `order_preview`→확인 토큰→`place_order` 흐름이 종이 거래로 동작하고, 서버 instructions 가 가상 데이터임을 밝히라고 지시하며 모든 도구 응답 첫 키가 `_demo` 입니다(오류는 `[데모]` 접두). 실제 키가 있어도 경고하고 쓰지 않으며, 데모 주문은 기본적으로 감사 로그에 남기지 않습니다

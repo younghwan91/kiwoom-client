@@ -54,7 +54,7 @@ chart = api.chart.stock_daily_chart(stk_cd="005930", base_dt="20260326", upd_stk
 print(info["stk_nm"])
 ```
 
-The access token is issued on the first call and refreshed before it expires. Get an app key and secret at the [Kiwoom REST API portal](https://openapi.kiwoom.com) and start on the mock server (`is_mock=True`).
+The access token is issued on the first call and refreshed before it expires. Get an app key and secret at the [Kiwoom REST API portal](https://openapi.kiwoom.com) and start on the mock server (`is_mock=True`). No key yet? `KiwoomAPI.demo()` lets you try it first ([demo mode](https://younghwan91.github.io/kiwoom-client/en/mcp/#demo-mode-try-it-without-a-key) — synthetic data, connects nowhere).
 
 ### From an AI agent (MCP)
 
@@ -69,6 +69,13 @@ Add it to Claude Code (paper-trading keys, `KIWOOM_IS_MOCK=true`):
 ```bash
 claude mcp add kiwoom -e KIWOOM_APP_KEY=YOUR_APP_KEY -e KIWOOM_APP_SECRET=YOUR_APP_SECRET \
   -e KIWOOM_IS_MOCK=true -- uvx --from 'kiwoom-client[mcp]' kiwoom-client-mcp
+```
+
+**Try it without a key** (from the release after 0.5.0): add `--demo` and it runs with no account or app key, on synthetic quotes and a made-up account. It connects to nothing, orders are paper trades in memory, and every response is marked as synthetic (these are not real quotes).
+
+```bash
+uvx --from 'kiwoom-client[mcp]' kiwoom-client-mcp --demo                         # just start the server
+claude mcp add kiwoom -- uvx --from 'kiwoom-client[mcp]' kiwoom-client-mcp --demo   # register the demo in Claude Code
 ```
 
 <details>

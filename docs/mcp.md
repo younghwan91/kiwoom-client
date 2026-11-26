@@ -45,6 +45,29 @@ kiwoom-client-mcp --version
 
 앱키·시크릿키는 [키움 REST API 포털](https://openapi.kiwoom.com)에서 발급합니다. 처음에는 모의투자 키로 시작하세요(모의투자와 실전투자 키는 서로 다르고, 다른 서버에 쓰면 8030 오류가 납니다).
 
+## 데모 모드 (키 없이 체험)
+
+키움 계좌·앱키 없이 바로 써 볼 수 있습니다(0.5.0 다음 릴리스부터). `--demo`(또는 `KIWOOM_MCP_DEMO=true`)로 띄우면 서버가 프로세스 안의 가짜 키움 서버에 붙습니다.
+
+```bash
+uvx --from 'kiwoom-client[mcp]' kiwoom-client-mcp --demo                         # 서버만 띄워 보기
+claude mcp add kiwoom -- uvx --from 'kiwoom-client[mcp]' kiwoom-client-mcp --demo   # Claude Code 에 데모로 등록
+```
+
+다른 클라이언트용 설정은 `kiwoom-client-mcp config <클라이언트> --demo` 가 출력합니다.
+
+!!! warning "가상 데이터입니다"
+    종목명·코드는 실제(삼성전자 005930 등 20종목)지만 시세·차트·수급·계좌는 전부 합성 데이터입니다. 실제 시세가 아니므로 투자 판단에 쓰지 마세요. 서버 `instructions` 가 에이전트에게 가상 데이터임을 밝히라고 지시하고, 모든 도구 응답의 첫 키가 `"_demo": "가상 데이터 — 실제 시세·계좌가 아닙니다"` 입니다. 오류 메시지에는 `[데모]` 가 붙습니다.
+
+- **연결하지 않습니다.** 키움 실서버·모의투자 서버는 물론 DNS 조회도 하지 않습니다. 소켓을 막은 상태로 전 기능을 돌리는 테스트가 이를 확인합니다. 실제 앱키가 환경에 있어도 경고만 남기고 쓰지 않습니다.
+- **되는 것**: smart 모드의 의도 도구 전부(`stock_snapshot`·`get_quotes`·`get_chart`·`market_movers`·`investor_flow`·`get_portfolio`·`get_orders`·`get_buying_power`·`rebalance_plan`·`watch`·`condition_search_run` 등)와 `search_tools` → `call_tool` 로 부르는 TR 도구 전부입니다. 의도 도구가 쓰지 않는 TR 은 카탈로그의 응답 필드 모양만 맞춘 채움값을 돌려줍니다.
+- **주문은 종이 거래**입니다. `order_preview` → 사용자 확인 → `place_order`(`confirm_token`) 흐름이 실제와 같습니다. 시장가나 현재가 이상의 지정가 매수는 바로 체결되고, 나머지 지정가는 미체결로 남아 `get_orders` 에 나오며 정정·취소할 수 있습니다. 신용·금현물 주문은 거부합니다. 서버를 다시 띄우면 계좌가 처음 상태(예수금 1,000만 원, 5종목 보유)로 돌아갑니다.
+- `watch` 는 합성 가격 주변의 가상 체결을, `condition_search_run` 은 가상 조건식 4개(급등주·거래량 급증·52주 신고가 근접·대형 우량주)를 씁니다.
+- 데모 주문은 기본적으로 감사 로그에 남기지 않습니다(`KIWOOM_MCP_AUDIT_LOG` 를 직접 주면 남깁니다). `KIWOOM_MCP_READ_ONLY=true` 는 데모에서도 주문 도구를 뺍니다.
+- `KIWOOM_MCP_DEMO=auto` 는 앱키·시크릿이 없을 때만 데모로 뜹니다. Claude Desktop 번들의 기본값입니다.
+
+파이썬에서는 `KiwoomAPI.demo()`·`AsyncKiwoomAPI.demo(seed=...)`, CLI 에서는 `kiwoom --demo quote 삼성전자` 로 같은 데모 백엔드를 씁니다. 날짜는 오늘 기준 과거 영업일이고, 같은 `seed` 면 같은 데이터가 나옵니다.
+
 ## 클라이언트에 붙이기
 
 ### Claude Desktop: 원클릭 번들 (.mcpb)
@@ -53,10 +76,11 @@ kiwoom-client-mcp --version
 
 | 항목 | 기본값 | 설명 |
 |---|---|---|
-| 앱키·시크릿키 | — | 입력값을 가리고 안전한 저장소에 보관합니다 |
+| 앱키·시크릿키 | — | 입력값을 가리고 안전한 저장소에 보관합니다. 비워 두면 데모 모드로 동작합니다 |
 | 모의투자 서버 | 켜짐 | 끄면 실전 서버에 조회만 합니다. 이 번들로는 실전 주문 도구를 켤 수 없습니다 |
 | 도구 목록 모드 | `smart` | `full`·`discovery` (아래 "컨텍스트 줄이기") |
 | 노출할 모듈 | 비움(전부) | 예: `market,chart,account` |
+| 데모 모드 | `auto` | `auto` 는 키가 비어 있으면 [데모](#데모-모드-키-없이-체험)(가상 데이터, 연결 없음), `true` 는 항상 데모, `false` 는 끔 |
 
 번들에는 서버 코드가 들어 있지 않습니다. 처음 실행할 때 uv 가 PyPI 에서 번들과 같은 버전의 `kiwoom-client[mcp]` 를 받습니다. 직접 만들려면 `python scripts/build_mcpb.py` 를 실행합니다(Node.js 필요, 공식 `@anthropic-ai/mcpb` CLI 로 검증하고 팩).
 
@@ -78,6 +102,7 @@ kiwoom-client-mcp config gemini-cli       # ~/.gemini/settings.json
 | 옵션 | 효과 |
 |---|---|
 | `--live` | `KIWOOM_IS_MOCK=false`(실전 서버 조회). 주문 도구는 여전히 꺼져 있음 |
+| `--demo` | 키 없이 `--demo` 로 띄우는 설정([데모 모드](#데모-모드-키-없이-체험)) |
 | `--toolsets market,chart` | 노출할 모듈만 넣음 |
 | `--full` | TR 도구 전부를 목록에 올림(아래 "컨텍스트 줄이기") |
 | `--discovery` | 메타 도구 3개만 노출 |
@@ -96,6 +121,7 @@ claude mcp add kiwoom -e KIWOOM_APP_KEY=YOUR_APP_KEY -e KIWOOM_APP_SECRET=YOUR_A
 |---|---|---|---|
 | `KIWOOM_APP_KEY`, `KIWOOM_APP_SECRET` | — | 앱키·시크릿키 (서버 실행 시 필수) | — |
 | `KIWOOM_IS_MOCK` | `--mock` | 모의투자 서버. true/false·1/0·yes/no 만 받고 그 밖의 값은 에러 | `false` (실전) |
+| `KIWOOM_MCP_DEMO` | `--demo` | [데모 모드](#데모-모드-키-없이-체험): 키 불필요, 가상 데이터, 연결 없음. `auto` = 키가 없을 때만 | `false` |
 | `KIWOOM_MCP_TOOLSETS` | `--toolsets` | 노출할 모듈, 쉼표 구분. `all` = 전부 | 전부 |
 | `KIWOOM_MCP_MODE` | `--full`, `--discovery` | `smart`·`full`·`discovery` (아래 "컨텍스트 줄이기") | `smart` |
 | `KIWOOM_MCP_MAX_ROWS` | `--max-rows` | 리스트 응답 기본 행 수 제한 | 제한 없음 |

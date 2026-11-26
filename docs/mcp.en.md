@@ -45,6 +45,29 @@ kiwoom-client-mcp --version
 
 Get an app key and secret from the [Kiwoom REST API portal](https://openapi.kiwoom.com). Start with a paper-trading (모의투자) key. Paper and live keys are different, and using one against the other server fails with error 8030.
 
+## Demo mode (try it without a key)
+
+Try it right away with no Kiwoom account or app key (from the release after 0.5.0). Start it with `--demo` (or `KIWOOM_MCP_DEMO=true`) and the server talks to a fake Kiwoom server inside the process.
+
+```bash
+uvx --from 'kiwoom-client[mcp]' kiwoom-client-mcp --demo                         # just start the server
+claude mcp add kiwoom -- uvx --from 'kiwoom-client[mcp]' kiwoom-client-mcp --demo   # register the demo in Claude Code
+```
+
+`kiwoom-client-mcp config <client> --demo` prints the config for other clients.
+
+!!! warning "This is synthetic data"
+    Stock names and codes are real (Samsung Electronics 005930 and 19 others), but every quote, chart, investor flow and account figure is synthetic. They are not real prices; don't trade on them. The server `instructions` tell the agent to say the data is synthetic, and every tool response starts with `"_demo": "가상 데이터 — 실제 시세·계좌가 아닙니다"` ("synthetic data — not real quotes or accounts"). Error messages get a `[데모]` prefix.
+
+- **It connects to nothing**: not the live server, not the paper-trading server, not even DNS. A test runs every feature with sockets blocked to check this. A real app key in the environment is ignored, with a warning.
+- **What works**: every smart-mode intent tool (`stock_snapshot`, `get_quotes`, `get_chart`, `market_movers`, `investor_flow`, `get_portfolio`, `get_orders`, `get_buying_power`, `rebalance_plan`, `watch`, `condition_search_run`, ...) and every TR tool reached through `search_tools` → `call_tool`. TRs the intent tools don't use return filler shaped like the catalog's response fields.
+- **Orders are paper trades.** The `order_preview` → user confirmation → `place_order` (`confirm_token`) flow is the real one. Market buys and limit buys at or above the price fill at once; other limits stay open, show up in `get_orders` and can be modified or cancelled. Credit and gold-spot orders are refused. Restarting the server resets the account (10,000,000 KRW cash, 5 holdings).
+- `watch` streams made-up trades around the synthetic price; `condition_search_run` has four made-up saved conditions (급등주, 거래량 급증, 52주 신고가 근접, 대형 우량주).
+- Demo orders are not written to the audit log by default (set `KIWOOM_MCP_AUDIT_LOG` yourself to keep them). `KIWOOM_MCP_READ_ONLY=true` still removes the order tools.
+- `KIWOOM_MCP_DEMO=auto` runs the demo only when no app key and secret are set. It is the Claude Desktop bundle's default.
+
+In Python, `KiwoomAPI.demo()` / `AsyncKiwoomAPI.demo(seed=...)` and, on the command line, `kiwoom --demo quote 005930` use the same demo backend. Dates are past business days counted from today, and the same `seed` gives the same data.
+
 ## Add it to your client
 
 ### Claude Desktop: one-click bundle (.mcpb)
@@ -53,10 +76,11 @@ Download `kiwoom-client-<version>.mcpb` from [GitHub Releases](https://github.co
 
 | Field | Default | Notes |
 |---|---|---|
-| App key, app secret | — | masked and kept in secure storage |
+| App key, app secret | — | masked and kept in secure storage. Leave them empty for demo mode |
 | Paper-trading server | on | off = lookups on the live server. This bundle cannot turn on live order tools |
 | Tool listing mode | `smart` | `full` or `discovery` (see "Saving context") |
 | Modules to expose | empty (all) | e.g. `market,chart,account` |
+| Demo mode | `auto` | `auto`: [demo](#demo-mode-try-it-without-a-key) (synthetic data, no connection) when the keys are empty; `true`: always; `false`: off |
 
 The bundle carries no server code: on first run uv installs `kiwoom-client[mcp]` from PyPI at the bundle's version. To build one yourself run `python scripts/build_mcpb.py` (needs Node.js; validates and packs with the official `@anthropic-ai/mcpb` CLI).
 
@@ -78,6 +102,7 @@ The snippet goes to stdout and the "where to put it" note goes to stderr, so `> 
 | Option | Effect |
 |---|---|
 | `--live` | `KIWOOM_IS_MOCK=false` (lookups on the live server). Order tools stay off |
+| `--demo` | a keyless config that starts with `--demo` ([demo mode](#demo-mode-try-it-without-a-key)) |
 | `--toolsets market,chart` | expose only these modules |
 | `--full` | list every TR tool (see "Saving context" below) |
 | `--discovery` | expose only three meta tools |
@@ -89,6 +114,7 @@ The snippet goes to stdout and the "where to put it" note goes to stderr, so `> 
 |---|---|---|---|
 | `KIWOOM_APP_KEY`, `KIWOOM_APP_SECRET` | — | App key and secret (required to serve) | — |
 | `KIWOOM_IS_MOCK` | `--mock` | paper-trading server. Accepts true/false, 1/0, yes/no; anything else is an error | `false` (live) |
+| `KIWOOM_MCP_DEMO` | `--demo` | [demo mode](#demo-mode-try-it-without-a-key): no key, synthetic data, no connection. `auto` = only when no key is set | `false` |
 | `KIWOOM_MCP_TOOLSETS` | `--toolsets` | modules to expose, comma-separated. `all` = every module | all |
 | `KIWOOM_MCP_MODE` | `--full`, `--discovery` | `smart`, `full` or `discovery` (see "Saving context") | `smart` |
 | `KIWOOM_MCP_MAX_ROWS` | `--max-rows` | default row limit for list responses | no limit |

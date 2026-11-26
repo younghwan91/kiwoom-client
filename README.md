@@ -54,7 +54,7 @@ chart = api.chart.stock_daily_chart(stk_cd="005930", base_dt="20260326", upd_stk
 print(info["stk_nm"])
 ```
 
-접근토큰은 첫 호출에서 자동 발급되며 만료 전에 갱신됩니다. 앱키·시크릿키는 [키움 REST API 포털](https://openapi.kiwoom.com)에서 발급받고, 처음에는 모의투자(`is_mock=True`)로 시작하세요.
+접근토큰은 첫 호출에서 자동 발급되며 만료 전에 갱신됩니다. 앱키·시크릿키는 [키움 REST API 포털](https://openapi.kiwoom.com)에서 발급받고, 처음에는 모의투자(`is_mock=True`)로 시작하세요. 키가 아직 없으면 `KiwoomAPI.demo()` 로 먼저 써 볼 수 있습니다([데모 모드](https://younghwan91.github.io/kiwoom-client/mcp/#데모-모드-키-없이-체험) — 가상 데이터이고 어디에도 연결하지 않습니다).
 
 ### AI 에이전트에서 (MCP)
 
@@ -71,6 +71,13 @@ Claude Code 에는 이렇게 붙입니다(키는 모의투자 키, `KIWOOM_IS_MO
 ```bash
 claude mcp add kiwoom -e KIWOOM_APP_KEY=YOUR_APP_KEY -e KIWOOM_APP_SECRET=YOUR_APP_SECRET \
   -e KIWOOM_IS_MOCK=true -- uvx --from 'kiwoom-client[mcp]' kiwoom-client-mcp
+```
+
+**키 없이 체험**(0.5.0 다음 릴리스부터): `--demo` 를 붙이면 계좌·앱키 없이 가상 시세·가상 계좌로 바로 동작합니다. 키움에 연결하지 않고 주문은 메모리 안의 종이 거래이며, 모든 응답에 가상 데이터 표시가 붙습니다(실제 시세가 아닙니다).
+
+```bash
+uvx --from 'kiwoom-client[mcp]' kiwoom-client-mcp --demo                         # 서버만 띄워 보기
+claude mcp add kiwoom -- uvx --from 'kiwoom-client[mcp]' kiwoom-client-mcp --demo   # Claude Code 에 데모로 등록
 ```
 
 <details>
