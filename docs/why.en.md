@@ -84,7 +84,7 @@ Only things you can check in the code and tests.
   token bucket too, but per app key (20/s); this one follows Kiwoom's limit being separate for each TR.
 - **Short-lived processes share one token.** With `token_cache="<path>"` (or `KIWOOM_TOKEN_CACHE`) cron jobs, scripts and
   the CLI reuse the token in that file instead of asking for a new one each run (mode 0600, no key or secret stored —
-  [guide](guide.md#sharing-the-token-across-processes)).
+  [guide](guide.en.md#sharing-the-token-across-processes)).
 - **Real-time fields by name.** `ws.on("0B", cb, named=True)` gives you `values["현재가"]` (current price) instead of
   `values["10"]`.
 - **Agents never see live orders by default.** On the live server the built-in MCP server does **not register** its 12
