@@ -140,9 +140,11 @@ kiwoom balance --mock             # 계좌평가잔고 (kt00018)
 kiwoom find 하이닉스 --mock
 kiwoom endpoints 체결             # 메서드 ↔ TR 찾기 (키 없이)
 kiwoom --json quote 005930        # 원 응답 JSON
+kiwoom --demo quote 삼성전자      # 키 없이 가상 데이터로 (연결 없음)
 ```
 
 키는 `from_env()` 와 같이 환경변수에서 읽고 `--env-file` 로 `.env` 를 지정할 수 있습니다. `--mock`/`--live` 가 `KIWOOM_IS_MOCK` 보다 우선합니다.
+`--demo` 는 키 없이 [데모 백엔드](mcp.md#데모-모드-키-없이-체험)를 쓰고, 출력 첫 줄에 `[데모] 가상 데이터` 배너를 찍습니다(`--json` 이면 stderr). 시세는 실제가 아닙니다.
 **조회만 합니다** — 주문·토큰 폐기 명령은 일부러 없습니다. `python -m kiwoom_client` 로도 실행됩니다.
 
 ## 디버깅 — repr · 로그 · timeout
