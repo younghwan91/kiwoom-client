@@ -22,6 +22,10 @@
 - CI: 단위 테스트를 Windows·macOS 에서도 돌린다
 - 문서: [프롬프트 모음](docs/prompts.md)(·영문) — Claude·Cursor 에 그대로 붙여 넣는 질문 19개와 쓰이는 도구·결과를 정리했습니다. 주문은 미리보기까지만 만들고, 테스트가 도구 이름 실존을 확인합니다
 
+### Changed
+
+- README 데모 GIF(`scripts/demo_mock_session.py`)가 자체 가짜 서버 대신 `kiwoom-client-mcp --demo` 와 같은 데모 백엔드로 돌아가도록 바꾸고 GIF 를 다시 만들었습니다. 화면에 `[DEMO]` 배너와 `_demo` 표시가 보입니다
+
 ### Fixed
 
 - Windows: 출력이 파이프·파일로 가면 쓰이는 레거시 코드 페이지(cp949·cp1252)에서 `kiwoom --help`·
