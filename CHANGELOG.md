@@ -104,6 +104,7 @@
 
 ### Changed
 
+- README·문서 첫 화면의 데모 GIF 흐름을 바꿨습니다 — 포트폴리오 요약 → 리밸런싱 계산 → 주문 미리보기(전송 없음) 흐름이고, 화면마다 "가상 데이터" 표시가 보입니다
 - MCP 프롬프트(`analyze_stock`·`review_account`·`market_today`·`rebalance`), `kiwoom://guide`, 서버 instructions 가
   TR 도구 대신 의도 도구(`get_chart`·`investor_flow`·`get_portfolio`·`get_orders`·`market_movers`·`rebalance_plan`)를
   안내합니다. smart 모드에서 `search_tools` 왕복이 줄어듭니다. 프롬프트가 다시 TR 도구를 가리키면 테스트가 실패합니다.

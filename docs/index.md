@@ -79,9 +79,9 @@ uvx --from 'kiwoom-client[mcp]' kiwoom-client-mcp
 
 Claude Code 에는 `claude mcp add kiwoom -e KIWOOM_APP_KEY=YOUR_APP_KEY -e KIWOOM_APP_SECRET=YOUR_APP_SECRET -e KIWOOM_IS_MOCK=true -- uvx --from 'kiwoom-client[mcp]' kiwoom-client-mcp` 로 붙입니다. Claude Desktop·Cursor·Codex 설정은 [MCP 서버](mcp.md#설정-스니펫)에 있습니다.
 
-![모의 데모: 에이전트가 get_quotes 로 시세를 묻고 order_preview 로 주문 초안을 만드는 터미널 화면](images/demo-mock.gif)
+![데모 모드: 에이전트가 get_portfolio 로 포트폴리오를 요약하고 rebalance_plan 으로 리밸런싱 수량을 계산한 뒤 order_preview 로 주문 미리보기를 만드는 터미널 화면](images/demo-mock.gif)
 
-<small>**모의 데모** — 진짜 MCP 서버에 가짜 키움 서버(가상 시세)를 붙이고 도구 호출을 스크립트로 재생했습니다. 주문은 나가지 않습니다. 레포 루트에서 `uv run --extra mcp python scripts/demo_mock_session.py` 로 키 없이 다시 볼 수 있습니다.</small>
+<small>**데모 모드** — 진짜 MCP 서버를 `--demo`(가상 데이터, 키 불필요)로 띄우고 도구 호출을 스크립트로 재생했습니다. 주문은 나가지 않습니다. 레포 루트에서 `uv run --extra mcp python scripts/demo_mock_session.py` 로 키 없이 다시 볼 수 있습니다.</small>
 
 ## 어디로 갈까
 

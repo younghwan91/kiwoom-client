@@ -28,14 +28,14 @@ An unofficial open-source client that runs on Windows, macOS, and Linux without 
 <p align="center"><sub>182 REST endpoints, 4 condition-search calls, and 19 real-time types across 15 modules. One tile, one endpoint.</sub></p>
 
 <p align="center">
-  <img alt="Mock demo: an agent asks for quotes with get_quotes and drafts an order with order_preview (fake Kiwoom server, nothing sent)" src="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/demo-mock.gif" width="100%">
+  <img alt="Demo mode: an agent summarizes the portfolio with get_portfolio, works out rebalance quantities with rebalance_plan, then previews an order with order_preview (synthetic data, nothing sent)" src="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/demo-mock.gif" width="100%">
 </p>
 
-<p align="center"><sub><b>Mock demo</b> — the real MCP server wired to a fake Kiwoom server (made-up prices), with the tool calls replayed from a script. No order is sent.</sub></p>
+<p align="center"><sub><b>Demo mode</b> — the real MCP server started with `--demo` (synthetic data, no key), with the tool calls replayed from a script. No order is sent.</sub></p>
 
 ```bash
 uvx --from 'kiwoom-client[mcp]' kiwoom-client-mcp            # start the MCP server (needs KIWOOM_APP_KEY / KIWOOM_APP_SECRET)
-uv run --extra mcp python scripts/demo_mock_session.py      # replay the mock demo above, no keys (repo root)
+uv run --extra mcp python scripts/demo_mock_session.py      # replay the demo above, no keys (repo root)
 ```
 
 ## Quick start

@@ -28,14 +28,14 @@ OpenAPI+의 COM/OCX 없이 Windows · macOS · Linux 어디서나 동작하는 �
 <p align="center"><sub>REST 엔드포인트 182개, 조건검색 4종, 실시간 19종을 15개 모듈로 감쌌습니다. 타일 하나가 엔드포인트 하나입니다.</sub></p>
 
 <p align="center">
-  <img alt="모의 데모: 에이전트가 get_quotes 로 시세를 묻고 order_preview 로 주문 초안을 만드는 터미널 화면(가짜 키움 서버, 주문 전송 없음)" src="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/demo-mock.gif" width="100%">
+  <img alt="데모 모드: 에이전트가 get_portfolio 로 포트폴리오를 요약하고 rebalance_plan 으로 리밸런싱 수량을 계산한 뒤 order_preview 로 주문 미리보기를 만드는 터미널 화면(가상 데이터, 주문 전송 없음)" src="https://raw.githubusercontent.com/younghwan91/kiwoom-client/main/docs/images/demo-mock.gif" width="100%">
 </p>
 
-<p align="center"><sub><b>모의 데모</b> — 진짜 MCP 서버에 가짜 키움 서버(가상 시세)를 붙이고 도구 호출을 스크립트로 재생했습니다. 주문은 나가지 않습니다.</sub></p>
+<p align="center"><sub><b>데모 모드</b> — 진짜 MCP 서버를 `--demo`(가상 데이터, 키 불필요)로 띄우고 도구 호출을 스크립트로 재생했습니다. 주문은 나가지 않습니다.</sub></p>
 
 ```bash
 uvx --from 'kiwoom-client[mcp]' kiwoom-client-mcp            # MCP 서버 시작 (KIWOOM_APP_KEY·KIWOOM_APP_SECRET 필요)
-uv run --extra mcp python scripts/demo_mock_session.py      # 위 모의 데모를 키 없이 재생 (레포 루트)
+uv run --extra mcp python scripts/demo_mock_session.py      # 위 데모를 키 없이 재생 (레포 루트)
 ```
 
 ## 빠른 시작
