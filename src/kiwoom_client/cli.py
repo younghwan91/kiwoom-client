@@ -32,6 +32,7 @@ from typing import Any
 
 import httpx
 
+from kiwoom_client._console import tolerate_legacy_encoding
 from kiwoom_client._errors import KiwoomError
 from kiwoom_client.parsing import _unsigned_number, extract_records
 
@@ -308,6 +309,7 @@ _COMMANDS: dict[str, Callable[[Any, argparse.Namespace], None]] = {
 
 def main(argv: Sequence[str] | None = None) -> int:
     """Entry point of the ``kiwoom`` script. Returns the exit status."""
+    tolerate_legacy_encoding()
     args = build_parser().parse_args(argv)
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG, format="%(levelname)s %(name)s %(message)s")

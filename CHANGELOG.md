@@ -14,6 +14,13 @@
   필드명(`"현재가"`)으로 바꾼 사본을 준다. 스펙에 없는 FID·타입은 그대로, 같은 타입의 다른 콜백은 FID 키를 받는다
 - CI: 단위 테스트를 Windows·macOS 에서도 돌린다
 
+### Fixed
+
+- Windows: 출력이 파이프·파일로 가면 쓰이는 레거시 코드 페이지(cp949·cp1252)에서 `kiwoom --help`·
+  `kiwoom-client-mcp --help` 등이 `UnicodeEncodeError` 로 죽던 것. 인코딩할 수 없는 글자(cp949 의 `—` 등)는 `?` 로 찍는다
+- 개발용 Claude Code 훅 `live_order_guard.py` 가 cp1252·cp949 콘솔에서 차단 메시지를 못 찍어 명령을 그대로
+  통과시키던 것(fail-open). 응답을 ASCII JSON 으로 쓰고 stdin 은 UTF-8 로 읽는다
+
 - MCP: 2단계 주문 — `order_preview` 가 그 주문에만 쓸 수 있는 1회용 `confirm_token`(HMAC, 120초)을 돌려주고,
   종목명·수량·단가로 주문하는 `place_order`·`modify_order`·`cancel_order` 는 토큰이 없거나 파라미터가 다르거나
   만료·재사용이면 전송하지 않고 거부한다(실주문 opt-in 가드 뒤에만 등록). `order_preview` 는 정정·취소(`action`)와

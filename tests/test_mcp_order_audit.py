@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import stat
+import sys
 
 import pytest
 
@@ -96,8 +97,9 @@ class TestEvents:
         text = log.read_text(encoding="utf-8")
         for secret in (token, APP_KEY, APP_SECRET, "test_token", "1234567890"):
             assert secret not in text
-        assert stat.S_IMODE(log.stat().st_mode) == 0o600
-        assert stat.S_IMODE(log.parent.stat().st_mode) == 0o700
+        if sys.platform != "win32":  # Windows has no POSIX permission bits
+            assert stat.S_IMODE(log.stat().st_mode) == 0o600
+            assert stat.S_IMODE(log.parent.stat().st_mode) == 0o700
 
     async def test_high_level_tool_is_logged_with_its_own_name(self, httpx_mock, api, tmp_path):
         log = tmp_path / "a.jsonl"

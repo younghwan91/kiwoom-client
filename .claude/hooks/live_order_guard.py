@@ -46,7 +46,7 @@ def deny(reason: str) -> None:
         "hookEventName": "PreToolUse",
         "permissionDecision": "deny",
         "permissionDecisionReason": "[kiwoom live-order guard] " + reason + HOW,
-    }}, ensure_ascii=False))
+    }}))  # ASCII escapes: a cp1252/cp949 console cannot fail to print it (fail-open)
     sys.exit(0)
 
 
@@ -95,7 +95,7 @@ def script_text(cmd: str, cwd: str) -> str:
 
 
 def main() -> None:
-    data = json.load(sys.stdin)
+    data = json.loads(sys.stdin.buffer.read().decode("utf-8"))  # whatever the locale
     if data.get("tool_name") != "Bash":
         return
     cmd = (data.get("tool_input") or {}).get("command") or ""

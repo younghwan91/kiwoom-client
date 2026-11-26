@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 
@@ -17,6 +18,12 @@ from kiwoom_client.mcp.client_config import (
     render,
 )
 from kiwoom_client.mcp.guard import ENV_VAR as LIVE_ORDERS_ENV_VAR
+
+# A minimal env on Windows still needs SYSTEMROOT (asyncio/sockets fail without it),
+# and UTF-8 output so the test can read Korean text back.
+_WINDOWS_ENV = {"PYTHONIOENCODING": "utf-8"} | {
+    k: os.environ[k] for k in ("SYSTEMROOT", "SystemRoot") if k in os.environ
+}
 
 
 @pytest.fixture
@@ -80,9 +87,10 @@ class TestWithoutMcpExtra:
             assert proc.stdout
 
     def test_serving_without_the_mcp_package_explains_the_extra(self):
-        env = {"KIWOOM_APP_KEY": "k", "KIWOOM_APP_SECRET": "s", "PATH": ""}
+        env = {"KIWOOM_APP_KEY": "k", "KIWOOM_APP_SECRET": "s", "PATH": "", **_WINDOWS_ENV}
         proc = subprocess.run(
-            [sys.executable, "-c", _WITHOUT_MCP], capture_output=True, text=True, env=env
+            [sys.executable, "-c", _WITHOUT_MCP], capture_output=True, text=True, env=env,
+            encoding="utf-8",
         )
         assert proc.returncode == 1
         assert "kiwoom-client[mcp]" in proc.stderr
